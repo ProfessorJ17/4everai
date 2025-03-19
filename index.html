@@ -1,0 +1,1231 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4EverAI - Keep Them With You Forever</title>
+    <style>
+        /* styles.css content starts here */
+        :root {
+            /* Earth Palette Colors - Modified */
+            --primary-color: #77B5FE;
+            --secondary-color: #A0CED9;
+            --accent-color: #F7CAC9;
+            --text-color: #333;
+            --background-color: #f0f0f0;
+            --gradient-start: #B2BEB5;
+            --gradient-end: #A7C4BC;
+
+            /* Neon Colors */
+            --neon-1: #ADD8E6;
+            --neon-2: #B0E2FF;
+            --neon-3: #E0BBE4;
+            --neon-4: #957DAD;
+            --neon-5: #D291BC;
+            --neon-6: #FFDAC1;
+            --neon-7: #FFB7B2;
+            --neon-8: #BDB76B;
+            --neon-9: #EEE8AA;
+            --neon-10: #F0E68C;
+
+            /* Purple/Blue Palette */
+            --pb-primary: #9370DB;
+            --pb-secondary: #7B68EE;
+            --pb-accent: #6A5ACD;
+            --pb-text: #fff;
+            --pb-background: #e6e6fa;
+            --pb-gradient-start: #8A2BE2;
+            --pb-gradient-end: #9400D3;
+
+            /* Orange/Red Palette */
+            --or-primary: #FF4500;
+            --or-secondary: #FF6347;
+            --or-accent: #FF8C00;
+            --or-text: #fff;
+            --or-background: #8B4513;
+            --or-gradient-start: #FF4500;
+            --or-gradient-end: #FFA07A;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            text-align: center;
+            background-color: var(--background-color);
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1rem 2rem;
+            background: rgba(240, 240, 240, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem !important;
+            font-weight: 800 !important;
+            color: black !important;
+            text-shadow: none !important;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo img {
+            height: 24px;
+            width: auto;
+        }
+
+        /* nav.css content starts here */
+        .nav-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .hamburger-menu {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 20px;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+
+        .hamburger-menu span {
+            display: block;
+            width: 100%;
+            height: 2px;
+            background-color: black;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-menu.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger-menu.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-menu.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+
+        .nav-links {
+            position: fixed;
+            top: 60px;
+            left: -100%;
+            width: 250px;
+            height: 100vh;
+            background: rgba(230, 230, 250, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            transition: left 0.3s ease;
+            z-index: 999;
+        }
+
+        .nav-links.active {
+            left: 0;
+        }
+
+        .nav-links a {
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 18px !important;
+            font-weight: 600 !important;
+        }
+
+        .mobile-menu-btn {
+            display: none !important;
+        }
+
+        /* Continue with original styles.css */
+        .nav-links a {
+            margin-left: 2rem;
+            text-decoration: none;
+            color: black;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+            font-size: 18px !important;
+            font-weight: 600 !important;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            text-shadow: 0 0 5px var(--primary-color);
+        }
+
+        .hero {
+            min-height: 100vh;
+            padding: 6rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-color);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            background: linear-gradient(135deg, #9370DB 0%, #6A5ACD 100%);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/1540588933.svg');
+            background-size: 75% auto;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            z-index: -1;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+        }
+
+        .hero h1,
+        .hero .subheadline,
+        .hero .supporting-text {
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 120% !important;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            text-shadow: none !important;
+            font-weight: 800 !important;
+            color: black !important;
+        }
+
+        .subheadline {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 5px var(--accent-color);
+        }
+
+        .supporting-text {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border: 2px solid var(--accent-color);
+            border-radius: 50px;
+            background: linear-gradient(45deg, #003087, #009cde);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            display: inline-block;
+            width: auto;
+            text-decoration: none;
+            text-align: center;
+            margin: 0.5rem;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #FFA500, #FF4500);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .cta-button:hover::before {
+            opacity: 1;
+        }
+
+        .cta-button:hover {
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7), 0 0 25px rgba(255, 215, 0, 0.5);
+            border: 2px solid gold;
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .cta-button.secondary {
+            border: 2px solid var(--secondary-color);
+            color: var(--text-color);
+        }
+
+        .cta-button.secondary:hover {
+            color: #000;
+        }
+
+        @keyframes neonPulse {
+            0% { box-shadow: 0 0 5px var(--neon-1), 0 0 10px var(--neon-2), 0 0 20px var(--neon-3); }
+            50% { box-shadow: 0 0 10px var(--neon-4), 0 0 20px var(--neon-5), 0 0 40px var(--neon-6); }
+            100% { box-shadow: 0 0 5px var(--neon-7), 0 0 10px var(--neon-8), 0 0 20px var(--neon-9); }
+        }
+
+        .dna-helix {
+            animation: rotate 20s linear infinite;
+            filter: drop-shadow(0 0 5px var(--accent-color));
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .feature-icon svg,
+        .step-icon svg,
+        .pricing-icon svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .section-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            display: block;
+        }
+
+        .section-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--text-color);
+        }
+
+        .testimonial-icon svg path {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        section {
+            padding: 6rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            color: #555;
+        }
+
+        /* Earth Tone Section */
+        section.earth-tone {
+            background: linear-gradient(135deg, #FF8C00 0%, #FF4500 100%);
+            color: #555;
+        }
+
+        /* Purple/Blue Section */
+        section.purple-blue {
+            background: linear-gradient(135deg, var(--neon-3) 0%, var(--neon-4) 100%);
+            color: #eee; /* Ensure text is readable on dark background */
+        }
+
+        /* White Section */
+        section.white-section {
+            background-color: var(--pb-background);
+            color: #333; /* Dark text for contrast */
+        }
+
+        h2 {
+            font-size: 2.7rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 800 !important;
+            color: black !important;
+            text-shadow: none !important;
+        }
+
+        /* Purple/Blue Section Heading */
+        section.purple-blue h2 {
+            color: black !important;
+            text-shadow: none !important;
+            font-weight: 800 !important;
+        }
+
+        /* White Section Heading */
+        section.white-section h2 {
+            color: black !important;
+            text-shadow: none !important;
+            font-weight: 800 !important;
+        }
+
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 4rem 0;
+        }
+
+        .step {
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            text-align: center;
+            padding: 2rem;
+            border: 1px solid var(--accent-color);
+            color: var(--text-color);
+        }
+
+        /* Earth Tone Step */
+        .earth-tone .step {
+            background: linear-gradient(135deg, #FF8C00 0%, #FF4500 100%);
+        }
+
+        /* Purple/Blue Step */
+        .purple-blue .step {
+            background: linear-gradient(135deg, var(--neon-3) 0%, var(--neon-4) 100%);
+        }
+
+        /* White Section Step */
+        section.white-section .step {
+            background-color: #fff;
+            color: #333;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Less intense shadow */
+        }
+
+        .step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px gold;
+            border: 1px solid gold;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            text-shadow: 0 0 5px var(--secondary-color);
+        }
+
+        /* White Section Step Number */
+        section.white-section .step-number {
+            background: var(--accent-color);
+            color: #fff;
+            text-shadow: none;
+        }
+
+        .features {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .features::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/1540588348.svg');
+            background-size: 50% auto;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            z-index: -1;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 4rem auto;
+            max-width: 1200px;
+        }
+
+        .feature {
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-color);
+        }
+
+        /* Earth Tone Feature */
+        .earth-tone .feature {
+            background: linear-gradient(135deg, #FF8C00 0%, #FF4500 100%);
+        }
+
+        /* Purple/Blue Feature */
+        .purple-blue .feature {
+            background: linear-gradient(135deg, var(--neon-3) 0%, var(--neon-4) 100%);
+        }
+
+        /* White Section Feature */
+        section.white-section .feature {
+            background-color: #fff;
+            color: #333;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px gold;
+            border: 1px solid gold;
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 1rem;
+            fill: var(--accent-color);
+        }
+
+        /* Purple/Blue Feature Icon */
+        section.purple-blue .feature-icon {
+            fill: var(--accent-color);
+        }
+
+        /* White Section Feature Icon */
+        section.white-section .feature-icon {
+            fill: var(--primary-color);
+        }
+
+        .testimonials {
+            background-image: url('/Geometric-Heart-2.svg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+
+        .testimonials::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 1;
+        }
+
+        .testimonials > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .testimonials-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin: 4rem auto;
+            max-width: 900px;
+        }
+
+        .testimonial {
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            padding: 2rem;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 250px;
+        }
+
+        /* Earth Tone Testimonial */
+        .earth-tone .testimonial {
+            background: linear-gradient(135deg, #FF8C00 0%, #FF4500 100%);
+        }
+
+        /* Purple/Blue Testimonial */
+        .purple-blue .testimonial {
+            background: linear-gradient(135deg, var(--neon-3) 0%, var(--neon-4) 100%);
+        }
+
+        /* White Section Testimonial */
+        section.white-section .testimonial {
+            background-color: #fff;
+            color: #333;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .testimonial:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px gold;
+            border: 1px solid gold;
+        }
+
+        .testimonial-icon {
+            background-image: url('/Geometric-Heart-2.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 2rem;
+            opacity: 0.8;
+            filter: drop-shadow(0 0 5px var(--accent-color));
+        }
+
+        .testimonial-icon svg {
+            display: none; /* Hide the existing SVG */
+        }
+
+        cite {
+            display: block;
+            margin-top: 1rem;
+            font-style: normal;
+            color: #333 !important;
+            text-shadow: none !important;
+            font-weight: 600 !important;
+        }
+
+        /* Purple/Blue Cite */
+        section.purple-blue cite {
+            color: #333 !important;
+            text-shadow: none !important;
+            font-weight: 600 !important;
+        }
+
+        /* White Section Cite */
+        section.white-section cite {
+            color: #333 !important;
+            text-shadow: none !important;
+            font-weight: 600 !important;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .pricing-plan {
+            background: var(--pb-background); /* Light purple from palette */
+            border-radius: 15px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: #333; /* Dark gray text for readability */
+        }
+
+        .pricing-plan p:contains("One-time Payment") {
+            font-weight: 700;
+            color: #8A2BE2;
+        }
+
+        .pricing-plan h3,
+        .pricing-plan .plan-price,
+        .pricing-plan p,
+        .pricing-plan .plan-features li {
+            color: black !important;
+            font-weight: 600 !important;
+        }
+
+        .pricing-plan:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px cyan;
+        }
+
+        .plan-header {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 1rem;
+        }
+
+        .plan-price {
+            font-size: 2.8rem !important;
+            font-weight: 800 !important;
+            margin: 1rem 0;
+            color: black !important;
+        }
+
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 1.5rem 0;
+        }
+
+        .plan-features li {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .plan-features li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+        }
+
+        .plan-cta {
+            margin-top: 2rem;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .plan-cta .cta-button {
+            width: 80%;
+            max-width: 200px;
+        }
+
+        .coming-soon {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--accent-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+
+        .pricing {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .pricing::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/Prismatic-DNA-Helix-Vortex-2.svg');
+            background-size: cover; /* Adjust as needed */
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            z-index: -1;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--or-gradient-start) 0%, var(--or-gradient-end) 100%);
+            color: var(--text-color);
+            padding: 4rem 2rem 2rem;
+            text-align: center;
+            border-top: 1px solid #222;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            margin: 2rem 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1.5rem;
+            margin: 2rem 0;
+            justify-content: center;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            padding: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            display: grid;
+            place-items: center;
+        }
+
+        .social-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .social-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px) scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Specific platform colors */
+        .social-icon[href*="facebook"]:hover {
+            filter: drop-shadow(0 0 8px #1877f2);
+        }
+
+        .social-icon[href*="twitter"]:hover,
+        .social-icon[href*="x.com"]:hover {
+            filter: drop-shadow(0 0 8px #1da1f2);
+        }
+
+        .social-icon[href*="instagram"]:hover {
+            filter: drop-shadow(0 0 8px #e1306c);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 2rem;
+        }
+
+        .ai-waveform {
+            width: 200px;
+            height: 200px;
+        }
+
+        .center-dot {
+            fill: var(--accent-color);
+            filter: drop-shadow(0 0 5px var(--accent-color));
+        }
+
+        .wave {
+            fill: none;
+            stroke: var(--accent-color);
+            stroke-width: 2;
+            opacity: 0.5;
+            filter: drop-shadow(0 0 5px var(--accent-color));
+        }
+
+        /* Purple/Blue Waveform */
+        section.purple-blue .center-dot {
+            fill: var(--accent-color);
+            filter: drop-shadow(0 0 5px var(--accent-color));
+        }
+
+        section.purple-blue .wave {
+            stroke: var(--accent-color);
+            filter: drop-shadow(0 0 5px var(--accent-color));
+        }
+
+        #problem {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        #problem::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/Colorful-Abstract-Geometric-Design.svg');
+            background-size: 75% auto;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            z-index: -1;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+        }
+
+        .how-it-works {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .how-it-works::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/Chromatic-DNA-Helix-Heart-Tunnel.svg');
+            background-size: cover; /* Adjust as needed */
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            z-index: -1;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+        }
+
+        h1, h2, h3 {
+            color: black !important;
+            font-weight: 800 !important;
+            text-shadow: none !important;
+            font-size: 120% !important;
+        }
+
+        /* Overriding section-specific heading styles */
+        section.purple-blue h2,
+        section.white-section h2,
+        section.earth-tone h2 {
+            color: black !important;
+            text-shadow: none !important;
+            font-weight: 800 !important;
+        }
+
+        .step h3, .feature h3 {
+            color: black !important;
+            font-weight: 700 !important;
+            font-size: 24px !important;
+        }
+
+        .pricing-plan h3,
+        .pricing-plan .plan-price,
+        .pricing-plan p,
+        .pricing-plan .plan-features li {
+            color: black !important;
+            font-weight: 600 !important;
+        }
+
+        .plan-price {
+            font-size: 2.8rem !important;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="logo">
+                <img src="/Prismatic-DNA-Helix-Circles.svg" alt="4EverAI Logo">
+                4EverAI
+            </div>
+            <div class="nav-links">
+                <a href="#how-it-works">How It Works</a>
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-content">
+            <h1>✨ Keep Them With You Forever—or Preserve Yourself for Tomorrow ✨</h1>
+            <p class="subheadline">🤖 Create a lifelike AI of you, your husband, wife, parent, grandparent, or any loved one—sharing their voice, wisdom, and love with future generations. ❤️</p>
+            <button class="cta-button">🚀 Build Your AI Legacy Now</button>
+            <p class="supporting-text">🌟 With 4EverAI, you can bring a loved one back to life or save your own story forever—turning memories into an interactive companion that speaks, listens, and stays close.</p>
+        </div>
+        <div class="hero-animation">
+          <svg viewBox="0 0 50 50" class="dna-helix">
+            <path d="M10 10 C15 20, 35 20, 40 10 C35 0, 15 0, 10 10" fill="none" stroke="var(--accent-color)" stroke-width="2"/>
+            <path d="M10 40 C15 30, 35 30, 40 40 C35 50, 15 50, 10 40" fill="none" stroke="var(--accent-color)" stroke-width="2"/>
+            <line x1="10" y1="10" x2="40" y2="40" stroke="var(--accent-color)" stroke-width="1"/>
+            <line x1="40" y1="10" x2="10" y2="40" stroke="var(--accent-color)" stroke-width="1"/>
+          </svg>
+        </div>
+    </header>
+
+    <section id="problem" class="problem-section white-section">
+        <div class="section-icon">
+            <svg viewBox="0 0 50 50">
+                <path d="M25 10 C15 20, 10 35, 20 45 C30 35, 35 20, 25 10" fill="none" stroke-width="2"/>
+                <line x1="25" y1="10" x2="25" y2="40" stroke-width="1"/>
+            </svg>
+        </div>
+        <h2>🤖 An AI That's Truly Them—or You 🌟</h2>
+        <p>🌌 With 4EverAI, we don't just save the past—we bring it to life in a way that feels like magic. We build digital companions that capture the heart of your voice, your personality, and your memories—or those of a loved one like your husband, wife, parent, or grandparent. This isn't some vague shadow or a simple recording you tuck away—it's an AI so real, so alive, that it talks back, shares advice, and keeps you or them woven into your family's everyday world, as vivid as ever.</p>
+        <p>🎙️ Think of it: an AI that sounds just like your spouse, laughing at an old joke you'd forgotten, or your mom offering that comforting advice you miss so much. Maybe it's you—your own voice, your own spirit, chatting with your grandkids years from now about the life you lived. This isn't just a memory locked in time—it's a living, breathing presence that connects across generations, keeping their essence—or yours—right there in their lives, warm and familiar.</p>
+        <p>💞 It's about more than technology—it's about holding onto love. Whether it's your husband's quirky sayings, your grandparent's storytelling, or your own way of seeing the world, 4EverAI makes sure they—or you—stay close, speaking with the same tone, the same heart, forever. 💞</p>
+    </section>
+
+    <section id="how-it-works" class="how-it-works purple-blue">
+        <h2>⚡ From You or Them to Eternity in 3 Steps 👨‍👩‍👧‍👦</h2>
+        <div class="steps-container">
+            <div class="step">
+                <div class="step-icon">
+                  <svg viewBox="0 0 50 50">
+                    <rect x="20" y="15" width="10" height="20" rx="2" fill="none" stroke="var(--accent-color)" stroke-width="2"/>
+                    <path d="M35 20 C40 20, 40 30, 45 30" fill="none" stroke="var(--accent-color)" stroke-width="1"/>
+                    <path d="M35 25 C38 25, 38 35, 41 35" fill="none" stroke="var(--accent-color)" stroke-width="1"/>
+                  </svg>
+                </div>
+                <div class="step-number">1️⃣</div>
+                <h3>📤 Share a Story</h3>
+                <p>💿 It all begins with what you hold dear—anything that captures your voice, your spirit, or your loved one's. Maybe it's a scratchy audio of your husband singing a tune, a video of your grandma knitting and chatting, or a text you wrote about your dreams. It could be as simple as a voicemail from your dad, a letter your wife penned, or a quick clip of you sharing a memory. No matter how small—just a minute or two—we'll use it to bring you or them back in a way that feels so true.</p>
+            </div>
+            <div class="step">
+                <div class="step-icon">
+                    <svg viewBox="0 0 50 50">
+                        <rect x="15" y="15" width="20" height="20" fill="none" stroke="var(--accent-color)" stroke-width="2"/>
+                        <line x1="10" y1="20" x2="15" y2="20" stroke="var(--accent-color)" stroke-width="1"/>
+                        <line x1="35" y1="20" x2="40" y2="20" stroke="var(--accent-color)" stroke-width="1"/>
+                        <line x1="10" y1="30" x2="15" y2="30" stroke="var(--accent-color)" stroke-width="1"/>
+                        <line x1="35" y1="30" x2="40" y2="30" stroke="var(--accent-color)" stroke-width="1"/>
+                    </svg>
+                </div>
+                <div class="step-number">2️⃣</div>
+                <h3>🤖 We Create the AI</h3>
+                <p>🛠️ Our advanced technology takes over, crafting an AI that's uniquely you—or them. We dive into every detail: the way your spouse's voice softened when they said "goodnight," the rhythm of your grandparent's storytelling, or the lilt in your laugh. It's not just about sound—it's about feeling. We shape a personalized digital companion that doesn't just echo the past but lives in the present, ready to talk, share, and connect with the ones you love.</p>
+            </div>
+            <div class="step">
+                <div class="step-icon">
+                    <svg viewBox="0 0 50 50">
+                        <circle cx="25" cy="25" r="5" fill="none" stroke="var(--accent-color)" stroke-width="2"/>
+                        <circle cx="15" cy="15" r="3" fill="none" stroke="var(--accent-color)" stroke-width="1"/>
+                        <circle cx="35" cy="35" r="3" fill="none" stroke="var(--accent-color)" stroke-width="1"/>
+                        <line x1="25" y1="25" x2="15" y2="15" stroke="var(--accent-color)" stroke-width="1"/>
+                        <line x1="25" y1="25" x2="35" y2="35" stroke="var(--accent-color)" stroke-width="1"/>
+                    </svg>
+                </div>
+                <div class="step-number">3️⃣</div>
+                <h3>📱 Stay Connected</h3>
+                <p>🌍 Your AI is ready—a constant companion for you or your family, anytime, anywhere. Imagine talking to your wife's AI when you miss her most, hearing her voice fill the silence. Picture your kids asking their granddad's AI about his life, or your own AI answering your grandkids' questions years from now. It's there on your phone, your tablet, wherever you are—keeping you or your loved one close, alive, and part of every moment, no matter the distance or time.</p>
+            </div>
+        </div>
+        <button class="cta-button">🔨 Start Crafting Yours</button>
+    </section>
+
+    <section id="features" class="features earth-tone">
+        <div class="section-icon">
+            <svg viewBox="0 0 50 50">
+                <path d="M25 10 L40 40 L10 40 Z" stroke-width="2"/>
+                <path d="M25 15 L35 35 L15 35 Z" stroke-width="1"/>
+                <path d="M25 20 L30 30 L20 30 Z" stroke-width="1"/>
+            </svg>
+        </div>
+        <h2>🏆 Why 4EverAI Stands Out ✨</h2>
+        <p>🌟 4EverAI isn't like anything else out there—it's a special blend of heart and tech, built to keep you or your loved ones alive forever. Here's what sets us apart, making us the choice for families who want more than just a memory:</p>
+        <div class="features-grid">
+            <div class="feature">
+                <h3>🎯 Lifelike Accuracy</h3>
+                <p>🎤 This is no generic bot—it's them, or you, down to the smallest detail. Our AI captures the exact sound of your husband's warm hello, your grandparent's gentle chuckle, or your own unique way of speaking. It doesn't just repeat—it responds, it feels real, like they're right there with you. It's so lifelike, you'll forget it's tech and just hear the love.</p>
+            </div>
+            <div class="feature">
+                <h3>🔒 Secure & Private</h3>
+                <p>🛡️ Your memories are precious, and we guard them like treasure. Every audio clip, every text, every piece of you or them is encrypted with the toughest security, safe from anyone else. Whether it's your wife's voice or your own story, it's yours alone—protected, private, and always secure with us.</p>
+            </div>
+            <div class="feature">
+                <h3>⏳ Forever Access</h3>
+                <p>⌛ Our annual plans mean your AI isn't a fleeting thing—it's a legacy that lasts. We keep it running strong for generations—your kids can talk to it today, your grandkids tomorrow, and beyond. It's not about a one-time save; it's about keeping you or them alive, year after year, forever in reach.</p>
+            </div>
+            <div class="feature">
+                <h3>🎨 Customizable</h3>
+                <p>🖌️ Your AI grows with your story—or theirs. Add more memories anytime—a new recording of your dad's advice, a note from your spouse you just found, or another piece of your own life. It's flexible, letting you make it even more real, more them, or more you, whenever you're ready.</p>
+            </div>
+        </div>
+        <p class="features-footer">💖 Whether it's you wanting to stay with your family, your spouse who lit up your days, or your grandparent whose voice you miss—4EverAI keeps that connection alive. It's not just a tool; it's a way to hold onto love, forever and ever. 💖</p>
+    </section>
+
+    <section id="testimonials" class="testimonials white-section">
+        <div class="testimonial-icon">
+            <svg viewBox="0 0 50 50">
+                <path d="M25 15 C20 10, 15 15, 15 20 C15 25, 25 35, 25 35 C25 35, 35 25, 35 20 C35 15, 30 10, 25 15" 
+                      fill="none" stroke-width="2"/>
+                <path d="M15 30 L20 35 L25 30 L30 35 L35 30" 
+                      fill="none" stroke-width="1"/>
+            </svg>
+        </div>
+        <h2>💖 Voices That Touch Hearts 💬</h2>
+        <div class="testimonials-container">
+            <div class="testimonial">
+                <p>"My husband played jazz and told stories between riffs. With 4EverAI, I turned old tapes into an AI I can talk to—he even hums while giving me advice. It's like he's still here!"</p>
+                <cite>🎷 — Lila P., New Orleans</cite>
+            </div>
+            <div class="testimonial">
+                <p>"After losing my wife, I found her recipe notes and voice recordings. 4EverAI made an AI that cooks with me—scolding me if I mess up. She's back in our kitchen."</p>
+                <cite>🌮 — Carlos V., San Antonio</cite>
+            </div>
+            <div class="testimonial">
+                <p>"My dad was a WWII vet who kept his stories quiet. One recording became a 4EverAI that tells my kids his tales in his gruff voice. It's him, alive for them."</p>
+                <cite>🎖️ — Hannah K., Chicago</cite>
+            </div>
+            <div class="testimonial">
+                <p>"My grandma left silly voicemails. Now her 4EverAI tells me jokes when I'm sad—it's her laughter again, keeping me going."</p>
+                <cite>☎️ — Priya S., Seattle</cite>
+            </div>
+            <div class="testimonial">
+                <p>"I recorded bedtime stories for my kids years ago. With 4EverAI, I made an AI of myself that reads new ones to my grandkids in my voice. They love their 'magic grandpa'!"</p>
+                <cite>📖 — Ethan R., Portland</cite>
+            </div>
+        </div>
+        <button class="cta-button secondary">Read More Stories</button>
+    </section>
+
+    <section id="pricing" class="pricing purple-blue">
+        <div class="section-icon">
+            <svg viewBox="0 0 50 50">
+                <path d="M15 25 C15 35, 35 15, 35 25 C35 35, 15 15, 15 25" fill="none" stroke-width="2"/>
+            </svg>
+        </div>
+        <h2>💰 AI Legacy Pricing 🚀</h2>
+        <p class="section-subtitle">Preserve your essence with our tiered video chat plans</p>
+        
+        <div class="pricing-grid">
+            <div class="pricing-plan">
+                <div class="plan-header">
+                    <h3>Bronze AI Voice</h3>
+                    <div class="plan-price">$49</div>
+                    <p>One-time Payment</p>
+                </div>
+                <p>Voice-only AI with perfect voice clone and expertise in one knowledge field. Includes unlimited text chats on mobile and web.</p>
+                <ul class="plan-features">
+                    <li>Perfect voice replication</li>
+                    <li>Expert in one knowledge field</li>
+                    <li>Unlimited text chat</li>
+                    <li>Private access link forever</li>
+                </ul>
+                <div class="plan-cta">
+                    <a href="https://www.paypal.com/ncp/payment/XWMXQ7GLSJBSJ" class="cta-button">Buy Now (Bronze Tier)</a>
+                </div>
+            </div>
+
+            <div class="pricing-plan">
+                <div class="plan-header">
+                    <h3>Custom AI Voice & Video</h3>
+                    <div class="plan-price">$199</div>
+                    <p>Per Year</p>
+                </div>
+                <p>Basic package with voice replication and video AI capabilities. Includes professional knowledgebase integration and 5 daily video chats.</p>
+                <ul class="plan-features">
+                    <li>Lifelike voice replication</li>
+                    <li>Professional knowledgebase</li>
+                    <li>5 video chats/day</li>
+                    <li>Google Cloud storage</li>
+                </ul>
+                <div class="plan-cta">
+                    <a href="https://www.paypal.com/ncp/payment/XWMXQ7GLSJBSJ" class="cta-button">Buy Now (Silver Tier)</a>
+                </div>
+            </div>
+
+            <div class="pricing-plan">
+                <div class="plan-header">
+                    <h3>Pro AI Companion</h3>
+                    <div class="plan-price">$299</div>
+                    <p>Per Year</p>
+                </div>
+                <p>Advanced plan with enhanced video capabilities and deeper knowledge integration. Perfect for frequent communication needs.</p>
+                <ul class="plan-features">
+                    <li>All Basic features</li>
+                    <li>10 video chats/day</li>
+                    <li>Priority knowledge updates</li>
+                    <li>Extended cloud storage</li>
+                </ul>
+                <div class="plan-cta">
+                    <a href="https://www.paypal.com/ncp/payment/ZWNWSJBVTQA96" class="cta-button">Buy Now (Gold Tier)</a>
+                </div>
+            </div>
+
+            <div class="pricing-plan">
+                <div class="plan-header">
+                    <h3>Unlimited AI Legacy</h3>
+                    <div class="plan-price">$399</div>
+                    <p>Per Year</p>
+                </div>
+                <span class="coming-soon">Coming Soon</span>
+                <p>Unrestricted access to all AI features with unlimited video chats and premium support.</p>
+                <ul class="plan-features">
+                    <li>Unlimited video chats</li>
+                    <li>Premium priority support</li>
+                    <li>Real-time knowledge sync</li>
+                    <li>Platinum cloud storage</li>
+                </ul>
+                <div class="plan-cta">
+                    <a href="/cdn-cgi/l/email-protection#adc0c2c9c9ccdfc6dfc8dbc2c1d9edcac0ccc4c183cec2c0" class="cta-button">Contact Us for Premium Tier</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <h3>🕊️ 4EverAI – Where Memories Meet Forever ♾️</h3>
+            <div class="footer-links">
+                <a href="#about">About Us</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <div class="contact-details">
+                <p>Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ccbfb9bcbca3beb88cf8a9baa9beada5e2afa3a1">[email&#160;protected]</a> | Phone: 1-800-555-1234</p>
+            </div>
+            <div class="social-links">
+                <a href="https://facebook.com/4EverAI" class="social-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z"/>
+                    </svg>
+                </a>
+                <a href="https://twitter.com/4EverAI" class="social-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </a>
+                <a href="https://instagram.com/4EverAI" class="social-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013 3.583.07 4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; 2025 4EverAI. All rights reserved. <a href="#privacy">Privacy Policy</a> | <a href="#terms">Terms of Service</a></p>
+    </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
+document.addEventListener('DOMContentLoaded', () => {
+  const hamburgerMenu = document.querySelector('.hamburger-menu');
+  const navLinks = document.querySelector('.nav-links');
+
+  hamburgerMenu.addEventListener('click', () => {
+    hamburgerMenu.classList.toggle('active');
+    navLinks.classList.toggle('active');
+  });
+});
+</script>
+</body>
+</html>
