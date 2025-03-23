@@ -981,6 +981,45 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .billing-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .toggle-button {
+            padding: 0.8rem 2rem;
+            border: 2px solid var(--accent-color);
+            border-radius: 30px;
+            background: transparent;
+            color: black;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-button.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .monthly { display: none; }
+        .toggle-button[data-period="monthly"].active ~ .monthly { display: block; }
+        .toggle-button[data-period="monthly"].active ~ .annual { display: none; }
+
+        .cta-button {
+            background: linear-gradient(45deg, #0066CC, #0099FF) !important;
+            border: 2px solid #0066CC !important;
+            box-shadow: 0 4px 15px rgba(0,102,204,0.3);
+        }
+
+        .cta-button:hover {
+            background: linear-gradient(45deg, #0099FF, #00CCFF) !important;
+            border: 2px solid #00CCFF !important;
+            box-shadow: 0 0 15px rgba(0,204,255,0.7), 0 0 25px rgba(0,153,255,0.5);
+            transform: translateY(-3px);
+        }
     </style>
 </head>
 <body>
@@ -1148,6 +1187,10 @@
     </section>
 
     <section id="pricing" class="pricing purple-blue">
+        <div class="billing-toggle">
+            <button class="toggle-button active" data-period="monthly">Monthly Billing</button>
+            <button class="toggle-button" data-period="annual">Annual Billing</button>
+        </div>
         <div class="section-icon">
             <svg viewBox="0 0 50 50">
                 <path d="M15 25 C15 35, 35 15, 35 25 C35 35, 15 15, 15 25" fill="none" stroke-width="2"/>
@@ -1173,15 +1216,17 @@
                     <li>Agent Page private or public</li>
                 </ul>
                 <div class="plan-cta">
-                    <a href="https://www.paypal.com/ncp/payment/TDU87VPX725V8" class="cta-button">Buy Now (Bronze Tier)</a>
+                    <a href="https://www.paypal.com/ncp/payment/TDU87VPX725V8" class="cta-button" style="background: linear-gradient(45deg, #0066CC, #0099FF); border: 2px solid #0066CC;">Buy Now (Bronze Tier)</a>
                 </div>
             </div>
 
             <div class="pricing-plan">
                 <div class="plan-header">
                     <h3>Professional True Life AI</h3>
-                    <div class="plan-price">$1499.99</div>
-                    <p>Per Year</p>
+                    <div class="plan-price annual">$1499.99</div>
+                    <div class="plan-price monthly">$199.99</div>
+                    <p class="period annual">Per Year</p>
+                    <p class="period monthly">Per Month</p>
                 </div>
                 <p>Advanced AI legacy preservation with premium features</p>
                 <ul class="plan-features">
@@ -1202,8 +1247,10 @@
             <div class="pricing-plan">
                 <div class="plan-header">
                     <h3>Ultimate Ultra Family AI</h3>
-                    <div class="plan-price">$3499.99</div>
-                    <p>Per Year</p>
+                    <div class="plan-price annual">$3499.99</div>
+                    <div class="plan-price monthly">$499.99</div>
+                    <p class="period annual">Per Year</p>
+                    <p class="period monthly">Per Month</p>
                 </div>
                 <p>Enterprise-grade multi-user legacy solution</p>
                 <ul class="plan-features">
@@ -1225,7 +1272,7 @@
             <div class="pricing-plan">
                 <div class="plan-header">
                     <h3>Quantum AI Legacy</h3>
-                    <div class="plan-price">????</div>
+                    <div class="plan-price">??$</div>
                     <p>Per Year</p>
                 </div>
                 <span class="coming-soon">Coming Soon</span>
@@ -1265,13 +1312,13 @@
             <div class="contact-info">
                 <h3>Reach Out To Us</h3>
                 <ul class="contact-details-list">
-                    <li><strong>Email: moddarkrevolt@gmail.com </li>
+                    <li><strong>Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="eca18388888d9e879e899a838098ac8b818d8580c28f8381">[email&#160;protected]</a></li>
                     <li><strong>Phone:</strong> (417) 413-1601</li>
                     <li><strong>Contact:</strong> Professor J17</li>
                     <li><strong>Location:</strong> Springfield, Missouri, USA</li>
                 </ul>
                 <div class="contact-buttons">
-                    <div class="cta-button">Email: moddarkrevolt@gmail.com </div>
+                    <div class="cta-button">Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3974565d5d584b524b5c4f56554d795e54585055175a5654">[email&#160;protected]</a></div>
                     <a href="tel:+14174131601" class="cta-button secondary">Call Us</a>
                 </div>
             </div>
@@ -1292,7 +1339,7 @@
                 <a href="https://711131719.xyz/j17/index.html">Login</a>
             </div>
             <div class="contact-details">
-                <p>Email: moddarkrevolt@gmail.com  | Phone: (417) 413-1601 | Springfield, Missouri, USA</p>
+                <p>Email: Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="96dbf9f2f2f7e4fde4f3e0f9fae2d6f1fbf7fffab8f5f9fb">[email&#160;protected]</a> | Phone: (417) 413-1601 | Springfield, Missouri, USA</p>
                 <p>Contact: Professor J17</p>
             </div>
             <div class="social-links">
@@ -1323,6 +1370,20 @@
         navLinks.classList.toggle('active');
       });
     });
+    </script>
+    <script>
+        document.querySelectorAll('.toggle-button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.toggle-button').forEach(b => b.classList.remove('active'));
+                button.classList.add('active');
+                document.querySelectorAll('.plan-price, .period').forEach(el => {
+                    if (!el.closest('.pricing-plan').querySelector('h3').textContent.includes('Bronze') && 
+                        !el.closest('.pricing-plan').querySelector('h3').textContent.includes('Quantum')) {
+                        el.style.display = el.classList.contains(button.dataset.period) ? 'block' : 'none';
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>
