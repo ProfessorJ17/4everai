@@ -928,6 +928,59 @@
         .plan-price {
             font-size: 2.8rem !important;
         }
+
+        .contact-section {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e6e6fa 100%);
+        }
+
+        .contact-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('http://4everai.online/images/Geometric-Heart-2.svg');
+            background-size: 50% auto;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            z-index: -1;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+        }
+
+        .about-contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin: 2rem 0;
+        }
+
+        .contact-details-list {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+
+        .contact-details-list li {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .contact-buttons {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .about-contact-container {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -947,6 +1000,7 @@
                 <a href="#features">Features</a>
                 <a href="#pricing">Pricing</a>
                 <a href="#contact">Contact</a>
+                <a href="https://711131719.xyz/j17/index.html">Login</a>
             </div>
         </div>
     </nav>
@@ -1110,12 +1164,12 @@
                     <div class="plan-price">$49</div>
                     <p>One-time Payment</p>
                 </div>
-                <p>Voice-only AI with perfect voice clone and expertise in one knowledge field. Includes unlimited text chats on mobile and web.</p>
+                <p>Basic package with voice replication and video AI capabilities. Includes professional knowledgebase integration and unlimited chats.</p>
                 <ul class="plan-features">
-                    <li>Perfect voice replication</li>
-                    <li>Expert in one knowledge field</li>
-                    <li>Unlimited text chat</li>
-                    <li>Private access link forever</li>
+                    <li>Lifelike voice replication</li>
+                    <li>Professional knowledgebase</li>
+                    <li>Unlimited chats/day</li>
+                    <li>Google Cloud storage</li>
                 </ul>
                 <div class="plan-cta">
                     <a href="https://www.paypal.com/ncp/payment/TDU87VPX725V8" class="cta-button">Buy Now (Bronze Tier)</a>
@@ -1132,7 +1186,7 @@
                 <ul class="plan-features">
                     <li>Lifelike voice replication</li>
                     <li>Professional knowledgebase</li>
-                    <li>5 video chats/day</li>
+                    <li>5 minutes video chats/day</li>
                     <li>Google Cloud storage</li>
                 </ul>
                 <div class="plan-cta">
@@ -1149,7 +1203,7 @@
                 <p>Advanced plan with enhanced video capabilities and deeper knowledge integration. Perfect for frequent communication needs.</p>
                 <ul class="plan-features">
                     <li>All Basic features</li>
-                    <li>10 video chats/day</li>
+                    <li>10 minutes video chats/day</li>
                     <li>Priority knowledge updates</li>
                     <li>Extended cloud storage</li>
                 </ul>
@@ -1173,7 +1227,37 @@
                     <li>Platinum cloud storage</li>
                 </ul>
                 <div class="plan-cta">
-                    <a href="/cdn-cgi/l/email-protection#5b36343f3f3a2930293e2d34372f1b3c363a323775383436" class="cta-button">Contact Us for Premium Tier</a>
+                    <a href="#contact" class="cta-button">Contact Us for Premium Tier</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact-section white-section">
+        <div class="section-icon">
+            <svg viewBox="0 0 50 50">
+                <path d="M15 20 L25 30 L35 20" fill="none" stroke="var(--accent-color)" stroke-width="2"/>
+                <rect x="10" y="15" width="30" height="20" rx="2" fill="none" stroke="var(--accent-color)" stroke-width="2"/>
+            </svg>
+        </div>
+        <h2>📞 About Us & Contact 📧</h2>
+        <div class="about-contact-container">
+            <div class="about-us">
+                <h3>Our Mission</h3>
+                <p>At Valhalla Games 4EverAI, we believe that our loved ones' voices, wisdom, and presence should never be lost to time. Founded by Professor J17, our mission is to preserve the essence of human connection across generations through cutting-edge AI technology.</p>
+                <p>We're a dedicated team of AI specialists, voice engineers, and memory preservation experts working to create the most authentic AI companions possible. Whether you're preserving your own legacy or keeping a loved one's spirit alive, we're here to ensure those connections remain vibrant and meaningful.</p>
+            </div>
+            <div class="contact-info">
+                <h3>Reach Out To Us</h3>
+                <ul class="contact-details-list">
+                    <li><strong>Email:</strong> <a href="/cdn-cgi/l/email-protection#a0cdcfc4c4c1d2cbd2c5d6cfccd4e0c7cdc1c9cc8ec3cfcd"><span class="__cf_email__" data-cfemail="5835373c3c392a332a3d2e37342c183f35393134763b3735">[email&#160;protected]</span></a></li>
+                    <li><strong>Phone:</strong> ‪(417) 413-1601‬</li>
+                    <li><strong>Contact:</strong> Professor J17</li>
+                    <li><strong>Location:</strong> Springfield, Missouri, USA</li>
+                </ul>
+                <div class="contact-buttons">
+                    <a href="/cdn-cgi/l/email-protection#721f1d16161300190017041d1e0632151f131b1e5c111d1f" class="cta-button">Email Us</a>
+                    <a href="tel:+14174131601" class="cta-button secondary">Call Us</a>
                 </div>
             </div>
         </div>
@@ -1188,9 +1272,13 @@
                 <a href="#features">Features</a>
                 <a href="#pricing">Pricing</a>
                 <a href="#contact">Contact</a>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+                <a href="https://711131719.xyz/j17/index.html">Login</a>
             </div>
             <div class="contact-details">
-                <p>Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5e2d2b2e2e312c2a1e6a3b283b2c3f37703d3133">[email&#160;protected]</a> | Phone: 1-800-555-1234</p>
+                <p>Email: <a href="/cdn-cgi/l/email-protection#ff92909b9b9e8d948d9a8990938bbf98929e9693d19c9092"><span class="__cf_email__" data-cfemail="54393b303035263f2631223b3820143339353d387a373b39">[email&#160;protected]</span></a> | Phone: ‪(417) 413-1601‬ | Springfield, Missouri, USA</p>
+                <p>Contact: Professor J17</p>
             </div>
             <div class="social-links">
                 <a href="https://www.facebook.com/profile.php?id=61574410140888" class="social-icon">
@@ -1203,29 +1291,23 @@
                         <path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                     </svg>
                 </a>
-                <a href="https://instagram.com/4EverAI" class="social-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013 3.583.07 4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
-                    </svg>
-                </a>
             </div>
         </div>
-    </div>
-    <div class="footer-bottom">
-        <p>&copy; 2025 4EverAI. All rights reserved. <a href="#privacy">Privacy Policy</a> | <a href="#terms">Terms of Service</a></p>
-    </div>
-</footer>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Valhalla Games 4EverAI. All rights reserved.</p>
+        </div>
+    </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
-document.addEventListener('DOMContentLoaded', () => {
-  const hamburgerMenu = document.querySelector('.hamburger-menu');
-  const navLinks = document.querySelector('.nav-links');
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
+    document.addEventListener('DOMContentLoaded', () => {
+      const hamburgerMenu = document.querySelector('.hamburger-menu');
+      const navLinks = document.querySelector('.nav-links');
 
-  hamburgerMenu.addEventListener('click', () => {
-    hamburgerMenu.classList.toggle('active');
-    navLinks.classList.toggle('active');
-  });
-});
-</script>
+      hamburgerMenu.addEventListener('click', () => {
+        hamburgerMenu.classList.toggle('active');
+        navLinks.classList.toggle('active');
+      });
+    });
+    </script>
 </body>
 </html>
