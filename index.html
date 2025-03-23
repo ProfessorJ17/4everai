@@ -981,6 +981,64 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Sales Progress Bar Styles */
+        #sales-progress {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+
+        .progress-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            margin: 2rem auto;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--pb-accent);
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 1.43%; /* $50 of $3500 = ~1.43% */
+            background: linear-gradient(90deg, var(--neon-1), var(--neon-3), var(--neon-5));
+            border-radius: 15px;
+            position: relative;
+            animation: glowing 2s infinite alternate;
+        }
+
+        @keyframes glowing {
+            0% {
+                box-shadow: 0 0 5px var(--neon-1), 0 0 10px var(--neon-3);
+            }
+            100% {
+                box-shadow: 0 0 10px var(--neon-5), 0 0 20px var(--neon-7);
+            }
+        }
+
+        .progress-text {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .amount-raised, .goal-amount {
+            font-size: 1.4rem;
+            color: var(--pb-accent);
+        }
+
+        .goal-text {
+            margin-top: 0.5rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
     </style>
 </head>
 <body>
@@ -1145,7 +1203,6 @@
                 <cite>📖 — Ethan R., Portland</cite>
             </div>
         </div>
-        <a href="#testimonials" class="cta-button secondary">Read More Stories</a>
     </section>
 
     <section id="pricing" class="pricing purple-blue">
@@ -1182,7 +1239,7 @@
                     <div class="plan-price">$199</div>
                     <p>Per Year</p>
                 </div>
-                <p>Basic package with voice replication and video AI capabilities. Includes professional knowledgebase integration and 5 daily video chats.</p>
+                <p>Basic package with voice replication and video AI capabilities. Includes professional knowledgebase integration and 5 minute video chat access.</p>
                 <ul class="plan-features">
                     <li>Lifelike voice replication</li>
                     <li>Professional knowledgebase</li>
@@ -1250,16 +1307,29 @@
             <div class="contact-info">
                 <h3>Reach Out To Us</h3>
                 <ul class="contact-details-list">
-                    <li><strong>Email:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fd909299999c8f968f988b929189bd9a909c9491d39e9290">[email&#160;protected]</a></li>
+                    <li><strong>Email:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="315c5e555550435a4354475e5d4571565c50585d1f525e5c">[email&#160;protected]</a></li>
                     <li><strong>Phone:</strong> (417) 413-1601</li>
                     <li><strong>Contact:</strong> Professor J17</li>
                     <li><strong>Location:</strong> Springfield, Missouri, USA</li>
                 </ul>
                 <div class="contact-buttons">
-                    <a href="/cdn-cgi/l/email-protection#0e63616a6a6f7c657c6b7861627a4e69636f6762206d6163" class="cta-button">Email Us</a>
+                    <div class="cta-button">Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bbd6d4dfdfdac9d0c9decdd4d7cffbdcd6dad2d795d8d4d6">[email&#160;protected]</a></div>
                     <a href="tel:+14174131601" class="cta-button secondary">Call Us</a>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <section id="sales-progress" class="white-section">
+        <h2>Total Sales Progress</h2>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <div class="progress-text">
+                <span class="amount-raised">$50</span> raised of <span class="goal-amount">$3500</span>
+            </div>
+            <p class="goal-text">Unlock Premium Tier Goal $3500</p>
         </div>
     </section>
 
@@ -1277,7 +1347,7 @@
                 <a href="https://711131719.xyz/j17/index.html">Login</a>
             </div>
             <div class="contact-details">
-                <p>Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="660b09020207140d140310090a1226010b070f0a4805090b">[email&#160;protected]</a> | Phone: (417) 413-1601 | Springfield, Missouri, USA</p>
+                <p>Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bed3d1dadadfccd5ccdbc8d1d2cafed9d3dfd7d290ddd1d3">[email&#160;protected]</a> | Phone: (417) 413-1601 | Springfield, Missouri, USA</p>
                 <p>Contact: Professor J17</p>
             </div>
             <div class="social-links">
