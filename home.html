@@ -1312,8 +1312,8 @@
                 <button id="subscription-btn" class="animated-icon-button animated-container" aria-label="Subscription Status">
                     <div class="glow-overlay"></div>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 11;">
-                        <path d="M12 2L22 12L12 22L2 12Z" fill="#999"/>
-                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="12px" fill="#fff" dy=".1em">?</text>
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#999"/>
+                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14px" fill="#999" dy=".1em">U</text>
                     </svg>
                 </button>
                 <button id="q-btn" class="animated-icon-button animated-container" aria-label="Q Button">
@@ -1819,13 +1819,11 @@
         const svgText = document.querySelector('#subscription-btn text');
 
         if (subscriptionDetails.status === 'Active') {
-            svgPath.setAttribute('fill', '#4CAF50'); // Green for active
-            svgText.textContent = '∞'; // Infinity symbol for unlimited
-            svgText.setAttribute('font-size', '16px'); // Larger font for infinity symbol
+            svgPath.setAttribute('fill', 'green');
+            svgText.textContent = 'U';
         } else {
-            svgPath.setAttribute('fill', '#F44336'); // Red for inactive
+            svgPath.setAttribute('fill', 'red');
             svgText.textContent = creditDetails.credits;
-            svgText.setAttribute('font-size', '12px'); // Standard font for numbers
         }
         svgText.setAttribute('fill', 'white');
     }
@@ -2750,7 +2748,6 @@
         subscriptionBtn.addEventListener('click', () => {
             const { purchased, startDate, endDate, status } = subscriptionDetails;
             let contentHTML = '';
-            const divider = `<hr style="border-color: #444; margin: 1rem 0;">`;
 
             if (status === 'Active') {
                 const now = new Date();
@@ -2761,21 +2758,21 @@
                 const daysLeftText = Math.max(daysLeft, 0) > 0 ? `(${Math.max(daysLeft, 0)} day${Math.max(daysLeft, 0) !== 1 ? 's' : ''} left)` : '(Expires today)';
 
                 contentHTML = `
-                    <p style="text-align: center; font-size: 1.1rem;"><strong>Credits:</strong> <span style="color: #4CAF50;">Unlimited</span></p>
-                    ${divider}
+                    <p><strong>Credits:</strong> Unlimited</p>
                     <p><strong>Status:</strong> <span style="color: #4CAF50;">Active</span></p>
                     <p><strong>Active From:</strong> ${startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}</p>
                     <p><strong>Expires On:</strong> ${endDate ? new Date(endDate).toLocaleDateString() : 'N/A'} <span style="color: var(--placeholder-color);">${daysLeftText}</span></p>
                 `;
             } else {
                  /* @tweakable The message displayed in the subscription popup when the user's subscription is inactive. */
-                const inactiveReasonText = "You do not have an active subscription or it has expired. Free users receive daily credits.";
+                const inactiveReasonText = "You do not have an active subscription or your subscription has expired.";
 
                 contentHTML = `
-                    <p style="text-align: center; font-size: 1.1rem;"><strong>Credits:</strong> <span style="color: #F44336;">${creditDetails.credits}/${config.DAILY_FREE_CREDITS}</span></p>
-                    ${divider}
+                    <p><strong>Credits:</strong> ${creditDetails.credits}/${config.DAILY_FREE_CREDITS}</p>
                     <p><strong>Status:</strong> <span style="color: #F44336;">Inactive</span></p>
-                    <p style="margin-top: 1rem; color: var(--placeholder-color); font-size: 0.9em;">${inactiveReasonText}</p>
+                    <p><strong>Start Date:</strong> ${startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}</p>
+                    <p><strong>End Date:</strong> ${endDate ? new Date(endDate).toLocaleDateString() : 'N/A'}</p>
+                    <p style="margin-top: 1rem;">${inactiveReasonText}</p>
                 `;
             }
 
