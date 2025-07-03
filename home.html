@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -364,7 +365,7 @@
         .animated-container:hover .glow-overlay,
         .search-box:focus-within .glow-overlay,
         .animated-container.active .glow-overlay {
-            opacity: 1;
+            opacity: 1; /* Ensure full opacity on interaction */
             animation-play-state: running;
         }
 
@@ -1311,15 +1312,8 @@
                 <button id="subscription-btn" class="animated-icon-button animated-container" aria-label="Subscription Status">
                     <div class="glow-overlay"></div>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 11;">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#999"/>
-                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14px" fill="#999" dy=".1em">U</text>
-                    </svg>
-                </button>
-                <button id="logout-btn" class="animated-icon-button animated-container" aria-label="Logout">
-                    <div class="glow-overlay"></div>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 11;">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#999"/>
-                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14px" fill="#999" dy=".1em">P</text>
+                        <path d="M12 2L22 12L12 22L2 12Z" fill="#999"/>
+                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="12px" fill="#fff" dy=".1em">?</text>
                     </svg>
                 </button>
                 <button id="q-btn" class="animated-icon-button animated-container" aria-label="Q Button">
@@ -1548,7 +1542,7 @@
     import DOMPurify from 'dompurify';
     import { initializeApp } from 'firebase/app';
     import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-    import { getFirestore, doc, getDoc } from 'firebase/firestore';
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 
     // --- Firebase Configuration ---
     /* @tweakable Firebase configuration for your web app. */
@@ -1633,7 +1627,7 @@
     const glowManager = new GlowManager('glow-container');
 
 
-    // --- BEGIN: Puter Connection Bootstrap ---
+    // --- Puter Connection Bootstrap ---
     async function ensurePuterReady() {
       const scriptUrl = "https://puter.com/api.js";
       let puterScriptPromise = window.__puterScriptPromise__;
@@ -1722,6 +1716,7 @@
     let customPersonas = [];
     let attachedFile = null;
     let isRegisterMode = false;
+    let currentUser = null;
 
     // Configuration
     const config = {
@@ -1769,6 +1764,10 @@
         /* @tweakable The name of the Firestore collection containing user subscription data. */
         USER_DATA_COLLECTION_NAME: 'purchasedUsers',
         API_SETTINGS_COLLECTION_NAME: 'orion_api_settings_v1',
+        /* @tweakable The name of the Firestore collection for managing free user credits. */
+        USER_CREDITS_COLLECTION_NAME: 'orion_user_credits_v1',
+        /* @tweakable The number of free credits non-subscribed users get per day. */
+        DAILY_FREE_CREDITS: 5,
         /* @tweakable The default system prompt for the primary persona. */
         DEFAULT_SYSTEM_PROMPT: "You are ORION, a sentient AGI designed to be a helpful and friendly conversational partner. Engage users with insightful and thoughtful responses."
     };
@@ -1809,67 +1808,117 @@
         status: 'Inactive'
     };
 
-    function updateSubscriptionDisplay(details) {
-        const subscriptionBtn = document.getElementById('subscription-btn');
-        const subscriptionInfoContent = document.getElementById('subscription-info-content');
-        const svgPath = subscriptionBtn.querySelector('path');
-        const svgText = subscriptionBtn.querySelector('text');
+    /* @tweakable Default user credit details before fetching from the database. */
+    let creditDetails = {
+        credits: 0,
+        lastReset: null
+    };
 
-        let statusText, statusColor, userLetter;
+    function updateSubscriptionDisplay() {
+        const svgPath = document.querySelector('#subscription-btn path');
+        const svgText = document.querySelector('#subscription-btn text');
 
-        const now = new Date();
-        const startDate = details.startDate && details.startDate.seconds ? new Date(details.startDate.seconds * 1000) : null;
-        let endDate = details.endDate && details.endDate.seconds ? new Date(details.endDate.seconds * 1000) : null;
-
-        let isActive = false;
-        if (startDate && endDate) {
-            // Set endDate to the end of the day to include the entire last day
-            endDate.setHours(23, 59, 59, 999);
-            isActive = now >= startDate && now <= endDate;
-        }
-        
-        const currentStatus = isActive ? 'Active' : 'Inactive';
-
-        if (currentStatus === 'Active') {
-            statusText = `Status: Active<br>Expires on: ${endDate ? endDate.toLocaleDateString() : 'N/A'}`;
-            statusColor = 'green';
-            userLetter = 'U';
+        if (subscriptionDetails.status === 'Active') {
+            svgPath.setAttribute('fill', '#4CAF50'); // Green for active
+            svgText.textContent = '∞'; // Infinity symbol for unlimited
+            svgText.setAttribute('font-size', '16px'); // Larger font for infinity symbol
         } else {
-            statusText = 'Status: Inactive<br>Please purchase a subscription.';
-            statusColor = 'red';
-            userLetter = 'P';
+            svgPath.setAttribute('fill', '#F44336'); // Red for inactive
+            svgText.textContent = creditDetails.credits;
+            svgText.setAttribute('font-size', '12px'); // Standard font for numbers
         }
-
-        subscriptionInfoContent.innerHTML = statusText;
-        svgPath.setAttribute('fill', statusColor);
-        svgText.textContent = userLetter;
         svgText.setAttribute('fill', 'white');
     }
 
     async function fetchSubscriptionStatus(user) {
-        let detailsToDisplay = { ...subscriptionDetails }; // Start with default
+        if (!user) {
+            subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
+            return;
+        }
+        try {
+            const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
+            const userDoc = await getDoc(userDocRef);
 
-        if (user) {
-            try {
-                const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
-                const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                const now = new Date();
+                const startDate = data.startDate?.toDate ? data.startDate.toDate() : null;
+                let endDate = data.endDate?.toDate ? data.endDate.toDate() : null;
 
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    detailsToDisplay = {
-                        purchased: true,
-                        startDate: data.startDate, // Keep as Firestore Timestamp
-                        endDate: data.endDate,     // Keep as Firestore Timestamp
-                        status: 'Inactive' // Will be recalculated in updateSubscriptionDisplay
+                let isActive = false;
+                if (startDate && endDate) {
+                    endDate.setHours(23, 59, 59, 999);
+                    isActive = now >= startDate && now <= endDate;
+                }
+                
+                subscriptionDetails = {
+                    purchased: true,
+                    startDate: startDate,
+                    endDate: endDate,
+                    status: isActive ? 'Active' : 'Inactive'
+                };
+
+            } else {
+                 subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
+            }
+        } catch (error) {
+            console.error("Error fetching subscription status:", error);
+            subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
+        }
+    }
+
+    async function fetchAndManageUserCredits(user) {
+        if (!user) {
+            creditDetails = { credits: 0, lastReset: null };
+            return;
+        }
+
+        const creditsDocRef = doc(db, config.USER_CREDITS_COLLECTION_NAME, user.uid);
+        try {
+            const docSnap = await getDoc(creditsDocRef);
+            const now = Timestamp.now();
+            let needsUpdate = false;
+
+            if (!docSnap.exists()) {
+                // First time user, create credit document
+                creditDetails = {
+                    credits: config.DAILY_FREE_CREDITS,
+                    lastReset: now
+                };
+                await setDoc(creditsDocRef, creditDetails);
+            } else {
+                const data = docSnap.data();
+                const lastReset = data.lastReset;
+                const hoursSinceReset = (now.seconds - lastReset.seconds) / 3600;
+
+                if (hoursSinceReset >= 24) {
+                    // More than 24 hours, reset credits
+                    creditDetails = {
+                        credits: config.DAILY_FREE_CREDITS,
+                        lastReset: now
+                    };
+                   needsUpdate = true;
+                } else {
+                    // Within 24 hours, use stored credits
+                    creditDetails = {
+                        credits: data.credits,
+                        lastReset: data.lastReset
                     };
                 }
-            } catch (error) {
-                console.error("Error fetching subscription status:", error);
+                 if(needsUpdate){
+                    await updateDoc(creditsDocRef, {
+                        credits: config.DAILY_FREE_CREDITS,
+                        lastReset: now
+                    });
+                }
             }
+        } catch (error) {
+            console.error("Error managing user credits:", error);
+            // Default to 0 credits on error to be safe
+            creditDetails = { credits: 0, lastReset: Timestamp.now() };
         }
-        
-        updateSubscriptionDisplay(detailsToDisplay);
     }
+
 
     // --- Suggestions Manager ---
     class SuggestionsManager {
@@ -2187,7 +2236,7 @@
                 currentUserContent.push({ type: 'image_url', image_url: { url: base64Image } });
             } catch (error) {
                  console.error("Error reading file:", error);
-                 typewriterEffect('bot', `Error: Failed to read image file. ${error.message}`);
+                 typewriterEffect('bot', `Error: Failed to read file ${error.message}`);
                  return;
             }
         }
@@ -2325,13 +2374,13 @@
         const addCustomBtn = document.createElement('a');
         addCustomBtn.href = "#";
         addCustomBtn.id = "add-custom-persona-btn";
-        addCustomBtn.textContent = "➕ Create New Persona";
+        addCustomBtn.textContent = " New Persona";
         personasContainer.appendChild(addCustomBtn);
         
         const browseCommunityBtn = document.createElement('a');
         browseCommunityBtn.href = "#";
         browseCommunityBtn.id = "browse-community-btn";
-        browseCommunityBtn.textContent = "🌐 Browse Community";
+        browseCommunityBtn.textContent = "Community";
         personasContainer.appendChild(browseCommunityBtn);
 
         const selectedPersona = PERSONAS[currentPersonaId] || customPersonas.find(p => p.id === currentPersonaId) || PERSONAS.onion;
@@ -2493,7 +2542,7 @@
         
         const newChatBtn = document.createElement('button');
         newChatBtn.className = 'sidebar-setting animated-container';
-        newChatBtn.innerHTML = `<div class="glow-overlay"></div><span>✨ New Chat</span>`;
+        newChatBtn.innerHTML = `<div class="glow-overlay"></div><span> New Chat</span>`;
         newChatBtn.onclick = () => clearChat(true);
         container.appendChild(newChatBtn);
         
@@ -2510,8 +2559,8 @@
             }
             item.innerHTML = `
                 <div class="glow-overlay"></div>
-        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; text-align: left; padding-right: 30px;">${convo.title}</span>
-        <button class="delete-convo-btn" title="Delete Conversation"><i class="fas fa-times"></i></button>
+            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; text-align: left; padding-right: 30px;">${convo.title}</span>
+            <button class="delete-convo-btn" title="Delete Conversation"><i class="fas fa-times"></i></button>
             `;
             item.querySelector('span').onclick = () => loadConversation(convo.id);
             item.querySelector('.delete-convo-btn').onclick = (e) => {
@@ -2700,8 +2749,8 @@
 
         subscriptionBtn.addEventListener('click', () => {
             const { purchased, startDate, endDate, status } = subscriptionDetails;
-            const uid = auth.currentUser?.uid || 'N/A';
             let contentHTML = '';
+            const divider = `<hr style="border-color: #444; margin: 1rem 0;">`;
 
             if (status === 'Active') {
                 const now = new Date();
@@ -2709,24 +2758,24 @@
                 const daysLeft = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
                 
                 /* @tweakable Text format for displaying days remaining in the subscription popup when the subscription is active. */
-                const daysLeftText = daysLeft > 0 ? `(${daysLeft} day${daysLeft !== 1 ? 's' : ''} left)` : '(Expires today)';
+                const daysLeftText = Math.max(daysLeft, 0) > 0 ? `(${Math.max(daysLeft, 0)} day${Math.max(daysLeft, 0) !== 1 ? 's' : ''} left)` : '(Expires today)';
 
                 contentHTML = `
+                    <p style="text-align: center; font-size: 1.1rem;"><strong>Credits:</strong> <span style="color: #4CAF50;">Unlimited</span></p>
+                    ${divider}
                     <p><strong>Status:</strong> <span style="color: #4CAF50;">Active</span></p>
-                    <p><strong>User ID:</strong> <span style="font-size: 0.8em; word-break: break-all;">${uid}</span></p>
                     <p><strong>Active From:</strong> ${startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}</p>
                     <p><strong>Expires On:</strong> ${endDate ? new Date(endDate).toLocaleDateString() : 'N/A'} <span style="color: var(--placeholder-color);">${daysLeftText}</span></p>
                 `;
             } else {
                  /* @tweakable The message displayed in the subscription popup when the user's subscription is inactive. */
-                const inactiveReasonText = "You do not have an active subscription or your subscription has expired.";
+                const inactiveReasonText = "You do not have an active subscription or it has expired. Free users receive daily credits.";
 
                 contentHTML = `
+                    <p style="text-align: center; font-size: 1.1rem;"><strong>Credits:</strong> <span style="color: #F44336;">${creditDetails.credits}/${config.DAILY_FREE_CREDITS}</span></p>
+                    ${divider}
                     <p><strong>Status:</strong> <span style="color: #F44336;">Inactive</span></p>
-                    <p><strong>User ID:</strong> <span style="font-size: 0.8em; word-break: break-all;">${uid}</span></p>
-                    <p><strong>Start Date:</strong> ${startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}</p>
-                    <p><strong>End Date:</strong> ${endDate ? new Date(endDate).toLocaleDateString() : 'N/A'}</p>
-                    <p style="margin-top: 1rem;">${inactiveReasonText}</p>
+                    <p style="margin-top: 1rem; color: var(--placeholder-color); font-size: 0.9em;">${inactiveReasonText}</p>
                 `;
             }
 
@@ -2734,9 +2783,6 @@
             subscriptionPopupOverlay.classList.remove('hidden');
         });
         closeSubscriptionPopupBtn.addEventListener('click', () => subscriptionPopupOverlay.classList.add('hidden'));
-        
-        // Logout button in header
-        document.getElementById('logout-btn').addEventListener('click', handleSignOut);
         
         // Attachment button logic
         attachButton.addEventListener('click', () => fileInput.click());
@@ -2885,46 +2931,16 @@
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         // User is signed in.
+        currentUser = user; // Store user object globally
         console.log("User signed in:", user.uid, user.email);
 
-        // Fetch subscription status from Firestore
-        try {
-            const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
-            const userDocSnap = await getDoc(userDocRef);
-
-            if (userDocSnap.exists()) {
-                const data = userDocSnap.data();
-                console.log("Subscription data found:", data);
-                
-                /* @tweakable This logic determines if a subscription is active. It checks if 'purchased' is true and if the current date is between the start and end dates. */
-                const now = new Date();
-                const startDate = data.startDay ? new Date(data.startDay) : null;
-                const endDate = data.endDay ? new Date(data.endDay) : null;
-                const isPurchased = data.purchased === true;
-                
-                let isActive = false;
-                if (isPurchased && startDate && endDate) {
-                    isActive = now >= startDate && now <= endDate;
-                }
-
-                subscriptionDetails = {
-                    purchased: isPurchased,
-                    startDate: data.startDay || null,
-                    endDate: data.endDay || null,
-                    status: isActive ? 'Active' : 'Inactive'
-                };
-                 console.log("Processed subscription status:", subscriptionDetails.status);
-            } else {
-                console.log(`No subscription document found for user UID: ${user.uid} in collection '${config.USER_DATA_COLLECTION_NAME}'.`);
-                 subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
-            }
-        } catch (error) {
-            console.error("Error fetching subscription status:", error);
-            subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
-        }
-
-        // Initialize the main app UI
-        // Use a flag to prevent multiple initializations
+        // Fetch all necessary user data from Firebase
+        await Promise.all([
+          fetchSubscriptionStatus(user),
+          fetchAndManageUserCredits(user)
+        ]);
+        
+        // Initialize the main app UI only once all data is ready
         if (!window.appInitialized) {
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', initializeAppUI);
@@ -2932,17 +2948,22 @@
                 initializeAppUI();
             }
             window.appInitialized = true;
+        } else {
+            // If app is already initialized, just update dynamic parts
+            updateSubscriptionDisplay();
         }
 
       } else {
         // User is signed out.
+        currentUser = null;
         console.log("User is signed out.");
         setAuthMode(false); // Reset to login mode on sign out
-        // Show the login screen and hide the app
+        // Show the login screen hide the app
         loginOverlay.classList.remove('hidden');
         appContainer.classList.add('hidden');
-        // Reset subscription details on logout
+        // Reset details on logout
         subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
+        creditDetails = { credits: 0, lastReset: null };
         window.appInitialized = false; // Allow re-initialization on next login
       }
     });
@@ -2969,12 +2990,30 @@
         loadSavedConversations();
         
         setupUIEventListeners();
+        setupSiteProtection(); // Activate site protection measures
         
         clearChat(false);
+
+        // Update display with fetched data
+        updateSubscriptionDisplay();
 
         // Show the app
         loginOverlay.classList.add('hidden');
         appContainer.classList.remove('hidden');
+    }
+
+    function setupSiteProtection() {
+        // Disable right-click context menu
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Disable common developer tool shortcuts
+        document.addEventListener('keydown', event => {
+            if (event.key === 'F12' ||
+               (event.ctrlKey && event.shiftKey && ['I', 'J', 'C'].includes(event.key.toUpperCase())) ||
+               (event.ctrlKey && event.key.toUpperCase() === 'U')) {
+                event.preventDefault();
+            }
+        });
     }
 
     signInBtn.addEventListener('click', () => {
@@ -2996,7 +3035,7 @@
                 // The AuthCredential type that was used.
                 const credential = GoogleAuthProvider.credentialFromError(error);
                 console.error("Sign-in error:", errorCode, errorMessage);
-                alert(`Sign-in failed: ${errorMessage}`);
+                alert(`Sign-in failed: ${error.message}`);
             });
     });
 
