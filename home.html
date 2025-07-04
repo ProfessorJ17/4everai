@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -365,7 +366,7 @@
         .animated-container:hover .glow-overlay,
         .search-box:focus-within .glow-overlay,
         .animated-container.active .glow-overlay {
-            opacity: 1; /* Ensure full opacity on interaction */
+            opacity: 1;
             animation-play-state: running;
         }
 
@@ -1307,7 +1308,7 @@
     <!-- Main App Container -->
     <div id="app-container" class="hidden">
         <header>
-            <div class="orion-logo">Mainframe<br><span style="font-size: 16px; margin-top: -9px; display: block;">Orion <span id="header-credits-display" style="font-size: 16px; margin-right: 5px;"></span><span id="version-number" style="font-size: 16px;">Version 1.0.5</span></span></div>
+            <div class="orion-logo">Mainframe<br><span style="font-size: 16px; margin-top: -9px; display: block;">Orion <span style="font-size: 16px;">Version 1.0.5</span> <span id="credits-display" style="font-size: 16px; color: var(--placeholder-color); margin-left: 8px;"></span></span></div>
             <div class="header-buttons">
                 <button id="subscription-btn" class="animated-icon-button animated-container" aria-label="Subscription Status">
                     <div class="glow-overlay"></div>
@@ -1542,7 +1543,7 @@
     import DOMPurify from 'dompurify';
     import { initializeApp } from 'firebase/app';
     import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
 
     // --- Firebase Configuration ---
     /* @tweakable Firebase configuration for your web app. */
@@ -1626,6 +1627,7 @@
     }
     const glowManager = new GlowManager('glow-container');
 
+
     // --- Puter Connection Bootstrap ---
     async function ensurePuterReady() {
       const scriptUrl = "https://puter.com/api.js";
@@ -1667,6 +1669,14 @@
       }
     }
 
+    (async () => {
+      try {
+        await ensurePuterReady();
+      } catch (e) {
+        console.error("Puter allow/init failed on page load:", e);
+      }
+    })();
+
     // ---------------------
     // Grab references to UI elements
     // ---------------------
@@ -1682,8 +1692,8 @@
     const modelSelector = document.getElementById('model-selector');
     const suggestionsContainer = document.getElementById('suggestions-container');
     const personasContainer = document.getElementById('personas-content-container');
-    const settingsButton = document.getElementById('settings-btn'); 
-    const sidebar = document.getElementById('sidebar'); 
+    const settingsButton = document.getElementById('settings-btn'); // Add reference to settings button
+    const sidebar = document.getElementById('sidebar'); // Add reference to sidebar
 
     // --- Login UI Elements ---
     const loginOverlay = document.getElementById('login-overlay');
@@ -1697,19 +1707,16 @@
     const authToggleMessage = document.getElementById('auth-toggle-message');
     const authToggleLink = document.getElementById('auth-toggle-link');
     const authForm = document.getElementById('auth-form');
-    const headerCreditsDisplay = document.getElementById('header-credits-display');
-    const versionNumberSpan = document.getElementById('version-number');
 
     // App state variables
     let messagePairs = [];
-    let currentPersonaId = 'caimeo'; 
+    let currentPersonaId = 'caimeo'; // Default to a built-in one
     let savedConversations = [];
     let currentLoadedConversationId = null;
     let nextConversationId = 1;
     let customPersonas = [];
     let attachedFile = null;
     let isRegisterMode = false;
-    let currentUser = null;
 
     // Configuration
     const config = {
@@ -1724,6 +1731,8 @@
         /* @tweakable Maximum number of suggestions to display. */
         MAX_SUGGESTIONS: 5,
        FREE_OPENROUTER_MODELS: [
+            // Text-Only Models
+       
             { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3 27B IT', provider: 'google', description: 'Free model from Google.' },
             { id: 'qwen/qwq-32b:free', name: 'QWQ 32B', provider: 'qwen', description: 'Free model from Qwen.' },
             { id: 'nousresearch/deephermes-3-llama-3-8b-preview:free', name: 'DeepHermes 3 Llama 3 8B Preview', provider: 'nousresearch', description: 'Free model from Nous Research.' },
@@ -1754,11 +1763,11 @@
         ],
         /* @tweakable The name of the Firestore collection containing user subscription data. */
         USER_DATA_COLLECTION_NAME: 'purchasedUsers',
+        /* @tweakable The name of the Firestore collection for user credit/usage data. */
+        USER_CREDITS_COLLECTION_NAME: 'user_credits_v1',
+        /* @tweakable Daily message limit for inactive users. */
+        DAILY_CREDIT_LIMIT: 5,
         API_SETTINGS_COLLECTION_NAME: 'orion_api_settings_v1',
-        /* @tweakable The name of the Firestore collection for managing free user credits. */
-        USER_CREDITS_COLLECTION_NAME: 'orion_user_credits_v1',
-        /* @tweakable The number of free credits non-subscribed users get per day. */
-        DAILY_FREE_CREDITS: 5,
         /* @tweakable The default system prompt for the primary persona. */
         DEFAULT_SYSTEM_PROMPT: "You are ORION, a sentient AGI designed to be a helpful and friendly conversational partner. Engage users with insightful and thoughtful responses."
     };
@@ -1791,6 +1800,11 @@
         }
     };
 
+    let userCredits = {
+        count: config.DAILY_CREDIT_LIMIT,
+        lastReset: null
+    };
+
     /* @tweakable Default user subscription details before fetching from the database. 'status' can be 'Active' or 'Inactive'. */
     let subscriptionDetails = {
         purchased: false,
@@ -1799,121 +1813,66 @@
         status: 'Inactive'
     };
 
-    /* @tweakable Default user credit details before fetching from the database. */
-    let creditDetails = {
-        credits: 0,
-        lastReset: null
-    };
+    function updateSubscriptionDisplay(details) {
+        const subscriptionBtn = document.getElementById('subscription-btn');
+        const subscriptionInfoContent = document.getElementById('subscription-info-content');
+        const svgPath = subscriptionBtn.querySelector('path');
+        const svgText = subscriptionBtn.querySelector('text');
 
-    function updateSubscriptionDisplay() {
-        const svgPath = document.querySelector('#subscription-btn path');
-        const svgText = document.querySelector('#subscription-btn text');
-        const headerCreditsDisplay = document.getElementById('header-credits-display');
-        const versionNumberSpan = document.getElementById('version-number');
+        let statusText, statusColor, userLetter;
 
-        if (subscriptionDetails.status === 'Active') {
-            svgPath.setAttribute('fill', 'green');
-            svgText.textContent = 'U';
-            if (headerCreditsDisplay) {
-                headerCreditsDisplay.textContent = 'Unlimited Credits | ';
-            }
-        } else {
-            svgPath.setAttribute('fill', 'red');
-            svgText.textContent = creditDetails.credits;
-            if (headerCreditsDisplay) {
-                headerCreditsDisplay.textContent = `${creditDetails.credits}/${config.DAILY_FREE_CREDITS} Credits | `;
-            }
+        const now = new Date();
+        const startDate = details.startDate && details.startDate.seconds ? new Date(details.startDate.seconds * 1000) : null;
+        let endDate = details.endDate && details.endDate.seconds ? new Date(details.endDate.seconds * 1000) : null;
+
+        let isActive = false;
+        if (startDate && endDate) {
+            // Set endDate to the end of the day to include the entire last day
+            endDate.setHours(23, 59, 59, 999);
+            isActive = now >= startDate && now <= endDate;
         }
+        
+        const currentStatus = isActive ? 'Active' : 'Inactive';
+
+        if (currentStatus === 'Active') {
+            statusText = `Status: Active<br>Expires on: ${endDate ? endDate.toLocaleDateString() : 'N/A'}`;
+            statusColor = 'green';
+            userLetter = 'U';
+        } else {
+            statusText = 'Status: Inactive<br>Please purchase a subscription.';
+            statusColor = 'red';
+            userLetter = 'P';
+        }
+
+        subscriptionInfoContent.innerHTML = statusText;
+        svgPath.setAttribute('fill', statusColor);
+        svgText.textContent = userLetter;
         svgText.setAttribute('fill', 'white');
     }
 
     async function fetchSubscriptionStatus(user) {
-        if (!user) {
-            subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
-            return;
-        }
-        try {
-            const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
-            const userDoc = await getDoc(userDocRef);
+        let detailsToDisplay = { ...subscriptionDetails }; // Start with default
 
-            if (userDoc.exists()) {
-                const data = userDoc.data();
-                const now = new Date();
-                const startDate = data.startDate?.toDate ? data.startDate.toDate() : null;
-                let endDate = data.endDate?.toDate ? data.endDate.toDate() : null;
+        if (user) {
+            try {
+                const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
+                const userDoc = await getDoc(userDocRef);
 
-                let isActive = false;
-                if (startDate && endDate) {
-                    endDate.setHours(23, 59, 59, 999);
-                    isActive = now >= startDate && now <= endDate;
-                }
-                
-                subscriptionDetails = {
-                    purchased: true,
-                    startDate: startDate,
-                    endDate: endDate,
-                    status: isActive ? 'Active' : 'Inactive'
-                };
-
-            } else {
-                 subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
-            }
-        } catch (error) {
-            console.error("Error fetching subscription status:", error);
-            subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
-        }
-    }
-
-    async function fetchAndManageUserCredits(user) {
-        if (!user) {
-            creditDetails = { credits: 0, lastReset: null };
-            return;
-        }
-
-        const creditsDocRef = doc(db, config.USER_CREDITS_COLLECTION_NAME, user.uid);
-        try {
-            const docSnap = await getDoc(creditsDocRef);
-            const now = Timestamp.now();
-            let needsUpdate = false;
-
-            if (!docSnap.exists()) {
-                // First time user, create credit document
-                creditDetails = {
-                    credits: config.DAILY_FREE_CREDITS,
-                    lastReset: now
-                };
-                await setDoc(creditsDocRef, creditDetails);
-            } else {
-                const data = docSnap.data();
-                const lastReset = data.lastReset;
-                const hoursSinceReset = (now.seconds - lastReset.seconds) / 3600;
-
-                if (hoursSinceReset >= 24) {
-                    // More than 24 hours, reset credits
-                    creditDetails = {
-                        credits: config.DAILY_FREE_CREDITS,
-                        lastReset: now
-                    };
-                   needsUpdate = true;
-                } else {
-                    // Within 24 hours, use stored credits
-                    creditDetails = {
-                        credits: data.credits,
-                        lastReset: data.lastReset
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    detailsToDisplay = {
+                        purchased: true,
+                        startDate: data.startDate, // Keep as Firestore Timestamp
+                        endDate: data.endDate,     // Keep as Firestore Timestamp
+                        status: 'Inactive' // Will be recalculated in updateSubscriptionDisplay
                     };
                 }
-                 if(needsUpdate){
-                    await updateDoc(creditsDocRef, {
-                        credits: config.DAILY_FREE_CREDITS,
-                        lastReset: now
-                    });
-                }
+            } catch (error) {
+                console.error("Error fetching subscription status:", error);
             }
-        } catch (error) {
-            console.error("Error managing user credits:", error);
-            // Default to 0 credits on error to be safe
-            creditDetails = { credits: 0, lastReset: Timestamp.now() };
         }
+        
+        updateSubscriptionDisplay(detailsToDisplay);
     }
 
     // --- Suggestions Manager ---
@@ -2183,15 +2142,13 @@
     }
     
     async function sendMessage() {
+        if (subscriptionDetails.status !== 'Active' && userCredits.count <= 0) {
+            alert('You have reached your daily message limit. Please subscribe for unlimited messages or wait until tomorrow.');
+            return;
+        }
+
         const message = inputBox.value.trim();
         if (!message && !attachedFile) return;
-
-        if (subscriptionDetails.status === 'Inactive') {
-            if (creditDetails.credits <= 0) {
-                alert("You have run out of daily credits. Please wait 24 hours for credits to reset, or subscribe for unlimited access.");
-                return;
-            }
-        }
 
         suggestionsManager.clearSuggestions();
         typewriterEffect('user', message);
@@ -2239,7 +2196,7 @@
                 currentUserContent.push({ type: 'image_url', image_url: { url: base64Image } });
             } catch (error) {
                  console.error("Error reading file:", error);
-                 typewriterEffect('bot', `Error: Failed to read file ${error.message}`);
+                 typewriterEffect('bot', `Error: Failed to read image file. ${error.message}`);
                  return;
             }
         }
@@ -2274,13 +2231,10 @@
                 saveCurrentConversation(true); // Auto-save new chats
             }
 
-            if (subscriptionDetails.status === 'Inactive') {
-                creditDetails.credits = Math.max(0, creditDetails.credits - 1);
-                updateSubscriptionDisplay();
-                // Update credits in Firestore
-                const creditsDocRef = doc(db, config.USER_CREDITS_COLLECTION_NAME, currentUser.uid);
-                await updateDoc(creditsDocRef, { credits: creditDetails.credits });
+            if (subscriptionDetails.status !== 'Active') {
+                await decrementCredits();
             }
+
         } catch (error) {
             console.error("Error during API call:", error);
             typewriterEffect('bot', `Error: ${error.message}`);
@@ -2390,7 +2344,7 @@
         const browseCommunityBtn = document.createElement('a');
         browseCommunityBtn.href = "#";
         browseCommunityBtn.id = "browse-community-btn";
-        browseCommunityBtn.textContent = "Community";
+        browseCommunityBtn.textContent = "Browse Community";
         personasContainer.appendChild(browseCommunityBtn);
 
         const selectedPersona = PERSONAS[currentPersonaId] || customPersonas.find(p => p.id === currentPersonaId) || PERSONAS.onion;
@@ -2500,7 +2454,6 @@
         document.getElementById('selected-persona').dataset.value = persona.id;
 
         updateConversationSelectionVisuals();
-        suggestionsManager.generateSuggestions(messagePairs);
     }
     
     function deleteConversation(convoId) {
@@ -2569,8 +2522,8 @@
             }
             item.innerHTML = `
                 <div class="glow-overlay"></div>
-            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; text-align: left; padding-right: 30px;">${convo.title}</span>
-            <button class="delete-convo-btn" title="Delete Conversation"><i class="fas fa-times"></i></button>
+        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; text-align: left; padding-right: 30px;">${convo.title}</span>
+        <button class="delete-convo-btn" title="Delete Conversation"><i class="fas fa-times"></i></button>
             `;
             item.querySelector('span').onclick = () => loadConversation(convo.id);
             item.querySelector('.delete-convo-btn').onclick = (e) => {
@@ -2584,7 +2537,7 @@
             const clearAllBtn = document.createElement('button');
             clearAllBtn.id = 'clear-all-conversations-btn';
             clearAllBtn.textContent = 'Clear All Chats';
-            clearAllBtn.style.color = 'var(--sidebar-label-color)'; 
+            clearAllBtn.style.color = 'var(--sidebar-label-color)'; /* Ensure text color is visible */
             clearAllBtn.onclick = clearAllConversations;
             container.appendChild(clearAllBtn);
         }
@@ -2628,6 +2581,7 @@
     const publishPersonaCancelBtn = document.getElementById('publish-persona-cancel-btn');
 
     function showCommunityPersonasModal() {
+        // Here you would fetch from a real backend. We'll use localStorage for this demo.
         const personas = JSON.parse(localStorage.getItem('community_personas') || '[]');
         communityPersonasList.innerHTML = '';
         if (personas.length === 0) {
@@ -2672,6 +2626,7 @@
             title: document.getElementById('publish-persona-title').value,
             prompt: document.getElementById('publish-persona-prompt').value
         };
+        // In a real app, this would be an API call. We'll simulate with localStorage.
         let community = JSON.parse(localStorage.getItem('community_personas') || '[]');
         community.unshift(personaData);
         localStorage.setItem('community_personas', JSON.stringify(community.slice(0, 50)));
@@ -2683,8 +2638,11 @@
 
     function handleSignOut() {
         signOut(auth).then(() => {
+            // Sign-out successful.
             console.log("Sign-out successful.");
+             // The onAuthStateChanged observer will handle showing the login screen.
         }).catch((error) => {
+            // An error happened.
             console.error("Sign-out error:", error);
             alert(`Sign-out failed: ${error.message}`);
         });
@@ -2730,13 +2688,13 @@
             sidebar.classList.add('open');
             document.getElementById('main-content').classList.add('shifted');
             document.querySelector('header').classList.add('shifted');
-            settingsButton.classList.add('hidden-when-sidebar-open'); 
+            settingsButton.classList.add('hidden-when-sidebar-open'); // Hide settings button
         });
         document.getElementById('close-sidebar').addEventListener('click', () => {
             sidebar.classList.remove('open');
             document.getElementById('main-content').classList.remove('shifted');
             document.querySelector('header').classList.remove('shifted');
-            settingsButton.classList.remove('hidden-when-sidebar-open'); 
+            settingsButton.classList.remove('hidden-when-sidebar-open'); // Show settings button
         });
 
         // Popups
@@ -2754,6 +2712,7 @@
 
         subscriptionBtn.addEventListener('click', () => {
             const { purchased, startDate, endDate, status } = subscriptionDetails;
+            const uid = auth.currentUser?.uid || 'N/A';
             let contentHTML = '';
 
             if (status === 'Active') {
@@ -2761,20 +2720,22 @@
                 const end = new Date(endDate);
                 const daysLeft = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
                 
-                const daysLeftText = Math.max(daysLeft, 0) > 0 ? `(${Math.max(daysLeft, 0)} day${Math.max(daysLeft, 0) !== 1 ? 's' : ''} left)` : '(Expires today)';
+                /* @tweakable Text format for displaying days remaining in the subscription popup when the subscription is active. */
+                const daysLeftText = daysLeft > 0 ? `(${daysLeft} day${daysLeft !== 1 ? 's' : ''} left)` : '(Expires today)';
 
                 contentHTML = `
-                    <p><strong>Credits:</strong> Unlimited</p>
                     <p><strong>Status:</strong> <span style="color: #4CAF50;">Active</span></p>
+                    <p><strong>User ID:</strong> <span style="font-size: 0.8em; word-break: break-all;">${uid}</span></p>
                     <p><strong>Active From:</strong> ${startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}</p>
                     <p><strong>Expires On:</strong> ${endDate ? new Date(endDate).toLocaleDateString() : 'N/A'} <span style="color: var(--placeholder-color);">${daysLeftText}</span></p>
                 `;
             } else {
+                 /* @tweakable The message displayed in the subscription popup when the user's subscription is inactive. */
                 const inactiveReasonText = "You do not have an active subscription or your subscription has expired.";
 
                 contentHTML = `
-                    <p><strong>Credits:</strong> ${creditDetails.credits}/${config.DAILY_FREE_CREDITS}</p>
                     <p><strong>Status:</strong> <span style="color: #F44336;">Inactive</span></p>
+                    <p><strong>User ID:</strong> <span style="font-size: 0.8em; word-break: break-all;">${uid}</span></p>
                     <p><strong>Start Date:</strong> ${startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}</p>
                     <p><strong>End Date:</strong> ${endDate ? new Date(endDate).toLocaleDateString() : 'N/A'}</p>
                     <p style="margin-top: 1rem;">${inactiveReasonText}</p>
@@ -2785,6 +2746,9 @@
             subscriptionPopupOverlay.classList.remove('hidden');
         });
         closeSubscriptionPopupBtn.addEventListener('click', () => subscriptionPopupOverlay.classList.add('hidden'));
+        
+        // Sign out button in sidebar
+        signOutBtn.addEventListener('click', handleSignOut);
         
         // Attachment button logic
         attachButton.addEventListener('click', () => fileInput.click());
@@ -2834,6 +2798,7 @@
                 const value = target.dataset.value;
 
                 if (target.id === 'add-custom-persona-btn') {
+                    // This should be handled by a dedicated modal, not implemented here yet
                     alert('Create Persona: Not implemented in this version.');
                 } else if (target.id === 'browse-community-btn') {
                     showCommunityPersonasModal();
@@ -2844,12 +2809,13 @@
                         localStorage.setItem('orion_selectedModel', value);
                         updateAttachButtonVisibility(value);
                     } else if (dropdownId === 'personas-content-container') {
+                        // This now handles clicking on the persona name part (the <a> tag)
                         const personaId = target.closest('a')?.dataset.value;
                         if(personaId) {
                            selectPersona(personaId);
                         }
                     } else if (dropdownId === 'theme-dropdown') {
-                        document.body.className = ''; 
+                        document.body.className = ''; // Clear all classes first
                         const theme = localStorage.getItem('orion_theme_mode') || 'dark';
                         if (theme === 'light') document.body.classList.add('light-theme');
 
@@ -2915,6 +2881,7 @@
         actionPromise
             .then((userCredential) => {
                  console.log(`Auth successful for: ${userCredential.user.email}`);
+                 // onAuthStateChanged will handle UI switch
             })
             .catch((error) => {
                 authErrorDiv.textContent = error.message;
@@ -2926,19 +2893,59 @@
             });
     });
 
+
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         // User is signed in.
-        currentUser = user; 
         console.log("User signed in:", user.uid, user.email);
 
-        // Fetch all necessary user data from Firebase
-        await Promise.all([
-          fetchSubscriptionStatus(user),
-          fetchAndManageUserCredits(user)
-        ]);
-        
-        // Initialize the main app UI only once all data is ready
+        // Fetch subscription status from Firestore
+        try {
+            const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (userDocSnap.exists()) {
+                const data = userDocSnap.data();
+                console.log("Subscription data found:", data);
+                
+                /* @tweakable This logic determines if a subscription is active. It checks if 'purchased' is true and if the current date is between the start and end dates. */
+                const now = new Date();
+                const startDate = data.startDay ? new Date(data.startDay) : null;
+                const endDate = data.endDay ? new Date(data.endDay) : null;
+                const isPurchased = data.purchased === true;
+                
+                let isActive = false;
+                if (isPurchased && startDate && endDate) {
+                    isActive = now >= startDate && now <= endDate;
+                }
+
+                subscriptionDetails = {
+                    purchased: isPurchased,
+                    startDate: data.startDay || null,
+                    endDate: data.endDay || null,
+                    status: isActive ? 'Active' : 'Inactive'
+                };
+                 console.log("Processed subscription status:", subscriptionDetails.status);
+            } else {
+                console.log(`No subscription document found for user UID: ${user.uid} in collection '${config.USER_DATA_COLLECTION_NAME}'.`);
+                 subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
+            }
+        } catch (error) {
+            console.error("Error fetching subscription status:", error);
+            subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
+        }
+
+        // Manage credits based on subscription status
+        if (subscriptionDetails.status === 'Active') {
+            userCredits = { count: Infinity, lastReset: new Date() };
+            updateCreditsDisplay();
+            checkCreditAndToggleInput();
+        } else {
+            await fetchAndManageCredits(user);
+        }
+
+        // Initialize the main app UI
+        // Use a flag to prevent multiple initializations
         if (!window.appInitialized) {
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', initializeAppUI);
@@ -2946,22 +2953,19 @@
                 initializeAppUI();
             }
             window.appInitialized = true;
-        } else {
-            updateSubscriptionDisplay();
         }
 
       } else {
         // User is signed out.
-        currentUser = null;
         console.log("User is signed out.");
-        setAuthMode(false); 
-        // Show the login screen hide the app
+        setAuthMode(false); // Reset to login mode on sign out
+        // Show the login screen and hide the app
         loginOverlay.classList.remove('hidden');
         appContainer.classList.add('hidden');
-        // Reset details on logout
+        document.getElementById('credits-display').textContent = '';
+        // Reset subscription details on logout
         subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
-        creditDetails = { credits: 0, lastReset: null };
-        window.appInitialized = false; 
+        window.appInitialized = false; // Allow re-initialization on next login
       }
     });
 
@@ -2987,30 +2991,85 @@
         loadSavedConversations();
         
         setupUIEventListeners();
-        setupSiteProtection(); 
         
         clearChat(false);
-
-        // Update display with fetched data
-        updateSubscriptionDisplay();
 
         // Show the app
         loginOverlay.classList.add('hidden');
         appContainer.classList.remove('hidden');
     }
 
-    function setupSiteProtection() {
-        // Disable right-click context menu
-        document.addEventListener('contextmenu', event => event.preventDefault());
+    async function fetchAndManageCredits(user) {
+        const creditDocRef = doc(db, config.USER_CREDITS_COLLECTION_NAME, user.uid);
+        try {
+            const creditDocSnap = await getDoc(creditDocRef);
+            const today = new Date().toDateString();
 
-        // Disable common developer tool shortcuts
-        document.addEventListener('keydown', event => {
-            if (event.key === 'F12' ||
-               (event.ctrlKey && event.shiftKey && ['I', 'J', 'C'].includes(event.key.toUpperCase())) ||
-               (event.ctrlKey && event.key.toUpperCase() === 'U')) {
-                event.preventDefault();
+            if (creditDocSnap.exists()) {
+                const data = creditDocSnap.data();
+                const lastResetDate = data.lastReset ? new Date(data.lastReset.seconds * 1000).toDateString() : null;
+
+                if (lastResetDate !== today) {
+                    // Time to reset credits
+                    await updateDoc(creditDocRef, { count: config.DAILY_CREDIT_LIMIT, lastReset: serverTimestamp() });
+                    userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date() };
+                } else {
+                    // Load existing credits for today
+                    userCredits = { count: data.count, lastReset: new Date(data.lastReset.seconds * 1000) };
+                }
+            } else {
+                // First time user or first time since credit system was introduced
+                await setDoc(creditDocRef, { count: config.DAILY_CREDIT_LIMIT, lastReset: serverTimestamp() });
+                userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date() };
             }
-        });
+        } catch (error) {
+            console.error("Error fetching/managing credits:", error);
+            // Fallback to default in case of error
+            userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date() };
+        }
+        
+        updateCreditsDisplay();
+        checkCreditAndToggleInput();
+    }
+    
+    function updateCreditsDisplay() {
+        const creditsDisplay = document.getElementById('credits-display');
+        if (!creditsDisplay) return;
+
+        if (subscriptionDetails.status === 'Active') {
+            creditsDisplay.textContent = 'Credits: Unlimited';
+        } else {
+            creditsDisplay.textContent = `Credits: ${userCredits.count}/${config.DAILY_CREDIT_LIMIT}`;
+        }
+    }
+
+    function checkCreditAndToggleInput() {
+        if (subscriptionDetails.status !== 'Active' && userCredits.count <= 0) {
+            inputBox.disabled = true;
+            sendButton.disabled = true;
+            inputBox.placeholder = 'Daily message limit reached.';
+        } else {
+            inputBox.disabled = false;
+            sendButton.disabled = false;
+            inputBox.placeholder = 'Type your message here...';
+        }
+    }
+
+    async function decrementCredits() {
+        const user = auth.currentUser;
+        if (!user || subscriptionDetails.status === 'Active') return;
+
+        userCredits.count = Math.max(0, userCredits.count - 1);
+        updateCreditsDisplay();
+        checkCreditAndToggleInput();
+
+        const creditDocRef = doc(db, config.USER_CREDITS_COLLECTION_NAME, user.uid);
+        try {
+            await updateDoc(creditDocRef, { count: increment(-1) });
+        } catch (error) {
+            console.error("Failed to decrement credits in Firestore:", error);
+            // Should ideally handle this, maybe retry or notify user
+        }
     }
 
     signInBtn.addEventListener('click', () => {
@@ -3022,6 +3081,7 @@
                 // The signed-in user info.
                 const user = result.user;
                 console.log("Sign-in successful for:", user.displayName);
+                // The onAuthStateChanged observer will handle showing the app.
             }).catch((error) => {
                 // Handle Errors here.
                 const errorCode = error.code;
@@ -3031,20 +3091,27 @@
                 // The AuthCredential type that was used.
                 const credential = GoogleAuthProvider.credentialFromError(error);
                 console.error("Sign-in error:", errorCode, errorMessage);
-                alert(`Sign-in failed: ${error.message}`);
+                alert(`Sign-in failed: ${errorMessage}`);
             });
     });
 
     signOutBtn.addEventListener('click', () => {
         signOut(auth).then(() => {
+            // Sign-out successful.
             console.log("Sign-out successful.");
+             // The onAuthStateChanged observer will handle showing the login screen.
         }).catch((error) => {
+            // An error happened.
             console.error("Sign-out error:", error);
             alert(`Sign-out failed: ${error.message}`);
         });
     });
 
+    // --- Init ---
+    // The main initialization is now triggered by the Firebase onAuthStateChanged listener.
+    // We keep this DOMContentLoaded listener minimal, mainly for things that can be set up before login.
     document.addEventListener('DOMContentLoaded', () => {
+        // The glow effect can be set up before login, but let's wait for theme info
         const savedColorTheme = localStorage.getItem('orion_color_theme') || 'orion';
         const savedThemeMode = localStorage.getItem('orion_theme_mode') || 'dark';
         if (savedThemeMode === 'light') document.body.classList.add('light-theme');
