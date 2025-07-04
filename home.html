@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -19,7 +17,7 @@
     }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSY3SV" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ctI+WdtXRGWt2kTvGFasHpSY3SV" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap');
@@ -682,13 +680,6 @@
             display: none; /* Chrome, Safari and Opera */
         }
         
-        .custom-dropdown-menu.above {
-            top: 100%;
-            bottom: auto;
-            margin-top: 0.5rem;
-            margin-bottom: 0;
-        }
-
         .custom-dropdown-menu a, .custom-dropdown-menu div {
             display: block;
             padding: 0.75rem 1rem;
@@ -1271,6 +1262,24 @@
             background: conic-gradient(from 0deg, #4285F4 0% 12.5%, #DB4437 12.5% 25%, #F4B400 25% 37.5%, #0F9D58 37.5% 50%, #000000 50% 100%);
         }
         
+        /* Security: Disable text selection and context menu */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Allow text selection only in input fields and content areas where needed */
+        input, textarea, .message-content {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        
     </style>
 </head>
 <body>
@@ -1394,6 +1403,13 @@
                     <div id="keys-content-container" style="transition: max-height 0.3s ease-out, opacity 0.3s ease-out;">
                         <div>
                             <label for="api-key-input" class="text-sm" style="color: var(--sidebar-label-color);">OpenRouter API Key:</label>
+                            <div id="api-key-display" style="display: none;">
+                                <span class="api-key-masked">••••••••••••••••</span>
+                                <button class="edit-api-btn animated-container" style="position: relative; z-index: 1;">
+                                    <div class="glow-overlay"></div>
+                                    <span style="position: relative; z-index: 2; color: white;">Edit API</span>
+                                </button>
+                            </div>
                             <input type="password" id="api-key-input" class="api-key-input">
                         </div>
                     </div>
@@ -1765,11 +1781,14 @@
         USER_DATA_COLLECTION_NAME: 'purchasedUsers',
         /* @tweakable The name of the Firestore collection for user credit/usage data. */
         USER_CREDITS_COLLECTION_NAME: 'user_credits_v1',
+        /* @tweakable The name of the Firestore collection for device tracking data. */
+        USER_DEVICE_COLLECTION_NAME: 'user_devices_v1',
         /* @tweakable Daily message limit for inactive users. */
         DAILY_CREDIT_LIMIT: 5,
         API_SETTINGS_COLLECTION_NAME: 'orion_api_settings_v1',
         /* @tweakable The default system prompt for the primary persona. */
-        DEFAULT_SYSTEM_PROMPT: "You are ORION, a sentient AGI designed to be a helpful and friendly conversational partner. Engage users with insightful and thoughtful responses."
+        DEFAULT_SYSTEM_PROMPT: "You are ORION, a sentient AGI designed to be a helpful and friendly conversational partner. Engage users with insightful and thoughtful responses.",
+        DEVICE_CREDITS_COLLECTION_NAME: 'device_credits_v2'
     };
 
     // Personas
@@ -1862,8 +1881,8 @@
                     const data = userDoc.data();
                     detailsToDisplay = {
                         purchased: true,
-                        startDate: data.startDate, // Keep as Firestore Timestamp
-                        endDate: data.endDate,     // Keep as Firestore Timestamp
+                        startDate: data.startDay ? new Date(data.startDay) : null,
+                        endDate: data.endDay ? new Date(data.endDay) : null,
                         status: 'Inactive' // Will be recalculated in updateSubscriptionDisplay
                     };
                 }
@@ -2648,6 +2667,422 @@
         });
     }
 
+    // --- Authentication Logic ---
+    function setAuthMode(register) {
+        isRegisterMode = register;
+        authErrorDiv.classList.add('hidden');
+        emailInput.value = '';
+        passwordInput.value = '';
+        if (register) {
+            authActionBtn.textContent = 'Register';
+            authToggleMessage.textContent = 'Already have an account?';
+            authToggleLink.textContent = 'Sign In';
+            passwordInput.placeholder = 'Password (min. 6 characters)';
+        } else {
+            authActionBtn.textContent = 'Sign In';
+            authToggleMessage.textContent = "Don't have an account?";
+            authToggleLink.textContent = 'Register';
+            passwordInput.placeholder = 'Password';
+        }
+    }
+
+    authToggleLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        setAuthMode(!isRegisterMode);
+    });
+
+    authForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        authErrorDiv.classList.add('hidden');
+        authActionBtn.disabled = true;
+        authActionBtn.textContent = '...';
+
+        const actionPromise = isRegisterMode
+            ? createUserWithEmailAndPassword(auth, email, password)
+            : signInWithEmailAndPassword(auth, email, password);
+        
+        actionPromise
+            .then((userCredential) => {
+                 console.log(`Auth successful for: ${userCredential.user.email}`);
+                 // onAuthStateChanged will handle UI switch
+            })
+            .catch((error) => {
+                authErrorDiv.textContent = error.message;
+                authErrorDiv.classList.remove('hidden');
+            })
+            .finally(() => {
+                authActionBtn.disabled = false;
+                authActionBtn.textContent = isRegisterMode ? 'Register' : 'Sign In';
+            });
+    });
+
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is signed in.
+        console.log("User signed in:", user.uid, user.email);
+
+        // Fetch subscription status from Firestore
+        try {
+            const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
+            const userDoc = await getDoc(userDocRef);
+
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                console.log("Subscription data found:", data);
+                
+                /* @tweakable This logic determines if a subscription is active. It checks if 'purchased' is true and if the current date is between the start and end dates. */
+                const now = new Date();
+                const startDate = data.startDay ? new Date(data.startDay) : null;
+                const endDate = data.endDay ? new Date(data.endDay) : null;
+                const isPurchased = data.purchased === true;
+                
+                let isActive = false;
+                if (isPurchased && startDate && endDate) {
+                    isActive = now >= startDate && now <= endDate;
+                }
+
+                subscriptionDetails = {
+                    purchased: isPurchased,
+                    startDate: data.startDay || null,
+                    endDate: data.endDay || null,
+                    status: isActive ? 'Active' : 'Inactive'
+                };
+                 console.log("Processed subscription status:", subscriptionDetails.status);
+            } else {
+                console.log(`No subscription document found for user UID: ${user.uid} in collection '${config.USER_DATA_COLLECTION_NAME}'.`);
+                 subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
+            }
+        } catch (error) {
+            console.error("Error fetching subscription status:", error);
+            subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
+        }
+
+        // Manage credits based on subscription status
+        if (subscriptionDetails.status === 'Active') {
+            userCredits = { count: Infinity, lastReset: new Date() };
+            updateCreditsDisplay();
+            checkCreditAndToggleInput();
+        } else {
+            await fetchAndManageCredits(user);
+        }
+
+        // Initialize the main app UI
+        // Use a flag to prevent multiple initializations
+        if (!window.appInitialized) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initializeAppUI);
+            } else {
+                initializeAppUI();
+            }
+            window.appInitialized = true;
+        }
+
+      } else {
+        // User is signed out.
+        console.log("User is signed out.");
+        setAuthMode(false); // Reset to login mode on sign out
+        // Show the login screen and hide the app
+        loginOverlay.classList.remove('hidden');
+        appContainer.classList.add('hidden');
+        document.getElementById('credits-display').textContent = '';
+        // Reset subscription details on logout
+        subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
+        window.appInitialized = false; // Allow re-initialization on next login
+      }
+    });
+
+    function initializeAppUI() {
+        // This function now contains all the setup that should run AFTER login.
+        apiKeyInput.value = localStorage.getItem('orion_apiKey') || '';
+        if (apiKeyInput.value) {
+            apiKeyInput.style.display = 'none';
+            document.getElementById('api-key-display').style.display = 'flex';
+        }
+        const savedThemeMode = localStorage.getItem('orion_theme_mode') || 'dark';
+        if (savedThemeMode === 'light') {
+            document.body.classList.add('light-theme');
+            document.getElementById('theme-toggle-btn').querySelector('i').className = 'fas fa-sun';
+        }
+
+        const savedColorTheme = localStorage.getItem('orion_color_theme') || 'orion';
+        document.body.classList.add(savedColorTheme + '-theme');
+        const themeOption = document.querySelector(`#theme-dropdown a[data-value="${savedColorTheme}"]`);
+        document.getElementById('selected-theme').textContent = themeOption ? themeOption.textContent : savedColorTheme.toUpperCase();
+        glowManager.updateTheme(savedColorTheme);
+
+        loadCustomPersonas();
+        currentPersonaId = localStorage.getItem('orion_selectedPersonaId') || 'caimeo';
+        populateModels();
+        populatePersonas();
+        loadSavedConversations();
+        
+        setupUIEventListeners();
+        
+        clearChat(false);
+
+        // Show the app
+        loginOverlay.classList.add('hidden');
+        appContainer.classList.remove('hidden');
+    }
+
+    async function fetchAndManageCredits(user) {
+        const deviceFingerprint = generateDeviceFingerprint();
+        const deviceCreditDocRef = doc(db, config.DEVICE_CREDITS_COLLECTION_NAME, deviceFingerprint);
+        
+        try {
+            // Handle credits tied to device fingerprint
+            const deviceCreditDocSnap = await getDoc(deviceCreditDocRef);
+
+            if (deviceCreditDocSnap.exists()) {
+                const data = deviceCreditDocSnap.data();
+                
+                if (shouldResetCredits(data.lastReset)) {
+                    // Time to reset credits (7 PM has passed)
+                    await updateDoc(deviceCreditDocRef, { 
+                        count: config.DAILY_CREDIT_LIMIT, 
+                        lastReset: serverTimestamp(),
+                        userId: user.uid,
+                        lastSeen: serverTimestamp()
+                    });
+                    userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date() };
+                } else {
+                    // Load existing credits
+                    userCredits = { count: data.count, lastReset: new Date(data.lastReset.seconds * 1000) };
+                    // Update last seen
+                    await updateDoc(deviceCreditDocRef, {
+                        lastSeen: serverTimestamp(),
+                        userId: user.uid
+                    });
+                }
+            } else {
+                // First time device
+                await setDoc(deviceCreditDocRef, { 
+                    count: config.DAILY_CREDIT_LIMIT, 
+                    lastReset: serverTimestamp(),
+                    userId: user.uid,
+                    fingerprint: deviceFingerprint,
+                    registeredAt: serverTimestamp(),
+                    lastSeen: serverTimestamp()
+                });
+                userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date() };
+            }
+        } catch (error) {
+            console.error("Error fetching/managing credits:", error);
+            // NO FALLBACK - if there's an error, set credits to 0 for security
+            userCredits = { count: 0, lastReset: new Date() };
+            // Try to sign out user if there's a persistent error
+            if (error.code !== 'unavailable') {
+                await signOut(auth);
+                return;
+            }
+        }
+        
+        updateCreditsDisplay();
+        checkCreditAndToggleInput();
+    }
+
+    function updateCreditsDisplay() {
+        const creditsDisplay = document.getElementById('credits-display');
+        if (!creditsDisplay) return;
+
+        if (subscriptionDetails.status === 'Active') {
+            creditsDisplay.textContent = 'Credits: Unlimited';
+        } else {
+            creditsDisplay.textContent = `Credits: ${userCredits.count}/${config.DAILY_CREDIT_LIMIT}`;
+        }
+    }
+
+    function checkCreditAndToggleInput() {
+        if (subscriptionDetails.status !== 'Active' && userCredits.count <= 0) {
+            inputBox.disabled = true;
+            sendButton.disabled = true;
+            inputBox.placeholder = 'Daily message limit reached.';
+        } else {
+            inputBox.disabled = false;
+            sendButton.disabled = false;
+            inputBox.placeholder = 'Type your message here...';
+        }
+    }
+
+    async function decrementCredits() {
+        const user = auth.currentUser;
+        if (!user || subscriptionDetails.status === 'Active') return;
+
+        userCredits.count = Math.max(0, userCredits.count - 1);
+        updateCreditsDisplay();
+        checkCreditAndToggleInput();
+
+        const deviceFingerprint = generateDeviceFingerprint();
+        const deviceCreditDocRef = doc(db, config.DEVICE_CREDITS_COLLECTION_NAME, deviceFingerprint);
+        try {
+            await updateDoc(deviceCreditDocRef, { 
+                count: increment(-1),
+                lastSeen: serverTimestamp(),
+                userId: user.uid
+            });
+        } catch (error) {
+            console.error("Failed to decrement credits in Firestore:", error);
+            // Sign out user if credit update fails for security
+            await signOut(auth);
+        }
+    }
+
+    function getNext7PMReset() {
+        const now = new Date();
+        const reset = new Date();
+        reset.setHours(19, 0, 0, 0); // 7 PM
+        
+        // If current time is past 7 PM today, set to 7 PM tomorrow
+        if (now >= reset) {
+            reset.setDate(reset.getDate() + 1);
+        }
+        
+        return reset;
+    }
+
+    function shouldResetCredits(lastResetTime) {
+        if (!lastResetTime) return true;
+        
+        const lastReset = new Date(lastResetTime.seconds * 1000);
+        const now = new Date();
+        
+        // Find the most recent 7 PM that should have triggered a reset
+        const todayAt7PM = new Date();
+        todayAt7PM.setHours(19, 0, 0, 0);
+        
+        const yesterdayAt7PM = new Date(todayAt7PM);
+        yesterdayAt7PM.setDate(yesterdayAt7PM.getDate() - 1);
+        
+        // The last reset time we should check against
+        const lastExpected7PM = now >= todayAt7PM ? todayAt7PM : yesterdayAt7PM;
+        
+        return lastReset < lastExpected7PM;
+    }
+
+    function generateDeviceFingerprint() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillText('Device fingerprint', 2, 2);
+        
+        // Enhanced fingerprinting for better security
+        const fingerprint = {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            languages: navigator.languages ? navigator.languages.join(',') : '',
+            platform: navigator.platform,
+            cookieEnabled: navigator.cookieEnabled,
+            doNotTrack: navigator.doNotTrack,
+            screenResolution: `${screen.width}x${screen.height}`,
+            availableScreenResolution: `${screen.availWidth}x${screen.availHeight}`,
+            screenColorDepth: screen.colorDepth,
+            screenPixelDepth: screen.pixelDepth,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timezoneOffset: new Date().getTimezoneOffset(),
+            canvasFingerprint: canvas.toDataURL(),
+            webglVendor: (() => {
+                try {
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    return gl ? gl.getParameter(gl.VENDOR) : '';
+                } catch (e) { return ''; }
+            })(),
+            webglRenderer: (() => {
+                try {
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    return gl ? gl.getParameter(gl.RENDERER) : '';
+                } catch (e) { return ''; }
+            })(),
+            hardwareConcurrency: navigator.hardwareConcurrency || 0,
+            deviceMemory: navigator.deviceMemory || 0,
+            maxTouchPoints: navigator.maxTouchPoints || 0,
+            plugins: Array.from(navigator.plugins).map(p => p.name).sort().join(','),
+            mimeTypes: Array.from(navigator.mimeTypes).map(m => m.type).sort().join(','),
+            localStorage: (() => { try { return !!window.localStorage; } catch (e) { return false; } })(),
+            sessionStorage: (() => { try { return !!window.sessionStorage; } catch (e) { return false; } })(),
+            indexedDB: !!window.indexedDB,
+            addBehavior: !!document.body.addBehavior,
+            openDatabase: !!window.openDatabase,
+            cpuClass: navigator.cpuClass || '',
+            oscpu: navigator.oscpu || ''
+        };
+        
+        // Create a more secure hash of the fingerprint
+        const fingerprintString = JSON.stringify(fingerprint);
+        let hash = 0;
+        if (fingerprintString.length === 0) return '0';
+        
+        for (let i = 0; i < fingerprintString.length; i++) {
+            const char = fingerprintString.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        
+        // Add additional entropy based on current session
+        const sessionEntropy = performance.now().toString() + Math.random().toString();
+        let sessionHash = 0;
+        for (let i = 0; i < sessionEntropy.length; i++) {
+            const char = sessionEntropy.charCodeAt(i);
+            sessionHash = ((sessionHash << 5) - sessionHash) + char;
+            sessionHash = sessionHash & sessionHash;
+        }
+        
+        return Math.abs(hash).toString(36) + Math.abs(sessionHash).toString(36).slice(0, 4);
+    }
+
+    // --- Security Event Listeners ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Disable right-click context menu
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            return false;
+        });
+
+        // Disable common keyboard shortcuts for developer tools
+        document.addEventListener('keydown', (e) => {
+            // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+Shift+C
+            if (e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+                (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Disable drag and drop
+        document.addEventListener('dragstart', (e) => {
+            e.preventDefault();
+            return false;
+        });
+
+        // Disable image dragging
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            return false;
+        });
+
+        // Monitor for developer tools opening (basic detection)
+        let devtools = { open: false, orientation: null };
+        const threshold = 160;
+        setInterval(() => {
+            if (window.outerHeight - window.innerHeight > threshold || 
+                window.outerWidth - window.innerWidth > threshold) {
+                if (!devtools.open) {
+                    devtools.open = true;
+                    console.clear();
+                    console.log('%cSecurity Notice: Developer tools detected.', 'color: red; font-size: 20px;');
+                }
+            } else {
+                devtools.open = false;
+            }
+        }, 500);
+
+        /* ...existing DOMContentLoaded code... */
+    });
+
     // --- UI Event Listeners ---
     function setupUIEventListeners() {
         // Collapsible sections
@@ -2839,273 +3274,31 @@
         sendButton.addEventListener('click', sendMessage);
         inputBox.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
         
-        apiKeyInput.addEventListener('change', () => localStorage.setItem('orion_apiKey', apiKeyInput.value.trim()));
-    }
-
-    // --- Authentication Logic ---
-    function setAuthMode(register) {
-        isRegisterMode = register;
-        authErrorDiv.classList.add('hidden');
-        emailInput.value = '';
-        passwordInput.value = '';
-        if (register) {
-            authActionBtn.textContent = 'Register';
-            authToggleMessage.textContent = 'Already have an account?';
-            authToggleLink.textContent = 'Sign In';
-            passwordInput.placeholder = 'Password (min. 6 characters)';
-        } else {
-            authActionBtn.textContent = 'Sign In';
-            authToggleMessage.textContent = "Don't have an account?";
-            authToggleLink.textContent = 'Register';
-            passwordInput.placeholder = 'Password';
-        }
-    }
-
-    authToggleLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        setAuthMode(!isRegisterMode);
-    });
-
-    authForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = emailInput.value;
-        const password = passwordInput.value;
-        authErrorDiv.classList.add('hidden');
-        authActionBtn.disabled = true;
-        authActionBtn.textContent = '...';
-
-        const actionPromise = isRegisterMode
-            ? createUserWithEmailAndPassword(auth, email, password)
-            : signInWithEmailAndPassword(auth, email, password);
-        
-        actionPromise
-            .then((userCredential) => {
-                 console.log(`Auth successful for: ${userCredential.user.email}`);
-                 // onAuthStateChanged will handle UI switch
-            })
-            .catch((error) => {
-                authErrorDiv.textContent = error.message;
-                authErrorDiv.classList.remove('hidden');
-            })
-            .finally(() => {
-                authActionBtn.disabled = false;
-                authActionBtn.textContent = isRegisterMode ? 'Register' : 'Sign In';
-            });
-    });
-
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // User is signed in.
-        console.log("User signed in:", user.uid, user.email);
-
-        // Fetch subscription status from Firestore
-        try {
-            const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
-            const userDocSnap = await getDoc(userDocRef);
-
-            if (userDocSnap.exists()) {
-                const data = userDocSnap.data();
-                console.log("Subscription data found:", data);
-                
-                /* @tweakable This logic determines if a subscription is active. It checks if 'purchased' is true and if the current date is between the start and end dates. */
-                const now = new Date();
-                const startDate = data.startDay ? new Date(data.startDay) : null;
-                const endDate = data.endDay ? new Date(data.endDay) : null;
-                const isPurchased = data.purchased === true;
-                
-                let isActive = false;
-                if (isPurchased && startDate && endDate) {
-                    isActive = now >= startDate && now <= endDate;
+        apiKeyInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const key = apiKeyInput.value.trim();
+                if (key) {
+                    localStorage.setItem('orion_apiKey', key);
+                    apiKeyInput.style.display = 'none';
+                    document.getElementById('api-key-display').style.display = 'flex';
                 }
-
-                subscriptionDetails = {
-                    purchased: isPurchased,
-                    startDate: data.startDay || null,
-                    endDate: data.endDay || null,
-                    status: isActive ? 'Active' : 'Inactive'
-                };
-                 console.log("Processed subscription status:", subscriptionDetails.status);
-            } else {
-                console.log(`No subscription document found for user UID: ${user.uid} in collection '${config.USER_DATA_COLLECTION_NAME}'.`);
-                 subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
             }
-        } catch (error) {
-            console.error("Error fetching subscription status:", error);
-            subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
-        }
-
-        // Manage credits based on subscription status
-        if (subscriptionDetails.status === 'Active') {
-            userCredits = { count: Infinity, lastReset: new Date() };
-            updateCreditsDisplay();
-            checkCreditAndToggleInput();
-        } else {
-            await fetchAndManageCredits(user);
-        }
-
-        // Initialize the main app UI
-        // Use a flag to prevent multiple initializations
-        if (!window.appInitialized) {
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initializeAppUI);
-            } else {
-                initializeAppUI();
-            }
-            window.appInitialized = true;
-        }
-
-      } else {
-        // User is signed out.
-        console.log("User is signed out.");
-        setAuthMode(false); // Reset to login mode on sign out
-        // Show the login screen and hide the app
-        loginOverlay.classList.remove('hidden');
-        appContainer.classList.add('hidden');
-        document.getElementById('credits-display').textContent = '';
-        // Reset subscription details on logout
-        subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
-        window.appInitialized = false; // Allow re-initialization on next login
-      }
-    });
-
-    function initializeAppUI() {
-        // This function now contains all the setup that should run AFTER login.
-        apiKeyInput.value = localStorage.getItem('orion_apiKey') || '';
-        const savedThemeMode = localStorage.getItem('orion_theme_mode') || 'dark';
-        if (savedThemeMode === 'light') {
-            document.body.classList.add('light-theme');
-            document.getElementById('theme-toggle-btn').querySelector('i').className = 'fas fa-sun';
-        }
-
-        const savedColorTheme = localStorage.getItem('orion_color_theme') || 'orion';
-        document.body.classList.add(savedColorTheme + '-theme');
-        const themeOption = document.querySelector(`#theme-dropdown a[data-value="${savedColorTheme}"]`);
-        document.getElementById('selected-theme').textContent = themeOption ? themeOption.textContent : savedColorTheme.toUpperCase();
-        glowManager.updateTheme(savedColorTheme);
-
-        loadCustomPersonas();
-        currentPersonaId = localStorage.getItem('orion_selectedPersonaId') || 'caimeo';
-        populateModels();
-        populatePersonas();
-        loadSavedConversations();
-        
-        setupUIEventListeners();
-        
-        clearChat(false);
-
-        // Show the app
-        loginOverlay.classList.add('hidden');
-        appContainer.classList.remove('hidden');
-    }
-
-    async function fetchAndManageCredits(user) {
-        const creditDocRef = doc(db, config.USER_CREDITS_COLLECTION_NAME, user.uid);
-        try {
-            const creditDocSnap = await getDoc(creditDocRef);
-            const today = new Date().toDateString();
-
-            if (creditDocSnap.exists()) {
-                const data = creditDocSnap.data();
-                const lastResetDate = data.lastReset ? new Date(data.lastReset.seconds * 1000).toDateString() : null;
-
-                if (lastResetDate !== today) {
-                    // Time to reset credits
-                    await updateDoc(creditDocRef, { count: config.DAILY_CREDIT_LIMIT, lastReset: serverTimestamp() });
-                    userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date() };
-                } else {
-                    // Load existing credits for today
-                    userCredits = { count: data.count, lastReset: new Date(data.lastReset.seconds * 1000) };
-                }
-            } else {
-                // First time user or first time since credit system was introduced
-                await setDoc(creditDocRef, { count: config.DAILY_CREDIT_LIMIT, lastReset: serverTimestamp() });
-                userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date() };
-            }
-        } catch (error) {
-            console.error("Error fetching/managing credits:", error);
-            // Fallback to default in case of error
-            userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date() };
-        }
-        
-        updateCreditsDisplay();
-        checkCreditAndToggleInput();
-    }
-    
-    function updateCreditsDisplay() {
-        const creditsDisplay = document.getElementById('credits-display');
-        if (!creditsDisplay) return;
-
-        if (subscriptionDetails.status === 'Active') {
-            creditsDisplay.textContent = 'Credits: Unlimited';
-        } else {
-            creditsDisplay.textContent = `Credits: ${userCredits.count}/${config.DAILY_CREDIT_LIMIT}`;
-        }
-    }
-
-    function checkCreditAndToggleInput() {
-        if (subscriptionDetails.status !== 'Active' && userCredits.count <= 0) {
-            inputBox.disabled = true;
-            sendButton.disabled = true;
-            inputBox.placeholder = 'Daily message limit reached.';
-        } else {
-            inputBox.disabled = false;
-            sendButton.disabled = false;
-            inputBox.placeholder = 'Type your message here...';
-        }
-    }
-
-    async function decrementCredits() {
-        const user = auth.currentUser;
-        if (!user || subscriptionDetails.status === 'Active') return;
-
-        userCredits.count = Math.max(0, userCredits.count - 1);
-        updateCreditsDisplay();
-        checkCreditAndToggleInput();
-
-        const creditDocRef = doc(db, config.USER_CREDITS_COLLECTION_NAME, user.uid);
-        try {
-            await updateDoc(creditDocRef, { count: increment(-1) });
-        } catch (error) {
-            console.error("Failed to decrement credits in Firestore:", error);
-            // Should ideally handle this, maybe retry or notify user
-        }
-    }
-
-    signInBtn.addEventListener('click', () => {
-        signInWithPopup(auth, provider)
-            .then((result) => {
-                // This gives you a Google Access Token. You can use it to access the Google API.
-                const credential = GoogleAuthProvider.credentialFromResult(result);
-                const token = credential.accessToken;
-                // The signed-in user info.
-                const user = result.user;
-                console.log("Sign-in successful for:", user.displayName);
-                // The onAuthStateChanged observer will handle showing the app.
-            }).catch((error) => {
-                // Handle Errors here.
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                // The email of the user's account used.
-                const email = error.customData.email;
-                // The AuthCredential type that was used.
-                const credential = GoogleAuthProvider.credentialFromError(error);
-                console.error("Sign-in error:", errorCode, errorMessage);
-                alert(`Sign-in failed: ${errorMessage}`);
-            });
-    });
-
-    signOutBtn.addEventListener('click', () => {
-        signOut(auth).then(() => {
-            // Sign-out successful.
-            console.log("Sign-out successful.");
-             // The onAuthStateChanged observer will handle showing the login screen.
-        }).catch((error) => {
-            // An error happened.
-            console.error("Sign-out error:", error);
-            alert(`Sign-out failed: ${error.message}`);
         });
-    });
+
+        // Add event listener for the Edit API button
+        document.querySelector('.edit-api-btn').addEventListener('click', () => {
+            apiKeyInput.style.display = 'block';
+            document.getElementById('api-key-display').style.display = 'none';
+            apiKeyInput.focus();
+        });
+
+        // Modify the part that loads the API key in initializeAppUI()
+        apiKeyInput.value = localStorage.getItem('orion_apiKey') || '';
+        if (apiKeyInput.value) {
+            apiKeyInput.style.display = 'none';
+            document.getElementById('api-key-display').style.display = 'flex';
+        }
+    }
 
     // --- Init ---
     // The main initialization is now triggered by the Firebase onAuthStateChanged listener.
