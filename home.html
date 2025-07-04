@@ -625,8 +625,8 @@
             border-radius: 6px;
             cursor: pointer;
             transition: background-color 0.2s, color 0.2s;
-            -webkit-background-clip: initial; /* Override inherited background-clip */
-            -webkit-text-fill-color: initial; /* Override inherited text-fill-color */
+            -webkit-background-clip: initial;
+            -webkit-text-fill-color: initial;
             background-clip: initial;
         }
         #clear-all-conversations-btn:hover {
@@ -1288,7 +1288,7 @@
     <!-- Firebase Login Screen -->
     <div id="login-overlay" class="hidden">
         <div id="login-box">
-            <div class="orion-logo">Mainframe</div>
+            <div class="orion-logo">Mainframe<br><span style="font-size: 16px; margin-top: -9px; display: block;">Orion <span style="font-size: 16px;">Version 1.0.5</span> <span id="credits-display" style="font-size: 16px; color: var(--placeholder-color); margin-left: 8px;"></span></span></div>
             <div id="auth-error" class="auth-error-message hidden"></div>
             
             <form class="auth-form" id="auth-form">
@@ -1317,7 +1317,7 @@
     <!-- Main App Container -->
     <div id="app-container" class="hidden">
         <header>
-            <div class="orion-logo">Mainframe<br><span style="font-size: 16px; margin-top: -9px; display: block;">Orion <span style="font-size: 16px;">Version 1.0.5</span> <span id="credits-display" style="font-size: 16px; color: var(--placeholder-color); margin-left: 8px;"></span></span></div>
+            <div class="orion-logo">Mainframe</div>
             <div class="header-buttons">
                 <button id="subscription-btn" class="animated-icon-button animated-container" aria-label="Subscription Status">
                     <div class="glow-overlay"></div>
@@ -1944,7 +1944,7 @@
                     'from', 'further', 'had', 'hadn\'t', 'has', 'hasn\'t', 'have', 'haven\'t', 'having', 'he', 'he\'d', 'he\'ll', 'he\'s', 
                     'her', 'here', 'here\'s', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'how\'s', 'i', 'i\'d', 'i\'ll', 'i\'m', 
                     'i\'ve', 'if', 'in', 'into', 'is', 'isn\'t', 'it', 'it\'s', 'its', 'itself', 'let\'s', 'me', 'more', 'most', 'mustn\'t', 
-                    'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'only', 'or', 'other', 'ought', 'our', 'ours', 'ourselves', 
+                    'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'only', 'or', 'ought', 'our', 'ours', 'ourselves', 
                     'out', 'over', 'own', 'same', 'shan\'t', 'she', 'she\'d', 'she\'ll', 'she\'s', 'should', 'shouldn\'t', 'so', 'some', 'such', 
                     'than', 'that', 'that\'s', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'there\'s', 'these', 'they', 
                     'they\'d', 'they\'ll', 'they\'re', 'they\'ve', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 
@@ -2083,7 +2083,7 @@
     // --- Chat & API Logic ---
     function typewriterEffect(sender, message) {
         // Remove any existing typing indicator
-        const typingIndicator = chatLog.querySelector('.typing-indicator');
+        const typingIndicator = chatLog.querySelector(`.${config.TYPING_INDICATOR_CLASS}`);
         if (typingIndicator) {
             typingIndicator.remove();
         }
@@ -2125,7 +2125,7 @@
 
     function showTypingIndicator() {
         const typingIndicator = document.createElement('div');
-        typingIndicator.className = 'message bot-message typing-indicator';
+        typingIndicator.className = `message bot-message ${config.TYPING_INDICATOR_CLASS}`;
         typingIndicator.innerHTML = `
             <div class="message-content">
                 <div style="display: flex; gap: 4px; align-items: center;">
@@ -2832,51 +2832,60 @@
         const deviceFingerprint = generateDeviceFingerprint();
         const deviceCreditDocRef = doc(db, config.DEVICE_CREDITS_COLLECTION_NAME, deviceFingerprint);
         
-        try {
-            // Handle credits tied to device fingerprint
-            const deviceCreditDocSnap = await getDoc(deviceCreditDocRef);
+        let localCredits = JSON.parse(localStorage.getItem('orion_userCredits'));
 
-            if (deviceCreditDocSnap.exists()) {
-                const data = deviceCreditDocSnap.data();
-                
-                if (shouldResetCredits(data.lastReset)) {
-                    // Time to reset credits (7 PM has passed)
-                    await updateDoc(deviceCreditDocRef, { 
+        if (localCredits && localCredits.count !== undefined && localCredits.lastReset) {
+            userCredits = localCredits;
+            if (shouldResetCredits(userCredits.lastReset)) {
+                userCredits.count = config.DAILY_CREDIT_LIMIT;
+                userCredits.lastReset = new Date().toISOString(); // Store as ISO string for consistency
+                localStorage.setItem('orion_userCredits', JSON.stringify(userCredits));
+            }
+        } else {
+            // If no local credits or invalid, try fetching from Firestore
+            try {
+                const deviceCreditDocSnap = await getDoc(deviceCreditDocRef);
+
+                if (deviceCreditDocSnap.exists()) {
+                    const data = deviceCreditDocSnap.data();
+                    
+                    if (shouldResetCredits(data.lastReset)) {
+                        userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date().toISOString() };
+                        await updateDoc(deviceCreditDocRef, { 
+                            count: config.DAILY_CREDIT_LIMIT, 
+                            lastReset: serverTimestamp(),
+                            userId: user.uid,
+                            lastSeen: serverTimestamp()
+                        });
+                    } else {
+                        userCredits = { count: data.count, lastReset: new Date(data.lastReset.seconds * 1000).toISOString() };
+                        await updateDoc(deviceCreditDocRef, {
+                            lastSeen: serverTimestamp(),
+                            userId: user.uid
+                        });
+                    }
+                } else {
+                    // First time device or no record in Firestore
+                    userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date().toISOString() };
+                    await setDoc(deviceCreditDocRef, { 
                         count: config.DAILY_CREDIT_LIMIT, 
                         lastReset: serverTimestamp(),
                         userId: user.uid,
+                        fingerprint: deviceFingerprint,
+                        registeredAt: serverTimestamp(),
                         lastSeen: serverTimestamp()
                     });
-                    userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date() };
-                } else {
-                    // Load existing credits
-                    userCredits = { count: data.count, lastReset: new Date(data.lastReset.seconds * 1000) };
-                    // Update last seen
-                    await updateDoc(deviceCreditDocRef, {
-                        lastSeen: serverTimestamp(),
-                        userId: user.uid
-                    });
                 }
-            } else {
-                // First time device
-                await setDoc(deviceCreditDocRef, { 
-                    count: config.DAILY_CREDIT_LIMIT, 
-                    lastReset: serverTimestamp(),
-                    userId: user.uid,
-                    fingerprint: deviceFingerprint,
-                    registeredAt: serverTimestamp(),
-                    lastSeen: serverTimestamp()
-                });
-                userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date() };
-            }
-        } catch (error) {
-            console.error("Error fetching/managing credits:", error);
-            // NO FALLBACK - if there's an error, set credits to 0 for security
-            userCredits = { count: 0, lastReset: new Date() };
-            // Try to sign out user if there's a persistent error
-            if (error.code !== 'unavailable') {
-                await signOut(auth);
-                return;
+                localStorage.setItem('orion_userCredits', JSON.stringify(userCredits)); // Save to local storage after fetching/setting
+            } catch (error) {
+                console.error("Error fetching/managing credits from Firestore:", error);
+                // Fallback to default local credits if Firestore fails
+                userCredits = { count: config.DAILY_CREDIT_LIMIT, lastReset: new Date().toISOString() };
+                localStorage.setItem('orion_userCredits', JSON.stringify(userCredits));
+                if (error.code !== 'unavailable') {
+                    await signOut(auth);
+                    return;
+                }
             }
         }
         
@@ -2900,7 +2909,8 @@
             inputBox.disabled = true;
             sendButton.disabled = true;
             inputBox.placeholder = 'Daily message limit reached.';
-        } else {
+        }
+        else {
             inputBox.disabled = false;
             sendButton.disabled = false;
             inputBox.placeholder = 'Type your message here...';
@@ -2912,6 +2922,7 @@
         if (!user || subscriptionDetails.status === 'Active') return;
 
         userCredits.count = Math.max(0, userCredits.count - 1);
+        localStorage.setItem('orion_userCredits', JSON.stringify(userCredits)); // Save to localStorage
         updateCreditsDisplay();
         checkCreditAndToggleInput();
 
@@ -2946,13 +2957,24 @@
     function shouldResetCredits(lastResetTime) {
         if (!lastResetTime) return true;
         
-        const lastReset = new Date(lastResetTime.seconds * 1000);
+        let lastReset;
+        if (typeof lastResetTime === 'object' && lastResetTime.seconds !== undefined) {
+            // Firestore Timestamp object
+            lastReset = new Date(lastResetTime.seconds * 1000);
+        } else if (typeof lastResetTime === 'string') {
+            // ISO string from localStorage
+            lastReset = new Date(lastResetTime);
+        } else {
+            // Fallback for unexpected types, treat as needing reset
+            return true;
+        }
+
         const now = new Date();
         
         // Find the most recent 7 PM that should have triggered a reset
         const todayAt7PM = new Date();
-        todayAt7PM.setHours(19, 0, 0, 0);
-        
+        todayAt7PM.setHours(19, 0, 0, 0); // 7 PM CST
+
         const yesterdayAt7PM = new Date(todayAt7PM);
         yesterdayAt7PM.setDate(yesterdayAt7PM.getDate() - 1);
         
