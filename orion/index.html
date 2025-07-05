@@ -253,11 +253,37 @@
             </div>
         </div>
 
+        <!-- Create Persona Modal -->
+        <div id="create-persona-modal" class="hidden popup-overlay">
+          <div id="create-persona-content" class="info-popup-container">
+             <button id="close-create-persona-btn" class="close-popup-btn"><i class="fas fa-times"></i></button>
+             <h3>Create New Persona</h3>
+             <form id="create-persona-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="persona-name">Persona Name</label>
+                        <input type="text" id="persona-name" required class="api-key-input" maxlength="30">
+                    </div>
+                    <div>
+                        <label for="persona-description">System Prompt</label>
+                        <textarea id="persona-description" required class="api-key-input" rows="6" style="resize: vertical;"></textarea>
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 1rem;">
+                    <button type="submit" class="add-community-persona-btn">Create</button>
+                </div>
+             </form>
+          </div>
+        </div>
+
         <!-- Community Personas Modal -->
         <div id="community-personas-modal" class="hidden popup-overlay">
           <div id="community-personas-content" class="info-popup-container">
              <button id="close-community-personas-btn" class="close-popup-btn"><i class="fas fa-times"></i></button>
              <h3>Community Personas</h3>
+             <p style="text-align: center; margin-bottom: 1rem; color: var(--sidebar-label-color);">
+                Submit your personas to: moddarkrevolt@gmail.com
+             </p>
              <div id="community-personas-list">
                <!-- Populated by JS -->
              </div>
