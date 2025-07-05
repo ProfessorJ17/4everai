@@ -906,16 +906,18 @@ function populatePersonas() {
     divider.style.margin = '10px 0';
     personasContainer.appendChild(divider);
     
-    const addCustomBtn = document.createElement('a');
-    addCustomBtn.href = "#";
-    addCustomBtn.id = "add-custom-persona-btn";
-    addCustomBtn.textContent = " New Persona";
-    personasContainer.appendChild(addCustomBtn);
+    // Add Create+ button
+    const createBtn = document.createElement('a');
+    createBtn.href = "#";
+    createBtn.id = "create-persona-btn";
+    createBtn.textContent = "Create +";
+    personasContainer.appendChild(createBtn);
     
+    // Add Community button
     const browseCommunityBtn = document.createElement('a');
     browseCommunityBtn.href = "#";
     browseCommunityBtn.id = "browse-community-btn";
-    browseCommunityBtn.textContent = "Browse Community";
+    browseCommunityBtn.textContent = "Community";
     personasContainer.appendChild(browseCommunityBtn);
 
     const selectedPersona = PERSONAS[currentPersonaId] || customPersonas.find(p => p.id === currentPersonaId) || PERSONAS.onion;
@@ -1786,7 +1788,7 @@ function setupUIEventListeners() {
                 // This should be handled by a dedicated modal, not implemented here yet
                 alert('Create Persona: Not implemented in this version.');
             } else if (target.id === 'browse-community-btn') {
-                showCommunityPersonasModal();
+                document.getElementById('community-personas-modal').classList.remove('hidden');
             } else if(value) {
                 if (dropdownId === 'model-selector') {
                     document.getElementById(selectedId).textContent = target.textContent;
@@ -1819,6 +1821,52 @@ function setupUIEventListeners() {
     setupDropdown('theme-btn', 'theme-dropdown', 'selected-theme');
 
     window.addEventListener('click', () => document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden')));
+
+    // Add persona buttons event listeners 
+    personasContainer.addEventListener('click', async (e) => {
+        const target = e.target.closest('a');
+        if (!target) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (target.id === 'create-persona-btn') {
+            document.getElementById('create-persona-modal').classList.remove('hidden');
+        } else if (target.id === 'browse-community-btn') {
+            document.getElementById('community-personas-modal').classList.remove('hidden');
+        } else if (target.dataset.value) {
+            selectPersona(target.dataset.value);
+        }
+    });
+
+    // Create Persona Form handling
+    const createPersonaForm = document.getElementById('create-persona-form');
+    const createPersonaModal = document.getElementById('create-persona-modal');
+    const closeCreatePersonaBtn = document.getElementById('close-create-persona-btn');
+
+    createPersonaForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('persona-name').value.trim();
+        const description = document.getElementById('persona-description').value.trim();
+        
+        const newPersona = {
+            id: `custom-${Date.now()}`,
+            name: name,
+            systemPrompt: description,
+        };
+
+        customPersonas.push(newPersona);
+        saveCustomPersonas();
+        populatePersonas();
+        selectPersona(newPersona.id);
+        createPersonaModal.classList.add('hidden');
+        createPersonaForm.reset();
+    });
+
+    closeCreatePersonaBtn.addEventListener('click', () => {
+        createPersonaModal.classList.add('hidden');
+        createPersonaForm.reset();
+    });
 
     // Send/Clear buttons
     sendButton.addEventListener('click', sendMessage);
