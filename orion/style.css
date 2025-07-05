@@ -1292,3 +1292,35 @@ body.google-ai-mode-theme .message-content::before {
     color: var(--sidebar-label-color);
     font-family: monospace;
 }
+
+#create-persona-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--sidebar-label-color);
+}
+
+#create-persona-form .api-key-input {
+    margin-bottom: 1rem;
+}
+
+.community-persona-item {
+    border: 1px solid var(--input-border);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+}
+
+.community-persona-item:hover {
+    border-color: var(--text-color);
+}
+
+.community-persona-title {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.community-persona-prompt {
+    color: var(--sidebar-label-color);
+    font-size: 0.9em;
+    white-space: pre-wrap;
+}
