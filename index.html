@@ -288,9 +288,10 @@
         }
 
         .cta-button:hover {
-            color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7), 0 0 25px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(45deg, #0099FF, #00CCFF) !important;
+            border: 2px solid #00CCFF !important;
+            box-shadow: 0 0 15px rgba(0,204,255,0.7), 0 0 25px rgba(0,153,255,0.5);
+            transform: translateY(-3px);
             border: 2px solid gold;
             box-shadow: 0 0 10px var(--accent-color);
         }
@@ -985,6 +986,86 @@
             gap: 1rem;
         }
 
+        /* Dropdown styles */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            padding: 1rem 0;
+            font-size: 18px !important;
+            font-weight: 600 !important;
+            text-decoration: none;
+            color: black;
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: 2rem;
+            font-family: 'Orbitron', sans-serif;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .dropbtn:hover {
+            color: var(--primary-color);
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f1f1f1;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .dropbtn {
+                margin-left: 0;
+                width: 100%;
+                text-align: left;
+            }
+            .dropdown-content {
+                position: static;
+                box-shadow: none;
+                background-color: transparent;
+                transform: none;
+                width: 100%;
+                padding-left: 1rem;
+            }
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            border-bottom: none !important;
+            margin-left: 0 !important;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+            color: var(--primary-color);
+            text-shadow: none;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .contact-buttons {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
         @media (max-width: 768px) {
             .about-contact-container {
                 grid-template-columns: 1fr;
@@ -1049,6 +1130,11 @@
                 <a href="#pricing">Pricing</a>
                 <a href="#contact">Contact</a>
                 <a href="https://711131719.xyz/j17/index.html">Login</a>
+<a href="https://caimeo.shop/ai/caimeo.html">Caimeo</a>
+              <a href="http://4everai.online/orion/index.html">Beta</a>
+
+
+              
             </div>
         </div>
     </nav>
@@ -1191,6 +1277,27 @@
             <div class="testimonial">
                 <p>"I recorded bedtime stories for my kids years ago. With 4EverAI, I made an AI of myself that reads new ones to my grandkids in my voice. They love their 'magic grandpa'!"</p>
                 <cite>📖 — Ethan R., Portland</cite>
+            </div>
+        </div>
+    </section>
+
+    <section id="caimeo" class="contact-section white-section">
+        <div class="section-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path>
+                <path d="M12 16v-4"></path>
+                <path d="M12 8h.01"></path>
+            </svg>
+        </div>
+        <h2>🤖 CAIMEO Beta Login</h2>
+        <div class="about-contact-container" style="grid-template-columns: 1fr; text-align: center;">
+            <div class="about-us">
+                <h3>Unlock the Future of Interaction</h3>
+                <p>Welcome to the CAIMEO Beta program. As a beta tester, you get exclusive access to our next-generation conversational AI. Your feedback is crucial in shaping the future of digital companionship.</p>
+                <p>Please use the button below to access the beta platform. Note that you will need your beta tester credentials provided to you via email.</p>
+                <div class="contact-buttons" style="justify-content: center;">
+                    <a href="#" class="cta-button">Access Beta Platform</a>
+                </div>
             </div>
         </div>
     </section>
@@ -1354,7 +1461,7 @@
             <div class="social-links">
                 <a href="https://www.facebook.com/profile.php?id=61574410140888" class="social-icon">
                     <svg viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z"/>
+                        <path fill="currentColor" d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V24h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z"/>
                     </svg>
                 </a>
                 <a href="https://x.com/J17dark" class="social-icon">
