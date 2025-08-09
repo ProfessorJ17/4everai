@@ -23,6 +23,18 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="photos">
+        <div id="apod-photo-container" class="photo"></div>
+        <div class="photo" data-index="1"></div>
+        <div class="photo" data-index="2"></div>
+        <div class="photo" data-index="4"></div>
+        <div class="photo" data-index="5"></div>
+    </div>
+    <div id="prism">
+        <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+    </div>
     <div id="glow-container"></div>
 
     <!-- Firebase Login Screen -->
@@ -41,30 +53,34 @@
                 <span>or</span>
             </div>
             
+            <div class="auth-text-button-group">
+                <p class="auth-toggle-text">
+                    <span id="auth-toggle-message">Don't have an account?</span>
+                </p>
+                <a href="#" id="auth-toggle-link" class="auth-link-button">Register</a>
+            </div>
 
-            
-            <p class="auth-toggle-text">
-                <span id="auth-toggle-message">Don't have an account?</span>
-                <a href="#" id="auth-toggle-link">Register</a>
+            <div class="auth-text-button-group">
+                <p class="auth-toggle-text">
+                    <span>Sign Up for Premium</span>
+                </p>
+                <a href="https://caimeo.shop/ai/caimeo.html" class="auth-link-button" target="_blank" rel="noopener noreferrer">Go to Premium</a>
+            </div>
 
-                          <p class="auth-toggle-text">
-                <span id="auth-toggle-message">Sign Up for </span>
-                <a href="https://caimeo.shop/ai/caimeo.html" id="auth-toggle-link">Preimum</a>
+            <div class="auth-text-button-group">
+                <p class="auth-toggle-text">
+                    <span>Audio/Video AI Products</span>
+                </p>
+                <a href="http://4everai.online" class="auth-link-button" target="_blank" rel="noopener noreferrer">Click here!</a>
+            </div>
 
-
- <p class="auth-toggle-text">
-                <span id="auth-toggle-message">Audio/Video AI Products</span>
-                <a href="http://4everai.online" id="auth-toggle-link"> Click here! </a>
-
-                            
-            </p>
         </div>
     </div>
 
     <!-- Main App Container -->
     <div id="app-container" class="hidden">
         <header>
-            <div class="orion-logo">Mainframe<br><span style="font-size: 16px; margin-top: -9px; display: block;">Orion <span style="font-size: 16px;">Version 1.0.6</span> <span id="credits-display" style="font-size: 16px; color: var(--placeholder-color); margin-left: 8px;"></span></span></div>
+            <div class="orion-logo">Mainframe<br><span style="font-size: 16px; margin-top: -9px; display: block;">Orion <span style="font-size: 16px;">Version 1.0.7</span> <span id="credits-display" style="font-size: 16px; color: var(--placeholder-color); margin-left: 8px;"></span></div>
             <div class="header-buttons">
                 <button id="subscription-btn" class="animated-icon-button animated-container" aria-label="Subscription Status">
                     <div class="glow-overlay"></div>
@@ -163,11 +179,15 @@
                                 <span class="api-key-masked">••••••••••••••••</span>
                                 <button type="button" class="edit-api-btn animated-container" style="position: relative;">
                                     <div class="glow-overlay"></div>
-                                    <span>Edit API</span>
+                                    <span>Edit</span>
                                 </button>
                             </div>
                             <input type="password" id="api-key-input" class="api-key-input" placeholder="Enter your OpenRouter API key and press Enter">
                         </div>
+                        <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" id="create-api-key-btn" class="preset-btn animated-container" style="margin-top: 0.75rem; text-decoration: none;">
+                            <div class="glow-overlay"></div>
+                            <span>Create API Key</span>
+                        </a>
                     </div>
                 </div>
 
@@ -253,6 +273,51 @@
                     </div>
                 </div>
 
+                <!-- Backgrounds Section -->
+                <div class="sidebar-setting-group">
+                    <h3 style="cursor: pointer;" id="backgrounds-header">Backgrounds <span id="backgrounds-toggle" style="color: #666; transition: transform 0.3s;">></span></h3>
+                    <div id="backgrounds-content-container" style="transition: max-height 0.3s ease-out, opacity 0.3s ease-out;">
+                        <div class="relative">
+                            <button id="background-btn" class="sidebar-setting animated-container custom-dropdown-button">
+                                <div class="glow-overlay"></div>
+                                <span id="selected-background">Default</span>
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                            <div id="background-dropdown" class="custom-dropdown-menu hidden">
+                               <a href="#" data-value="-1">Default (Black)</a>
+                               <a href="#" data-value="1">Nebula 1</a>
+                               <a href="#" data-value="2">Dark Space</a>
+                               <a href="#" data-value="4">Starry Sky 1</a>
+                               <a href="#" data-value="5">Starry Sky 2</a>
+                            </div>
+                        </div>
+                        <div class="setting-toggle-container" style="margin-top: 1rem;">
+                            <label for="prism-toggle" class="text-sm" style="color: var(--sidebar-label-color);">Prism Effect</label>
+                            <label class="switch">
+                                <input type="checkbox" id="prism-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div id="apod-controls" style="margin-top: 1rem; border-top: 1px solid var(--input-border); padding-top: 1rem;">
+                            <label for="nasa-api-key-input" class="text-sm" style="color: var(--sidebar-label-color);">NASA API Key:</label>
+                            <input type="password" id="nasa-api-key-input" class="api-key-input" placeholder="Optional, uses DEMO_KEY" style="margin-top: 0.25rem;">
+                            
+                            <div class="apod-button-row" style="display: flex; justify-content: space-between; margin-top: 0.75rem; gap: 5px;">
+                                <button id="apod-prev-btn" class="animated-icon-button animated-container" aria-label="Previous Day" style="width: 36px; height: 36px;"><div class="glow-overlay"></div><i class="fas fa-chevron-left" style="z-index:11;"></i></button>
+                                <button id="apod-today-btn" class="preset-btn animated-container" style="flex-grow: 1;"><div class="glow-overlay"></div><span>Today</span></button>
+                                <button id="apod-random-btn" class="preset-btn animated-container" style="flex-grow: 1;"><div class="glow-overlay"></div><span>Random</span></button>
+                                <button id="apod-next-btn" class="animated-icon-button animated-container" aria-label="Next Day" style="width: 36px; height: 36px;"><div class="glow-overlay"></div><i class="fas fa-chevron-right" style="z-index:11;"></i></button>
+                            </div>
+                            <div style="text-align: center; margin-top: 0.75rem;">
+                                <a href="https://api.nasa.gov/" target="_blank" rel="noopener noreferrer" id="get-nasa-api-key-btn" class="preset-btn animated-container" style="text-decoration: none; display: inline-block;">
+                                    <div class="glow-overlay"></div>
+                                    <span>Get NASA API Key</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Parameters Section -->
                 <div class="sidebar-setting-group">
                     <h3 style="cursor: pointer;" id="parameters-header">Parameters <span id="parameters-toggle" style="color: #666; transition: transform 0.3s;">></span></h3>
@@ -292,6 +357,22 @@
                             <div class="slider-container">
                                 <input type="range" id="repetition-penalty-slider" class="parameter-slider" min="0.01" max="2" step="0.01" value="1.0">
                             </div>
+                        </div>
+
+                        <!-- Preset Buttons -->
+                        <div class="parameter-presets">
+                            <button id="preset-truth" class="preset-btn animated-container">
+                                <div class="glow-overlay"></div>
+                                <span>Truth</span>
+                            </button>
+                            <button id="preset-default" class="preset-btn animated-container">
+                                <div class="glow-overlay"></div>
+                                <span>Default</span>
+                            </button>
+                            <button id="preset-creative" class="preset-btn animated-container">
+                                <div class="glow-overlay"></div>
+                                <span>Creative</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -419,6 +500,10 @@
           </form>
         </div>
 
+    </div>
+
+    <div id="apod-credit-container" class="hidden">
+        <!-- APOD credit will be injected here by JS -->
     </div>
 
     <script type="module" src="script.js"></script>
