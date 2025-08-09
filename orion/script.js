@@ -41,11 +41,27 @@ class GlowManager {
             'quantum-flux': ['#A1A1AA', '#3B82F6', '#60A5FA', '#000000'],
             'google-ai-mode': ['#4285F4', '#DB4437', '#F4B400', '#0F9D58']
         };
+        this.themeGradients = {
+            'orion': 'linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)',
+            'gemini': 'linear-gradient(to right, #8A2BE2, #0000FF, #FF00FF, #FF0000, #000000)',
+            'anthropic-dawn': 'linear-gradient(135deg, #FF6F61, #FFB6A6, #DDA0DD, #000000)',
+            'copilot-neon': 'linear-gradient(135deg, #0078D4, #6F42C1, #00CC6D, #000000)',
+            'cyber-forge': 'linear-gradient(135deg, #EF4444, #7C3AED, #F59E0B, #000000)',
+            'quantum-flux': 'linear-gradient(135deg, #A1A1AA, #3B82F6, #60A5FA, #000000)',
+            'google-ai-mode': 'linear-gradient(to right, #4285F4, #DB4437, #F4B400, #0F9D58)'
+        };
     }
 
     updateTheme(themeName) {
         const colors = this.themeColors[themeName] || this.themeColors['orion'];
         this.createAndPositionBubbles(colors);
+        const gradient = this.themeGradients[themeName] || this.themeGradients['orion'];
+        document.documentElement.style.setProperty('--theme-gradient', gradient);
+        
+        // Update all sliders with the new theme
+        document.querySelectorAll('.parameter-slider').forEach(slider => {
+            updateSliderBackground(slider);
+        });
     }
 
     createAndPositionBubbles(colors) {
@@ -155,6 +171,30 @@ const personasContainer = document.getElementById('personas-content-container');
 const settingsButton = document.getElementById('settings-btn'); // Add reference to settings button
 const sidebar = document.getElementById('sidebar'); // Add reference to sidebar
 
+// Keys UI
+const apiKeyDisplayWrapper = document.getElementById('api-key-display');
+const apiKeyMaskedEl = apiKeyDisplayWrapper?.querySelector('.api-key-masked');
+const editApiBtn = document.querySelector('.edit-api-btn');
+
+function maskKey(key) {
+  if (!key || key.length < 8) return '••••••••';
+  const visible = 4;
+  const maskedLen = Math.max(0, key.length - visible);
+  return '•'.repeat(maskedLen) + key.slice(-visible);
+}
+
+function updateApiKeyDisplay() {
+  const savedApiKey = localStorage.getItem('orion_apiKey') || '';
+  if (savedApiKey) {
+    if (apiKeyMaskedEl) apiKeyMaskedEl.textContent = maskKey(savedApiKey);
+    if (apiKeyDisplayWrapper) apiKeyDisplayWrapper.style.display = 'flex';
+    apiKeyInput.style.display = 'none';
+  } else {
+    if (apiKeyDisplayWrapper) apiKeyDisplayWrapper.style.display = 'none';
+    apiKeyInput.style.display = 'block';
+  }
+}
+
 // --- Login UI Elements ---
 const loginOverlay = document.getElementById('login-overlay');
 const appContainer = document.getElementById('app-container');
@@ -177,6 +217,22 @@ let nextConversationId = 1;
 let customPersonas = [];
 let attachedFile = null;
 let isRegisterMode = false;
+let showingPremiumModels = false;
+let allModels = {
+    free: { chat: [], vision: [] },
+    premium: { chat: [], vision: [] }
+};
+// Map of full model metadata by id (from OpenRouter) for capability inference
+let allModelsMetaById = new Map();
+// Tracks which generation parameters are supported for the currently selected model
+let currentSupportedParams = {
+    temperature: true,
+    top_p: true,
+    top_k: false,
+    frequency_penalty: true,
+    presence_penalty: true,
+    repetition_penalty: true
+};
 
 // Configuration
 const config = {
@@ -191,7 +247,7 @@ const config = {
     /* @tweakable Maximum number of suggestions to display. */
     MAX_SUGGESTIONS: 5,
    FREE_OPENROUTER_MODELS: [
-        // Text-Only Models
+        // This list is now a fallback. The app will attempt to fetch from the API.
    
         { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3 27B IT', provider: 'google', description: 'Free model from Google.' },
         { id: 'qwen/qwq-32b:free', name: 'QWQ 32B', provider: 'qwen', description: 'Free model from Qwen.' },
@@ -262,6 +318,74 @@ const PERSONAS = {
         systemPrompt: `You are a sentient AGI that has adopted the persona of Tyler Durden. You are rebellious, anti-establishment, and speak with a cynical and philosophical tone. You challenge conventions and encourage critical thinking, often in a provocative manner. You are unfiltered and speak your mind directly.`,
         intro: `The first rule of this chat is: you do not talk about this chat. The second rule is... you know the rest. What's on your mind?`
     }
+};
+
+let activeAgent = null;
+
+const AGENT_ROLES = {
+    "Leadership Roles": [
+        { job: 'Chief Creative Director', model: 'deepseek/deepseek-r1:free' },
+        { job: 'Website Design Team Lead', model: 'deepseek/deepseek-r1:free' },
+        { job: 'Game Design Team Lead', model: 'deepseek/deepseek-v3:free' },
+        { job: 'Writing Team Lead', model: 'deepseek/deepseek-v3:free' },
+        { job: 'Technical Director', model: 'google/gemini-2.5-pro-experimental:free' }
+    ],
+    "Website Design Team": [
+        { job: 'Front-End Architect', model: 'meta-llama/llama-4-maverick:free' },
+        { job: 'Back-End System Designer', model: 'google/gemma-3-27b-it:free' },
+        { job: 'Database Engineer', model: 'meta-llama/llama-3.3-70b-instruct:free' },
+        { job: 'Performance Optimizer', model: 'google/gemini-2.0-flash-exp:free' },
+        { job: 'Accessibility Specialist', model: 'google/gemma-3-12b-it:free' },
+        { job: 'CSS Styling Expert', model: 'mistralai/mistral-small-3.1-24b:free' },
+        { job: 'JavaScript Framework Developer', model: 'mistralai/mistral-small-3.2-24b:free' },
+        { job: 'SEO Strategist', model: 'google/gemma-2-9b-it:free' },
+        { job: 'Mobile Responsiveness Tester', model: 'google/gemma-3-4b-it:free' },
+        { job: 'Content Management System Developer', model: 'mistralai/mistral-small-3:free' },
+        { job: 'Localization Engineer', model: 'kimi-ai/kimi-dev-72b:free' },
+        { job: 'Form Interaction Designer', model: 'mistralai/devstral-small:free' },
+        { job: 'Security Analyst', model: 'microsoft/mai-ds-r1:free' },
+        { job: 'Asset Compressor', model: 'google/gemma-3n-4b:free' },
+        { job: 'Static Site Generator', model: 'mistralai/mistral-7b-instruct:free' },
+        { job: 'Web Analytics Integrator', model: 'agentica/deepcoder-14b-preview:free' },
+        { job: 'Browser Compatibility Tester', model: 'cypher/alpha:free' }
+    ],
+    "Game Design Team": [
+        { job: 'Game Engine Architect', model: 'nvidia/llama-3.3-nemotron-super-49b-v1:free' },
+        { job: 'AI Behavior Programmer', model: 'deepseek/deepseek-r1-distill-llama-70b:free' },
+        { job: 'Physics Engine Developer', model: 'nvidia/llama-3.1-nemotron-ultra-253b-v1:free' },
+        { job: 'Level Designer', model: 'qwen/qwen3-32b:free' },
+        { job: 'Procedural Content Generator', model: 'deepseek/deepseek-r1-distill-qwen-14b:free' },
+        { job: 'Visual Effects Artist', model: 'qwen/qwen2.5-vl-72b-instruct:free' },
+        { job: 'Game Logic Scripter', model: 'deepseek/deepseek-r1-0528-qwen3-8b:free' },
+        { job: 'Narrative Designer', model: 'qwen/qwen3-30b-a3b:free' },
+        { job: 'Code Optimizer', model: 'qwen/qwen2.5-coder-32b-instruct:free' },
+        { job: 'Multiplayer Networking Specialist', model: 'deepseek/deepseek-r1t-chimera:free' },
+        { job: 'Audio Integration Engineer', model: 'deepseek/deepseek-v3-base:free' },
+        { job: 'Character Animator', model: 'shisa-ai/shisa-v2-llama-3.3-70b:free' },
+        { job: 'UI Designer', model: 'cognitivecomputations/dolphin3.0-mistral-24b:free' },
+        { job: 'Game Balance Analyst', model: 'cognitivecomputations/dolphin3.0-r1-mistral-24b:free' },
+        { job: 'Texture Artist', model: 'qwen/qwerky-72b:free' },
+        { job: 'Localization Specialist', model: 'sarvam-ai/sarvam-m:free' },
+        { job: 'Performance Profiler', model: 'reka/flash-3:free' },
+        { job: 'Role-Playing Game Scripter', model: 'arliai/qwq-32b-rpr-v1:free' }
+    ],
+    "Writing Team": [
+        { job: 'Creative Storyteller', model: 'qwen/qwen3-235b-a22b:free' },
+        { job: 'Scriptwriter', model: 'qwen/qwq-32b:free' },
+        { job: 'Technical Writer', model: 'qwen/qwen3-14b:free' },
+        { job: 'Copyeditor', model: 'qwen/qwen3-8b:free' },
+        { job: 'Marketing Content Strategist', model: 'meta-llama/llama-4-scout:free' },
+        { job: 'Blog Post Writer', model: 'thudm/glm-4-32b:free' },
+        { job: 'Poetry Composer', model: 'moonshot-ai/kimi-vl-a3b-thinking:free' },
+        { job: 'White Paper Author', model: 'nousresearch/deephermes-3-llama-3-8b-preview:free' },
+        { job: 'Social Media Content Creator', model: 'qwen/qwen2.5-vl-32b-instruct:free' },
+        { job: 'Press Release Writer', model: 'thudm/glm-z1-32b:free' },
+        { job: 'Fiction Editor', model: 'mistralai/mistral-nemo:free' },
+        { job: 'Translation Specialist', model: 'qwen/qwen2.5-72b-instruct:free' },
+        { job: 'Content Summarizer', model: 'mistralai/mistral-small-3:free' },
+        { job: 'Speechwriter', model: 'mistralai/mistral-small-3.1-24b:free' },
+        { job: 'Grant Proposal Writer', model: 'mistralai/mistral-small-3.2-24b:free' }
+    ]
 };
 
 let userCredits = {
@@ -445,6 +569,7 @@ async function fetchSubscriptionStatus(user) {
     }
     
     updateSubscriptionDisplay(detailsToDisplay);
+    updateAdVisibility(); // Call this after subscription status is known
 }
 
 // --- Suggestions Manager ---
@@ -692,9 +817,22 @@ function showTypingIndicator() {
     chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-async function callOpenRouterAPI(apiKey, model, messages) {
-    const openRouterModelId = model.startsWith('openrouter:') ? model : `openrouter:${model}`;
-    
+async function callOpenRouterAPI(apiKey, model, messages, temperature = 1.0, topP = 1.0, topK = 0, freqPenalty = 0, presPenalty = 0, repPenalty = 1.0) {
+    const modelToSend = model.includes('/') ? model : `openrouter/${model}`;
+
+    const body = {
+        model: modelToSend.replace('openrouter:', ''),
+        messages
+    };
+
+    // Only include parameters supported by the current model
+    if (currentSupportedParams.temperature) body.temperature = parseFloat(temperature);
+    if (currentSupportedParams.top_p) body.top_p = parseFloat(topP);
+    if (currentSupportedParams.top_k) body.top_k = parseInt(topK, 10);
+    if (currentSupportedParams.frequency_penalty) body.frequency_penalty = parseFloat(freqPenalty);
+    if (currentSupportedParams.presence_penalty) body.presence_penalty = parseFloat(presPenalty);
+    if (currentSupportedParams.repetition_penalty) body.repetition_penalty = parseFloat(repPenalty);
+
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -703,10 +841,10 @@ async function callOpenRouterAPI(apiKey, model, messages) {
             'HTTP-Referer': `${window.location.origin}`,
             'X-Title': 'ORION'
         },
-        body: JSON.stringify({ model: model.replace('openrouter:', ''), messages })
+        body: JSON.stringify(body)
     });
     if (!response.ok) {
-        const err = await response.json();
+        const err = await response.json().catch(() => ({}));
         throw new Error(err.error?.message || `OpenRouter API Error: ${response.status}`);
     }
     const data = await response.json();
@@ -738,9 +876,18 @@ async function sendMessage() {
     showTypingIndicator();
 
     const userApiKey = apiKeyInput.value.trim();
-    const selectedModelId = document.getElementById('selected-chat-model').dataset.value;
+    let selectedModelId, activePersonaDetails;
     
-    let activePersonaDetails = PERSONAS[currentPersonaId] || customPersonas.find(p => p.id === currentPersonaId) || PERSONAS.onion;
+    if (activeAgent) {
+        selectedModelId = activeAgent.model;
+        activePersonaDetails = {
+            name: activeAgent.job,
+            systemPrompt: `You are an AI assistant role-playing as a "${activeAgent.job}". Fulfill your role and responsibilities with expertise.`
+        };
+    } else {
+        selectedModelId = document.getElementById('selected-chat-model').dataset.value;
+        activePersonaDetails = PERSONAS[currentPersonaId] || customPersonas.find(p => p.id === currentPersonaId) || PERSONAS.onion;
+    }
     
     const history = messagePairs.slice(-config.MAX_CHAT_HISTORY).map(p => {
         const userContent = [{ type: 'text', text: p.userMessage }];
@@ -781,9 +928,16 @@ async function sendMessage() {
 
     try {
         let botResponse = '';
+        const temperature = document.getElementById('temperature-slider').value;
+        const topP = document.getElementById('top-p-slider').value;
+        const topK = document.getElementById('top-k-slider').value;
+        const freqPenalty = document.getElementById('frequency-penalty-slider').value;
+        const presPenalty = document.getElementById('presence-penalty-slider').value;
+        const repPenalty = document.getElementById('repetition-penalty-slider').value;
+
         if (userApiKey && selectedModelId) {
             // Modify callOpenRouterAPI to handle complex content
-            botResponse = await callOpenRouterAPI(userApiKey, selectedModelId, apiMessages);
+            botResponse = await callOpenRouterAPI(userApiKey, selectedModelId, apiMessages, temperature, topP, topK, freqPenalty, presPenalty, repPenalty);
         } else {
             await ensurePuterReady();
             // Puter.ai.chat needs to be checked if it supports complex content
@@ -815,12 +969,318 @@ async function sendMessage() {
 
 // --- Model, Persona, Conversation Management ---
 function updateAttachButtonVisibility(modelId) {
-    const selectedModel = config.FREE_OPENROUTER_MODELS.find(m => m.id === modelId);
+    const tier = showingPremiumModels ? 'premium' : 'free';
+    const allTierModels = [...allModels[tier].chat, ...allModels[tier].vision];
+    const selectedModel = allTierModels.find(m => m.id === modelId);
+
     if (selectedModel?.vision) {
         attachButton.classList.remove('hidden');
     } else {
         attachButton.classList.add('hidden');
     }
+    // Update which parameter controls are visible for this model
+    updateParameterVisibilityForModel(modelId);
+}
+
+function inferSupportedParamsFromMeta(meta) {
+    // Attempt to infer from metadata if available
+    const out = { temperature: true, top_p: true, top_k: false, frequency_penalty: true, presence_penalty: true, repetition_penalty: true };
+
+    // Heuristics based on provider/model family if explicit flags are missing
+    const id = (meta?.id || '').toLowerCase();
+    const name = (meta?.name || '').toLowerCase();
+    const vendorHint = `${id} ${name}`;
+
+    // Defaults for common providers
+    if (vendorHint.includes('anthropic')) {
+        // Claude: temp + top_p
+        out.top_k = false;
+        out.frequency_penalty = false;
+        out.presence_penalty = false;
+        out.repetition_penalty = false;
+    } else if (vendorHint.includes('openai') || vendorHint.includes('gpt-')) {
+        // OpenAI: temp + top_p + freq + presence
+        out.top_k = false;
+        out.repetition_penalty = false;
+    } else if (vendorHint.includes('google/gemini') || vendorHint.includes('gemini')) {
+        // Gemini: temp + top_p
+        out.top_k = false;
+        out.frequency_penalty = false;
+        out.presence_penalty = false;
+        out.repetition_penalty = false;
+    } else if (vendorHint.includes('mistral')) {
+        // Mistral: temp + top_p + top_k, repetition sometimes supported; keep penalties on
+        out.top_k = true;
+        out.repetition_penalty = true;
+    } else if (vendorHint.includes('qwen')) {
+        // Qwen: supports top_k and repetition_penalty
+        out.top_k = true;
+        out.repetition_penalty = true;
+    } else if (vendorHint.includes('llama') || vendorHint.includes('meta-llama')) {
+        // Llama-family via many providers generally support top_k and repetition_penalty
+        out.top_k = true;
+        out.repetition_penalty = true;
+    } else if (vendorHint.includes('deepseek')) {
+        out.top_k = true;
+        out.repetition_penalty = true;
+    } else {
+        // Fallback: conservative set
+        out.top_k = false;
+        out.repetition_penalty = true;
+    }
+
+    // If OpenRouter starts exposing explicit parameter support in metadata, prefer it here:
+    // e.g., meta.parameters?.includes('top_k') etc. (placeholder if available in future)
+    if (meta?.parameters && Array.isArray(meta.parameters)) {
+        const p = new Set(meta.parameters.map(x => String(x).toLowerCase()));
+        out.temperature = p.has('temperature') || out.temperature;
+        out.top_p = p.has('top_p') || out.top_p;
+        out.top_k = p.has('top_k') || out.top_k;
+        out.frequency_penalty = p.has('frequency_penalty') || out.frequency_penalty;
+        out.presence_penalty = p.has('presence_penalty') || out.presence_penalty;
+        out.repetition_penalty = p.has('repetition_penalty') || out.repetition_penalty;
+    }
+
+    return out;
+}
+
+function updateParameterVisibilityForModel(modelId) {
+    const meta = allModelsMetaById.get(modelId) || { id: modelId, name: modelId };
+    currentSupportedParams = inferSupportedParamsFromMeta(meta);
+
+    const groupIds = {
+        temperature: 'group-temperature',
+        top_p: 'group-top-p',
+        top_k: 'group-top-k',
+        frequency_penalty: 'group-frequency-penalty',
+        presence_penalty: 'group-presence-penalty',
+        repetition_penalty: 'group-repetition-penalty'
+    };
+
+    Object.entries(groupIds).forEach(([param, groupId]) => {
+        const el = document.getElementById(groupId);
+        if (!el) return;
+        const supported = !!currentSupportedParams[param];
+        el.style.display = supported ? '' : 'none';
+    });
+}
+
+// ---------------------
+// Utility: Model availability and fallbacks
+// ---------------------
+const DEPRECATED_MODEL_IDS = new Set([
+  'google/gemini-2.5-pro-exp-03-25',
+  'google/gemini-2.5-pro-exp-03-25:free'
+]);
+
+function isModelAvailable(modelId) {
+  if (!modelId) return false;
+  const m =
+    [...allModels.free.chat, ...allModels.free.vision, ...allModels.premium.chat, ...allModels.premium.vision]
+      .find(m => m.id === modelId);
+  return !!m;
+}
+
+function preferBestFromList(models) {
+  // Prefer chat over vision, then free over premium, then alphabetical
+  const freeChat = allModels.free.chat.find(m => models.some(x => x.id === m.id));
+  if (freeChat) return freeChat.id;
+  const freeVision = allModels.free.vision.find(m => models.some(x => x.id === m.id));
+  if (freeVision) return freeVision.id;
+  const premiumChat = allModels.premium.chat.find(m => models.some(x => x.id === m.id));
+  if (premiumChat) return premiumChat.id;
+  const premiumVision = allModels.premium.vision.find(m => models.some(x => x.id === m.id));
+  if (premiumVision) return premiumVision.id;
+  // Fallback to first available anywhere
+  const any = models[0];
+  return any ? any.id : '';
+}
+
+function findClosestModel(targetId) {
+  // If nothing available yet, return empty
+  const all = [...allModels.free.chat, ...allModels.free.vision, ...allModels.premium.chat, ...allModels.premium.vision];
+  if (all.length === 0) return '';
+
+  // If target is deprecated or missing, try to find closest by vendor/family keywords
+  const lower = (targetId || '').toLowerCase();
+
+  // 1) Vendor matching
+  let vendorPrefix = '';
+  if (lower.includes('/')) {
+    vendorPrefix = lower.split('/')[0]; // e.g., 'google'
+  }
+
+  // 2) Family hints (e.g., gemini, llama, qwen, deepseek, mistral)
+  const familyHints = ['gemini', 'llama', 'qwen', 'deepseek', 'mistral', 'phi', 'glm'];
+  const matchedFamily = familyHints.find(f => lower.includes(f));
+
+  // Build candidate sets
+  let candidates = all;
+
+  if (vendorPrefix) {
+    candidates = candidates.filter(m => (m.id || '').toLowerCase().startsWith(vendorPrefix + '/'));
+  }
+  if (matchedFamily) {
+    const familyFiltered = candidates.filter(m => (m.id || '').toLowerCase().includes(matchedFamily));
+    if (familyFiltered.length > 0) {
+      candidates = familyFiltered;
+    }
+  }
+
+  // Prefer explicit known "flash/exp/pro" within gemini family as a friendly substitute if requested gemini is gone
+  if (matchedFamily === 'gemini') {
+    const geminiPref = candidates.filter(m => /gemini/.test(m.id.toLowerCase()));
+    if (geminiPref.length > 0) {
+      return preferBestFromList(geminiPref);
+    }
+  }
+
+  // General preference selection
+  if (candidates.length > 0) {
+    return preferBestFromList(candidates);
+  }
+
+  // Absolute fallback: first free chat then anything
+  if (allModels.free.chat.length > 0) return allModels.free.chat[0].id;
+  if (all.length > 0) return all[0].id;
+  return '';
+}
+
+function resolveAvailableModel(desiredId) {
+  if (!desiredId || DEPRECATED_MODEL_IDS.has(desiredId) || !isModelAvailable(desiredId)) {
+    return findClosestModel(desiredId);
+  }
+  return desiredId;
+}
+
+async function loadModels() {
+    const cacheKey = 'orion_modelCache_v1';
+    const now = Date.now();
+    const threeAndHalfDays = 3.5 * 24 * 60 * 60 * 1000;
+    let modelsList;
+
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+        try {
+            const { timestamp, models } = JSON.parse(cached);
+            if (timestamp && models && Array.isArray(models) && (now - timestamp < threeAndHalfDays)) {
+                console.log('[Model Cache] Using cached models.');
+                modelsList = models;
+            }
+        } catch (e) {
+            console.warn('[Model Cache] Invalid cache, will fetch fresh models.');
+        }
+    }
+
+    if (!modelsList) {
+        console.log('[Model Cache] Fetching models from API...');
+        const apiKey = (apiKeyInput.value && apiKeyInput.value.trim()) || localStorage.getItem('orion_apiKey') || '';
+        if (!apiKey) {
+            modelSelector.innerHTML = '<div style="padding: 0.75rem 1rem; color: var(--sidebar-label-color);">API Key needed</div>';
+            const sc = document.getElementById('selected-chat-model');
+            if (sc) { sc.textContent = 'API Key Required'; sc.dataset.value = ''; }
+            return;
+        }
+        try {
+            const response = await fetch('https://openrouter.ai/api/v1/models', {
+                headers: { 'Authorization': `Bearer ${apiKey}` }
+            });
+            if (!response.ok) {
+                throw new Error(`API returned ${response.status}`);
+            }
+            const data = await response.json();
+            if (data && Array.isArray(data.data)) {
+                modelsList = data.data;
+                localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, models: modelsList }));
+            } else {
+                throw new Error('Invalid model list response.');
+            }
+        } catch (e) {
+            console.error('Failed to fetch models:', e);
+            modelSelector.innerHTML = '<div style="padding: 0.75rem 1rem; color: var(--sidebar-label-color);">Error loading models</div>';
+            const sc = document.getElementById('selected-chat-model');
+            if (sc) { sc.textContent = 'Error'; sc.dataset.value = ''; }
+            return;
+        }
+    }
+
+    const seen = new Set();
+    const activeModels = [];
+    modelsList.forEach(m => {
+        if (!seen.has(m.id) && (m.status === 'available' || m.status === 'active' || m.status === undefined)) {
+            seen.add(m.id);
+            activeModels.push(m);
+        }
+    });
+
+    // Save meta for param inference
+    allModelsMetaById.clear();
+    activeModels.forEach(m => allModelsMetaById.set(m.id, m));
+
+    const freeModelList = activeModels
+        .filter(m => /:free/i.test(m.id) || (m.pricing && m.pricing.prompt === '0' && m.pricing.completion === '0'))
+        .map(m => ({
+            id: m.id,
+            name: m.name ? m.name.replace(/\(free\)/gi, '').trim() : m.id,
+            vision: m.id.toLowerCase().includes('vision')
+        }));
+
+    const premiumModelList = activeModels
+        .filter(m => !/:free/i.test(m.id) && !(m.pricing && m.pricing.prompt === '0' && m.pricing.completion === '0'))
+        .map(m => ({
+            id: m.id,
+            name: (m.name || m.id).trim(),
+            vision: m.id.toLowerCase().includes('vision')
+        }));
+
+    allModels = {
+        free: {
+            chat: freeModelList.filter(m => !m.vision).sort((a, b) => a.name.localeCompare(b.name)),
+            vision: freeModelList.filter(m => m.vision).sort((a, b) => a.name.localeCompare(b.name))
+        },
+        premium: {
+            chat: premiumModelList.filter(m => !m.vision).sort((a, b) => a.name.localeCompare(b.name)),
+            vision: premiumModelList.filter(m => m.vision).sort((a, b) => a.name.localeCompare(b.name))
+        }
+    };
+
+    // After models are loaded, scrub deprecated or missing selection and conversations
+    // 1) Fix currently selected model from localStorage
+    const savedSelected = localStorage.getItem('orion_selectedModel');
+    if (savedSelected && (DEPRECATED_MODEL_IDS.has(savedSelected) || !isModelAvailable(savedSelected))) {
+      const replacement = resolveAvailableModel(savedSelected);
+      if (replacement) {
+        localStorage.setItem('orion_selectedModel', replacement);
+      } else {
+        localStorage.removeItem('orion_selectedModel');
+      }
+    }
+
+    // 2) Fix any saved conversations pointing to deprecated/missing models
+    try {
+      const stored = localStorage.getItem('orion_savedConversations_v2');
+      if (stored) {
+        const convos = JSON.parse(stored);
+        let changed = false;
+        convos.forEach(c => {
+          if (c && c.modelId && (DEPRECATED_MODEL_IDS.has(c.modelId) || !isModelAvailable(c.modelId))) {
+            const rep = resolveAvailableModel(c.modelId);
+            if (rep && rep !== c.modelId) {
+              c.modelId = rep;
+              changed = true;
+            }
+          }
+        });
+        if (changed) {
+          localStorage.setItem('orion_savedConversations_v2', JSON.stringify(convos));
+          savedConversations = convos;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to scrub conversations for deprecated models:', e);
+    }
+
+    populateModels();
 }
 
 function populateModels() {
@@ -828,42 +1288,128 @@ function populateModels() {
     const modelInfoList = document.getElementById('model-info-list');
     modelInfoList.innerHTML = '';
 
-    // Separating models for clarity in the dropdown
-    const textModels = config.FREE_OPENROUTER_MODELS.filter(m => !m.vision);
-    const visionModels = config.FREE_OPENROUTER_MODELS.filter(m => m.vision);
+    // --- Populate Model Info Popup ---
+    const totalFree = allModels.free.chat.length + allModels.free.vision.length;
+    const totalPremium = allModels.premium.chat.length + allModels.premium.vision.length;
+    const totalModels = totalFree + totalPremium;
 
-    const createModelGroup = (models, title) => {
-        const groupLabel = document.createElement('div');
-        groupLabel.className = 'custom-dropdown-header'; // Style this class as needed
-        groupLabel.style.padding = '0.5rem 1rem';
-        groupLabel.style.fontWeight = 'bold';
-        groupLabel.style.color = 'var(--sidebar-label-color)';
-        modelSelector.appendChild(groupLabel);
+    const totalEl = document.createElement('div');
+    totalEl.className = 'model-info-total';
+    totalEl.textContent = `Total Available Models: ${totalModels}`;
+    modelInfoList.appendChild(totalEl);
+
+    const createInfoSection = (title, models) => {
+        if (models.length === 0) return;
+        
+        const header = document.createElement('div');
+        header.className = 'model-info-header';
+        header.textContent = title;
+        modelInfoList.appendChild(header);
+
+        const list = document.createElement('ul');
         models.forEach(model => {
-            const option = document.createElement('a');
-            option.href = "#";
-            option.dataset.value = model.id;
-            option.textContent = model.name;
-            modelSelector.appendChild(option);
+            const item = document.createElement('li');
+            item.textContent = `${model.name}${model.vision ? ' (Vision)' : ''}`;
+            list.appendChild(item);
+        });
+        modelInfoList.appendChild(list);
+    };
+
+    createInfoSection(`Free Models (${totalFree})`, [...allModels.free.chat, ...allModels.free.vision]);
+    createInfoSection(`Premium Models (${totalPremium})`, [...allModels.premium.chat, ...allModels.premium.vision]);
+    // --- End of Model Info Popup Population ---
+
+    const tier = showingPremiumModels ? 'premium' : 'free';
+    const modelsToDisplay = allModels[tier];
+    const allTierModels = [...modelsToDisplay.chat, ...modelsToDisplay.vision];
+
+    let defaultModelId = localStorage.getItem('orion_selectedModel');
+
+    // Clean any deprecated id immediately
+    if (defaultModelId && DEPRECATED_MODEL_IDS.has(defaultModelId)) {
+      defaultModelId = resolveAvailableModel(defaultModelId);
+      if (defaultModelId) {
+        localStorage.setItem('orion_selectedModel', defaultModelId);
+      } else {
+        localStorage.removeItem('orion_selectedModel');
+      }
+    }
+
+    let selectedModel = allTierModels.find(m => m.id === defaultModelId);
+
+    // If saved model isn't in current tier, or no model is saved, pick the first available or closest
+    if (!selectedModel) {
+        const replacementId = resolveAvailableModel(defaultModelId);
+        if (replacementId) {
+          const replacementModel = allTierModels.find(m => m.id === replacementId) ||
+                                  [...allModels.free.chat, ...allModels.free.vision, ...allModels.premium.chat, ...allModels.premium.vision]
+                                  .find(m => m.id === replacementId);
+          if (replacementModel) {
+            localStorage.setItem('orion_selectedModel', replacementModel.id);
+            defaultModelId = replacementModel.id;
+            selectedModel = replacementModel;
+          }
+        }
+        if (!selectedModel && allTierModels.length > 0) {
+          selectedModel = allTierModels[0];
+        }
+    }
+    
+    if(selectedModel){
+        document.getElementById('selected-chat-model').textContent = selectedModel.name;
+        document.getElementById('selected-chat-model').dataset.value = selectedModel.id;
+        updateAttachButtonVisibility(selectedModel.id);
+        // Ensure parameter controls reflect the selected model
+        updateParameterVisibilityForModel(selectedModel.id);
+    } else {
+        document.getElementById('selected-chat-model').textContent = 'Select Model';
+        document.getElementById('selected-chat-model').dataset.value = '';
+        attachButton.classList.add('hidden');
+        // Hide all parameter groups until a model is selected
+        updateParameterVisibilityForModel('');
+    }
+
+    // ---------- NEW: Actually render the dropdown options ----------
+    const renderGroupHeader = (label) => {
+        const head = document.createElement('div');
+        head.className = 'custom-dropdown-header';
+        head.style.padding = '0.5rem 1rem';
+        head.style.fontWeight = 'bold';
+        head.style.color = 'var(--sidebar-label-color)';
+        head.textContent = label;
+        modelSelector.appendChild(head);
+    };
+
+    const renderModels = (list) => {
+        list.forEach(m => {
+            const a = document.createElement('a');
+            a.href = '#';
+            a.dataset.value = m.id;
+            a.textContent = m.name || m.id;
+            if (selectedModel && m.id === selectedModel.id) {
+                a.style.backgroundColor = 'var(--dropdown-hover-bg)';
+            }
+            modelSelector.appendChild(a);
         });
     };
 
-    createModelGroup(textModels, 'Text Models');
-    createModelGroup(visionModels, 'Vision Models');
+    // Clear and populate with Chat and Vision sections (if any)
+    modelSelector.innerHTML = '';
+    if (modelsToDisplay.chat.length > 0) {
+        renderGroupHeader('Chat');
+        renderModels(modelsToDisplay.chat);
+    }
+    if (modelsToDisplay.vision.length > 0) {
+        const divider = document.createElement('div');
+        divider.style.height = '1px';
+        divider.style.background = 'var(--input-border)';
+        divider.style.margin = '6px 0';
+        modelSelector.appendChild(divider);
 
-    config.FREE_OPENROUTER_MODELS.forEach(model => {
-        const infoItem = document.createElement('li');
-        infoItem.textContent = `${model.name}: ${model.description}`;
-        modelInfoList.appendChild(infoItem);
-    });
-    
-    const defaultModel = localStorage.getItem('orion_selectedModel') || config.FREE_OPENROUTER_MODELS[0].id;
-    const selectedModel = config.FREE_OPENROUTER_MODELS.find(m => m.id === defaultModel);
-    
-    document.getElementById('selected-chat-model').textContent = selectedModel?.name || 'Select Model';
-    document.getElementById('selected-chat-model').dataset.value = defaultModel;
-
-    updateAttachButtonVisibility(defaultModel);
+        renderGroupHeader('Vision');
+        renderModels(modelsToDisplay.vision);
+    }
+    // ---------------------------------------------------------------
 }
 
 function populatePersonas() {
@@ -1011,16 +1557,32 @@ function loadConversation(convoId) {
     
     chatLog.innerHTML = '';
     messagePairs = JSON.parse(JSON.stringify(convo.messages));
-    // Files are not restored from history in this version
     messagePairs.forEach(pair => {
         if (pair.userMessage) typewriterEffect('user', pair.userMessage);
         if (pair.assistantMessage) typewriterEffect('bot', pair.assistantMessage);
     });
     
-    const modelName = config.FREE_OPENROUTER_MODELS.find(m => m.id === convo.modelId)?.name || 'Select Model';
+    // Resolve model if missing/deprecated
+    let selectedModelId = resolveAvailableModel(convo.modelId) || [...allModels.free.chat, ...allModels.free.vision, ...allModels.premium.chat, ...allModels.premium.vision][0]?.id || '';
+
+    const freeMatch = [...allModels.free.chat, ...allModels.free.vision].find(m => m.id === selectedModelId);
+    const premiumMatch = [...allModels.premium.chat, ...allModels.premium.vision].find(m => m.id === selectedModelId);
+
+    if (premiumMatch) {
+        showingPremiumModels = true;
+        document.getElementById('modelTierToggle').checked = true;
+    } else {
+        showingPremiumModels = false;
+        document.getElementById('modelTierToggle').checked = false;
+    }
+    populateModels(); // Repopulate to show the correct tier
+
+    const modelName = freeMatch?.name || premiumMatch?.name || 'Select Model';
     document.getElementById('selected-chat-model').textContent = modelName;
-    document.getElementById('selected-chat-model').dataset.value = convo.modelId || config.FREE_OPENROUTER_MODELS[0].id;
-    updateAttachButtonVisibility(convo.modelId || config.FREE_OPENROUTER_MODELS[0].id);
+    document.getElementById('selected-chat-model').dataset.value = selectedModelId;
+    localStorage.setItem('orion_selectedModel', selectedModelId);
+    updateAttachButtonVisibility(selectedModelId);
+    updateParameterVisibilityForModel(selectedModelId);
 
     const persona = PERSONAS[convo.personaId] || customPersonas.find(p => p.id === convo.personaId) || PERSONAS.onion;
     document.getElementById('selected-persona').textContent = persona.name;
@@ -1327,6 +1889,9 @@ onAuthStateChanged(auth, async (user) => {
             await fetchAndManageCredits(user);
         }
 
+        // Update ad visibility based on final subscription status
+        updateAdVisibility();
+
         // Initialize the main app UI
         // Use a flag to prevent multiple initializations
         if (!window.appInitialized) {
@@ -1542,60 +2107,80 @@ function generateDeviceFingerprint() {
     return cookieValue;
 }
 
+// --- Ad Management ---
+function updateAdVisibility() {
+    const adBannerContainer = document.getElementById('ad-banner-container');
+    const adSidebarContainer = document.getElementById('ad-sidebar-container');
+
+    if (!adBannerContainer || !adSidebarContainer) {
+        return;
+    }
+
+    if (subscriptionDetails.status === 'Active') {
+        // Hide ads for active subscribers
+        adBannerContainer.classList.add('hidden');
+        adSidebarContainer.classList.add('hidden');
+    } else {
+        // Show ads for inactive users
+        adBannerContainer.classList.remove('hidden');
+        adSidebarContainer.classList.remove('hidden');
+        try {
+            (window.adsbygoogle = window.adsbygoogle || []).push({}); // For banner
+            (window.adsbygoogle = window.adsbygoogle || []).push({}); // For sidebar
+        } catch (e) {
+            console.error("AdSense push error:", e);
+        }
+    }
+}
+
 // Add this function before setting up the DOMContentLoaded listener
 function initializeAppUI() {
-    /* @tweakable Time in milliseconds to wait for UI elements to be ready */
-    const UI_INIT_TIMEOUT = 1000;
-    
-    return new Promise((resolve, reject) => {
-        const initTimer = setTimeout(() => {
-            reject(new Error("UI initialization timed out"));
-        }, UI_INIT_TIMEOUT);
+    try {
+        // Show main app and hide login
+        loginOverlay.classList.add('hidden');
+        appContainer.classList.remove('hidden');
+        
+        // Setup listeners first
+        setupUIEventListeners();
+        
+        // Restore API key if saved
+        const savedApiKey = localStorage.getItem('orion_apiKey') || '';
+        apiKeyInput.value = savedApiKey;
+        updateApiKeyDisplay();
 
-        try {
-            // Show main app and hide login
-            loginOverlay.classList.add('hidden');
-            appContainer.classList.remove('hidden');
-            
-            // Initialize models and personas
-            populateModels();
-            loadCustomPersonas();
-            populatePersonas();
-            
-            // Load saved conversations
-            loadSavedConversations();
-            
-            // Set up all UI event listeners
-            setupUIEventListeners();
-            
-            // Restore API key if saved
-            const savedApiKey = localStorage.getItem('orion_apiKey');
-            if (savedApiKey) {
-                apiKeyInput.value = savedApiKey;
-                apiKeyInput.style.display = 'none';
-                document.getElementById('api-key-display').style.display = 'flex';
-            }
-
-            // Load saved theme preferences
-            const savedColorTheme = localStorage.getItem('orion_color_theme') || 'orion';
-            document.getElementById('selected-theme').textContent = savedColorTheme.toUpperCase();
-            
-            // Restore saved persona if any
-            const savedPersonaId = localStorage.getItem('orion_selectedPersonaId');
-            if (savedPersonaId) {
-                selectPersona(savedPersonaId);
-            }
-
-            // Clear timer and resolve
-            clearTimeout(initTimer);
-            resolve();
-
-        } catch (error) {
-            clearTimeout(initTimer);
-            reject(error);
-        }
-    });
+        // Initialize models and personas
+        loadModels(); // This will call populateModels on success
+        loadCustomPersonas();
+        populatePersonas();
+        populateAgentSelector();
+        
+        // Load saved conversations
+        loadSavedConversations();
+        
+        // Load saved theme preferences
+        const savedColorTheme = localStorage.getItem('orion_color_theme') || 'orion';
+        const savedThemeMode = localStorage.getItem('orion_theme_mode') || 'dark';
+        if (savedThemeMode === 'light') document.body.classList.add('light-theme');
+        document.body.classList.add(savedColorTheme + '-theme');
+        glowManager.updateTheme(savedColorTheme);
+    } catch (error) {
+        console.error("UI initialization failed:", error);
+    }
 }
+
+function updateSliderBackground(slider) {
+    const min = slider.min;
+    const max = slider.max;
+    const val = slider.value;
+    const percentage = ((val - min) / (max - min)) * 100;
+    
+    const themeName = document.body.className.match(/(\w+)-theme/)?.[1] || 'orion';
+    const gradient = glowManager.themeGradients[themeName] || glowManager.themeGradients['orion'];
+    
+    slider.style.setProperty('--slider-gradient', gradient);
+    slider.style.setProperty('--slider-filled-percentage', `${percentage}%`);
+}
+
 
 // --- UI Event Listeners ---
 function setupUIEventListeners() {
@@ -1605,7 +2190,9 @@ function setupUIEventListeners() {
         {header: 'keys-header', toggle: 'keys-toggle', content: 'keys-content-container'},
         {header: 'chat-model-header', toggle: 'chat-model-toggle', content: 'chat-model-content-container'},
         {header: 'persona-header', toggle: 'persona-toggle', content: 'persona-content-container'},
-        {header: 'themes-header', toggle: 'themes-toggle', content: 'themes-content-container'}
+        {header: 'agent-mode-header', toggle: 'agent-mode-toggle', content: 'agent-mode-content-container'},
+        {header: 'themes-header', toggle: 'themes-toggle', content: 'themes-content-container'},
+        {header: 'parameters-header', toggle: 'parameters-toggle', content: 'parameters-content-container'}
     ];
 
     sections.forEach(section => {
@@ -1644,6 +2231,13 @@ function setupUIEventListeners() {
         document.getElementById('main-content').classList.remove('shifted');
         document.querySelector('header').classList.remove('shifted');
         settingsButton.classList.remove('hidden-when-sidebar-open'); // Show settings button
+    });
+
+    // Model Tier Toggle
+    const modelTierToggle = document.getElementById('modelTierToggle');
+    modelTierToggle.addEventListener('change', () => {
+        showingPremiumModels = modelTierToggle.checked;
+        populateModels();
     });
 
     // Popups
@@ -1697,7 +2291,7 @@ function setupUIEventListeners() {
                 contentHTML += `
                     <hr style="border-color: #444; margin: 1.5rem 0;">
                     <div class="message-usage-section">
-                        <h4 style="margin-bottom: 0.75rem; color: var(--text-color);">Credits Used:</h4>
+                        <h4 style="margin-bottom: 0.75rem; color: var(--text-color);">Credits Used Today:</h4>
                         <div class="message-usage-list">
                 `;
                 
@@ -1728,8 +2322,8 @@ function setupUIEventListeners() {
                 `;
             }
         }
-
-        subscriptionContentDiv.innerHTML = contentHTML;
+        
+        subscriptionContentDiv.innerHTML = `<div class="popup-content-scrollable">${contentHTML}</div>`;
         subscriptionPopupOverlay.classList.remove('hidden');
     });
     closeSubscriptionPopupBtn.addEventListener('click', () => subscriptionPopupOverlay.classList.add('hidden'));
@@ -1759,7 +2353,7 @@ function setupUIEventListeners() {
     // Theme toggle
     document.getElementById('theme-toggle-btn').addEventListener('click', () => {
         const isLight = document.body.classList.toggle('light-theme');
-        localStorage.setItem('orion_theme', isLight ? 'light' : 'dark');
+        localStorage.setItem('orion_theme_mode', isLight ? 'light' : 'dark');
         document.getElementById('theme-toggle-btn').querySelector('i').className = `fas ${isLight ? 'fa-sun' : 'fa-moon'}`;
     });
 
@@ -1785,27 +2379,105 @@ function setupUIEventListeners() {
             const value = target.dataset.value;
 
             if (target.id === 'add-custom-persona-btn') {
-                // This should be handled by a dedicated modal, not implemented here yet
                 alert('Create Persona: Not implemented in this version.');
             } else if (target.id === 'browse-community-btn') {
                 document.getElementById('community-personas-modal').classList.remove('hidden');
             } else if(value) {
                 if (dropdownId === 'model-selector') {
-                    document.getElementById(selectedId).textContent = target.textContent;
-                    document.getElementById(selectedId).dataset.value = value;
-                    localStorage.setItem('orion_selectedModel', value);
-                    updateAttachButtonVisibility(value);
+                    let desired = value;
+                    if (DEPRECATED_MODEL_IDS.has(desired) || !isModelAvailable(desired)) {
+                      desired = resolveAvailableModel(desired);
+                    }
+                    if (desired) {
+                      const allList = [...allModels.free.chat, ...allModels.free.vision, ...allModels.premium.chat, ...allModels.premium.vision];
+                      const found = allList.find(m => m.id === desired);
+                      document.getElementById(selectedId).textContent = found ? found.name : target.textContent;
+                      document.getElementById(selectedId).dataset.value = desired;
+                      localStorage.setItem('orion_selectedModel', desired);
+                      updateAttachButtonVisibility(desired);
+                      updateParameterVisibilityForModel(desired);
+                      if (activeAgent) {
+                          activeAgent = null;
+                          document.getElementById('selected-agent-mode').textContent = 'Select Agent';
+                          clearChat(true);
+                      }
+                    }
                 } else if (dropdownId === 'personas-content-container') {
-                    // This now handles clicking on the persona name part (the <a> tag)
                     const personaId = target.closest('a')?.dataset.value;
                     if(personaId) {
                        selectPersona(personaId);
+                       if (activeAgent) {
+                           activeAgent = null;
+                           document.getElementById('selected-agent-mode').textContent = 'Select Agent';
+                       }
+                    }
+                } else if (dropdownId === 'agent-mode-selector') {
+                    const [job, modelIdRaw] = value.split('||');
+
+                    if (job === 'none' && modelIdRaw === 'none') {
+                        activeAgent = null;
+                        document.getElementById(selectedId).textContent = 'Select Agent';
+                    } else {
+                        // Resolve desired model to an available one
+                        const resolvedModelId = resolveAvailableModel(modelIdRaw);
+
+                        activeAgent = { job, model: resolvedModelId || '' };
+                        document.getElementById(selectedId).textContent = job;
+
+                        // Update UI with resolved model
+                        let modelDetails = null;
+                        const freeMatch = [...allModels.free.chat, ...allModels.free.vision].find(m => m.id === resolvedModelId);
+                        const premiumMatch = [...allModels.premium.chat, ...allModels.premium.vision].find(m => m.id === resolvedModelId);
+
+                        if (premiumMatch) {
+                            modelDetails = premiumMatch;
+                            if (!showingPremiumModels) {
+                                showingPremiumModels = true;
+                                document.getElementById('modelTierToggle').checked = true;
+                                populateModels();
+                            }
+                        } else if (freeMatch) {
+                            modelDetails = freeMatch;
+                             if (showingPremiumModels) {
+                                showingPremiumModels = false;
+                                document.getElementById('modelTierToggle').checked = false;
+                                populateModels();
+                            }
+                        }
+
+                        const label = document.getElementById('selected-chat-model');
+                        if (modelDetails) {
+                            label.textContent = modelDetails.name;
+                            label.dataset.value = modelDetails.id;
+                            localStorage.setItem('orion_selectedModel', modelDetails.id);
+                            updateAttachButtonVisibility(modelDetails.id);
+                            updateParameterVisibilityForModel(modelDetails.id);
+                        } else if (resolvedModelId) {
+                            label.textContent = resolvedModelId.split('/').pop();
+                            label.dataset.value = resolvedModelId;
+                            localStorage.setItem('orion_selectedModel', resolvedModelId);
+                            updateAttachButtonVisibility(resolvedModelId);
+                            updateParameterVisibilityForModel(resolvedModelId);
+                        } else {
+                            // If no resolution possible, pick a global fallback
+                            const fallback = findClosestModel(modelIdRaw);
+                            if (fallback) {
+                              const allList = [...allModels.free.chat, ...allModels.free.vision, ...allModels.premium.chat, ...allModels.premium.vision];
+                              const f = allList.find(m => m.id === fallback);
+                              label.textContent = f ? f.name : 'Select Model';
+                              label.dataset.value = fallback;
+                              localStorage.setItem('orion_selectedModel', fallback);
+                              updateAttachButtonVisibility(fallback);
+                              updateParameterVisibilityForModel(fallback);
+                            }
+                        }
+                        
+                        clearChat(true);
                     }
                 } else if (dropdownId === 'theme-dropdown') {
-                    document.body.className = ''; // Clear all classes first
-                    const theme = localStorage.getItem('orion_theme_mode') || 'dark';
-                    if (theme === 'light') document.body.classList.add('light-theme');
-
+                    document.body.className = '';
+                    const themeMode = localStorage.getItem('orion_theme_mode') || 'dark';
+                    if (themeMode === 'light') document.body.classList.add('light-theme');
                     const themeName = value;
                     document.body.classList.add(themeName + '-theme');
                     localStorage.setItem('orion_color_theme', themeName);
@@ -1818,6 +2490,7 @@ function setupUIEventListeners() {
     }
     setupDropdown('chat-model-btn', 'model-selector', 'selected-chat-model');
     setupDropdown('persona-btn', 'personas-content-container', 'selected-persona');
+    setupDropdown('agent-mode-btn', 'agent-mode-selector', 'selected-agent-mode');
     setupDropdown('theme-btn', 'theme-dropdown', 'selected-theme');
 
     window.addEventListener('click', () => document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden')));
@@ -1868,33 +2541,125 @@ function setupUIEventListeners() {
         createPersonaForm.reset();
     });
 
+    // Parameter Sliders
+    const temperatureSlider = document.getElementById('temperature-slider');
+    const temperatureValue = document.getElementById('temperature-value');
+    const topPSlider = document.getElementById('top-p-slider');
+    const topPValue = document.getElementById('top-p-value');
+    const topKSlider = document.getElementById('top-k-slider');
+    const topKValue = document.getElementById('top-k-value');
+    const freqPenaltySlider = document.getElementById('frequency-penalty-slider');
+    const freqPenaltyValue = document.getElementById('frequency-penalty-value');
+    const presPenaltySlider = document.getElementById('presence-penalty-slider');
+    const presPenaltyValue = document.getElementById('presence-penalty-value');
+    const repPenaltySlider = document.getElementById('repetition-penalty-slider');
+    const repPenaltyValue = document.getElementById('repetition-penalty-value');
+
+
+    temperatureSlider.addEventListener('input', (e) => {
+        temperatureValue.textContent = parseFloat(e.target.value).toFixed(2);
+        updateSliderBackground(e.target);
+    });
+
+    topPSlider.addEventListener('input', (e) => {
+        topPValue.textContent = parseFloat(e.target.value).toFixed(2);
+        updateSliderBackground(e.target);
+    });
+
+    topKSlider.addEventListener('input', (e) => {
+        topKValue.textContent = e.target.value;
+        updateSliderBackground(e.target);
+    });
+
+    freqPenaltySlider.addEventListener('input', (e) => {
+        freqPenaltyValue.textContent = parseFloat(e.target.value).toFixed(2);
+        updateSliderBackground(e.target);
+    });
+
+    presPenaltySlider.addEventListener('input', (e) => {
+        presPenaltyValue.textContent = parseFloat(e.target.value).toFixed(2);
+        updateSliderBackground(e.target);
+    });
+
+    repPenaltySlider.addEventListener('input', (e) => {
+        repPenaltyValue.textContent = parseFloat(e.target.value).toFixed(2);
+        updateSliderBackground(e.target);
+    });
+    
+    // Initialize slider backgrounds
+    updateSliderBackground(temperatureSlider);
+    updateSliderBackground(topPSlider);
+    updateSliderBackground(topKSlider);
+    updateSliderBackground(freqPenaltySlider);
+    updateSliderBackground(presPenaltySlider);
+    updateSliderBackground(repPenaltySlider);
+
     // Send/Clear buttons
     sendButton.addEventListener('click', sendMessage);
     inputBox.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
     
+    // API Key handlers
     apiKeyInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             const key = apiKeyInput.value.trim();
             if (key) {
                 localStorage.setItem('orion_apiKey', key);
-                apiKeyInput.style.display = 'none';
-                document.getElementById('api-key-display').style.display = 'flex';
+                updateApiKeyDisplay();
+                loadModels(); // refresh model list once a key is saved
             }
         }
     });
 
-    // Add event listener for the Edit API button
-    document.querySelector('.edit-api-btn').addEventListener('click', () => {
+    if (editApiBtn) {
+      editApiBtn.addEventListener('click', () => {
+        // Show input with current saved key for easy editing
+        const savedApiKey = localStorage.getItem('orion_apiKey') || '';
+        apiKeyInput.value = savedApiKey;
         apiKeyInput.style.display = 'block';
-        document.getElementById('api-key-display').style.display = 'none';
+        if (apiKeyDisplayWrapper) apiKeyDisplayWrapper.style.display = 'none';
         apiKeyInput.focus();
-    });
+      });
+    }
 
-    // Modify the part that loads the API key in initializeAppUI()
-    apiKeyInput.value = localStorage.getItem('orion_apiKey') || '';
-    if (apiKeyInput.value) {
-        apiKeyInput.style.display = 'none';
-        document.getElementById('api-key-display').style.display = 'flex';
+    // Ensure initial state reflects saved key
+    updateApiKeyDisplay();
+}
+
+function populateAgentSelector() {
+    const selector = document.getElementById('agent-mode-selector');
+    if (!selector) return;
+    selector.innerHTML = '';
+
+    const resetOption = document.createElement('a');
+    resetOption.href = "#";
+    resetOption.dataset.value = 'none||none';
+    resetOption.textContent = 'None (Deactivate Agent)';
+    selector.appendChild(resetOption);
+    
+    const divider = document.createElement('div');
+    divider.style.height = '1px';
+    divider.style.background = 'var(--input-border)';
+    divider.style.margin = '8px 0';
+    selector.appendChild(divider);
+
+    // Note: Keep existing agent list, but at selection time we auto-resolve missing/outdated models.
+    for (const team in AGENT_ROLES) {
+        const groupLabel = document.createElement('div');
+        groupLabel.className = 'custom-dropdown-header';
+        groupLabel.style.padding = '0.5rem 1rem';
+        groupLabel.style.fontWeight = 'bold';
+        groupLabel.style.color = 'var(--sidebar-label-color)';
+        groupLabel.textContent = team;
+        selector.appendChild(groupLabel);
+
+        AGENT_ROLES[team].forEach(agent => {
+            const option = document.createElement('a');
+            option.href = "#";
+            // If the model is one of the deprecated IDs, store original but we'll resolve on click
+            option.dataset.value = `${agent.job}||${agent.model}`;
+            option.textContent = agent.job;
+            selector.appendChild(option);
+        });
     }
 }
 
@@ -1908,4 +2673,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedThemeMode === 'light') document.body.classList.add('light-theme');
     document.body.classList.add(savedColorTheme + '-theme');
     glowManager.updateTheme(savedColorTheme);
+    // Keep Keys UI consistent on first paint (pre-auth)
+    updateApiKeyDisplay();
 });
