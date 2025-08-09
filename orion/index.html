@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSY3SV" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3940256099942544" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -40,15 +41,22 @@
                 <span>or</span>
             </div>
             
-            <button id="sign-in-btn" class="animated-text-button animated-container google-signin-btn">
-                <div class="glow-overlay"></div>
-                <i class="fab fa-google" style="margin-right: 10px; z-index: 2;"></i>
-                <span style="z-index: 2;">Sign in with Google</span>
-            </button>
+
             
             <p class="auth-toggle-text">
                 <span id="auth-toggle-message">Don't have an account?</span>
                 <a href="#" id="auth-toggle-link">Register</a>
+
+                          <p class="auth-toggle-text">
+                <span id="auth-toggle-message">Sign Up for </span>
+                <a href="https://caimeo.shop/ai/caimeo.html" id="auth-toggle-link">Preimum</a>
+
+
+ <p class="auth-toggle-text">
+                <span id="auth-toggle-message">Audio/Video AI Products</span>
+                <a href="http://4everai.online" id="auth-toggle-link"> Click here! </a>
+
+                            
             </p>
         </div>
     </div>
@@ -90,6 +98,15 @@
                 </button>
             </div>
         </header>
+
+        <div id="ad-banner-container" class="hidden">
+             <ins class="adsbygoogle"
+                  style="display:block"
+                  data-ad-client="ca-pub-3940256099942544"
+                  data-ad-slot="1033173712"
+                  data-ad-format="auto"
+                  data-full-width-responsive="true"></ins>
+        </div>
 
         <div id="main-content">
             <div id="chat-log" class="chat-container">
@@ -144,12 +161,12 @@
                             <label for="api-key-input" class="text-sm" style="color: var(--sidebar-label-color);">OpenRouter API Key:</label>
                             <div id="api-key-display" style="display: none;">
                                 <span class="api-key-masked">••••••••••••••••</span>
-                                <button class="edit-api-btn animated-container" style="position: relative; z-index: 1;">
+                                <button type="button" class="edit-api-btn animated-container" style="position: relative;">
                                     <div class="glow-overlay"></div>
                                     <span>Edit API</span>
                                 </button>
                             </div>
-                            <input type="password" id="api-key-input" class="api-key-input">
+                            <input type="password" id="api-key-input" class="api-key-input" placeholder="Enter your OpenRouter API key and press Enter">
                         </div>
                     </div>
                 </div>
@@ -158,6 +175,14 @@
                 <div class="sidebar-setting-group">
                     <h3 style="cursor: pointer;" id="chat-model-header">Chat Model <span id="chat-model-toggle" style="color: #666; transition: transform 0.3s;">></span></h3>
                     <div id="chat-model-content-container" style="transition: max-height 0.3s ease-out, opacity 0.3s ease-out;">
+                        <div class="model-tier-toggle">
+                          <span class="switch-label">Free</span>
+                          <label class="switch">
+                            <input type="checkbox" id="modelTierToggle">
+                            <span class="slider"></span>
+                          </label>
+                          <span class="switch-label">Premium</span>
+                        </div>
                         <div class="relative">
                             <button id="chat-model-btn" class="sidebar-setting animated-container custom-dropdown-button">
                                 <div class="glow-overlay"></div>
@@ -188,6 +213,23 @@
                     </div>
                 </div>
 
+                <!-- Agent Mode Section -->
+                <div class="sidebar-setting-group">
+                    <h3 style="cursor: pointer;" id="agent-mode-header">Agent Mode <span id="agent-mode-toggle" style="color: #666; transition: transform 0.3s;">></span></h3>
+                    <div id="agent-mode-content-container" style="transition: max-height 0.3s ease-out, opacity 0.3s ease-out;">
+                        <div class="relative">
+                            <button id="agent-mode-btn" class="sidebar-setting animated-container custom-dropdown-button">
+                                <div class="glow-overlay"></div>
+                                <span id="selected-agent-mode">Select Agent</span>
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                            <div id="agent-mode-selector" class="custom-dropdown-menu hidden">
+                                <!-- Agent options will be injected here by new JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Themes Section -->
                 <div class="sidebar-setting-group">
                     <h3 style="cursor: pointer;" id="themes-header">Themes <span id="themes-toggle" style="color: #666; transition: transform 0.3s;">></span></h3>
@@ -211,6 +253,58 @@
                     </div>
                 </div>
 
+                <!-- Parameters Section -->
+                <div class="sidebar-setting-group">
+                    <h3 style="cursor: pointer;" id="parameters-header">Parameters <span id="parameters-toggle" style="color: #666; transition: transform 0.3s;">></span></h3>
+                    <div id="parameters-content-container" class="space-y-4" style="transition: max-height 0.3s ease-out, opacity 0.3s ease-out;">
+                        <div class="parameter-slider-group" id="group-temperature">
+                            <label for="temperature-slider">Temperature: <span id="temperature-value">1.00</span></label>
+                            <div class="slider-container">
+                                <input type="range" id="temperature-slider" class="parameter-slider" min="0" max="2" step="0.01" value="1.0">
+                            </div>
+                        </div>
+                        <div class="parameter-slider-group" id="group-top-p">
+                             <label for="top-p-slider">Top P: <span id="top-p-value">1.00</span></label>
+                             <div class="slider-container">
+                                <input type="range" id="top-p-slider" class="parameter-slider" min="0" max="1" step="0.01" value="1.0">
+                             </div>
+                        </div>
+                        <div class="parameter-slider-group" id="group-top-k">
+                            <label for="top-k-slider">Top K: <span id="top-k-value">0</span></label>
+                            <div class="slider-container">
+                                <input type="range" id="top-k-slider" class="parameter-slider" min="0" max="1000" step="1" value="0">
+                            </div>
+                        </div>
+                        <div class="parameter-slider-group" id="group-frequency-penalty">
+                            <label for="frequency-penalty-slider">Frequency Penalty: <span id="frequency-penalty-value">0.00</span></label>
+                            <div class="slider-container">
+                                <input type="range" id="frequency-penalty-slider" class="parameter-slider" min="-2" max="2" step="0.01" value="0">
+                            </div>
+                        </div>
+                        <div class="parameter-slider-group" id="group-presence-penalty">
+                            <label for="presence-penalty-slider">Presence Penalty: <span id="presence-penalty-value">0.00</span></label>
+                            <div class="slider-container">
+                                <input type="range" id="presence-penalty-slider" class="parameter-slider" min="-2" max="2" step="0.01" value="0">
+                            </div>
+                        </div>
+                        <div class="parameter-slider-group" id="group-repetition-penalty">
+                            <label for="repetition-penalty-slider">Repetition Penalty: <span id="repetition-penalty-value">1.00</span></label>
+                            <div class="slider-container">
+                                <input type="range" id="repetition-penalty-slider" class="parameter-slider" min="0.01" max="2" step="0.01" value="1.0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ad-sidebar-container" class="sidebar-setting-group hidden">
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-3940256099942544"
+                         data-ad-slot="2934735716"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                </div>
+
                 <!-- Account Section -->
                 <div class="sidebar-setting-group" style="margin-top: auto;">
                     <button id="sign-out-btn">Sign Out</button>
@@ -224,9 +318,9 @@
             <div id="info-popup" class="info-popup-container">
                 <button id="close-info-popup" class="close-popup-btn"><i class="fas fa-times"></i></button>
                 <h3>Model Information</h3>
-                <ul id="model-info-list" class="list-disc list-inside space-y-2" style="color: var(--sidebar-label-color); max-height: 200px; overflow-y: auto;">
+                <div id="model-info-list" class="space-y-2" style="color: var(--sidebar-label-color); max-height: 300px; overflow-y: auto; padding-right: 10px;">
                     <!-- Model info will be dynamically populated -->
-                </ul>
+                </div>
                 <p class="mt-4 text-sm text-center" style="color: var(--placeholder-color);">System Last Updated: <span id="last-update-date"></span></p>
             </div>
         </div>
@@ -236,9 +330,19 @@
             <div id="help-popup" class="info-popup-container">
                 <button id="close-help-popup" class="close-popup-btn"><i class="fas fa-times"></i></button>
                 <h3>MAINFRAME : ORION Edition</h3>
-                <p class="text-center" style="color: var(--sidebar-label-color);">
-                    This is the ORION user interface, designed for seamless interaction with various AI models and tools.
-                </p>
+                <div id="help-popup-content" class="popup-content-scrollable">
+                    <p style="margin-bottom: 1rem;">This is the ORION user interface, designed for seamless interaction with various AI models and tools. Explore its unique features:</p>
+                    <ul style="list-style-position: inside; padding-left: 10px; text-align: left; font-size: 0.9em;">
+                        <li style="margin-bottom: 0.75rem;"><strong>Advanced Theming:</strong> Choose from multiple dynamic color themes that alter the entire UI's aesthetic.</li>
+                        <li style="margin-bottom: 0.75rem;"><strong>Agent Mode:</strong> Select specialized AI agents from various teams (e.g., Website Design, Game Design) to handle specific tasks with expert-level prompts.</li>
+                        <li style="margin-bottom: 0.75rem;"><strong>Extensive Model Library:</strong> Access a vast collection of AI models from OpenRouter, conveniently sorted into Free and Premium tiers, including Vision-capable models.</li>
+                        <li style="margin-bottom: 0.75rem;"><strong>Custom & Community Personas:</strong> Create and save your own AI personalities or browse and import personas shared by the community.</li>
+                        <li style="margin-bottom: 0.75rem;"><strong>Intelligent Suggestions:</strong> Toggle the 'Q' button to get AI-generated follow-up questions based on the conversation, helping you explore topics more deeply.</li>
+                        <li style="margin-bottom: 0.75rem;"><strong>Firebase-Powered:</strong> Full user authentication, subscription status tracking, and a credit system for free-tier users.</li>
+                        <li style="margin-bottom: 0.75rem;"><strong>Image Support:</strong> Attach images to your prompts when using Vision-enabled AI models.</li>
+                        <li style="margin-bottom: 0.75rem;"><strong>Conversation Management:</strong> All your chats are automatically saved and can be reloaded or deleted from the sidebar.</li>
+                    </ul>
+                </div>
             </div>
         </div>
         
