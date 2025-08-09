@@ -193,6 +193,14 @@ function updateApiKeyDisplay() {
     if (apiKeyDisplayWrapper) apiKeyDisplayWrapper.style.display = 'none';
     apiKeyInput.style.display = 'block';
   }
+  
+  // Recalculate container height after DOM changes
+  setTimeout(() => {
+    const keysContentContainer = document.getElementById('keys-content-container');
+    if (keysContentContainer && keysContentContainer.style.maxHeight && keysContentContainer.style.maxHeight !== '0px') {
+        keysContentContainer.style.maxHeight = keysContentContainer.scrollHeight + 'px';
+    }
+  }, 50); // A small delay ensures the DOM has been updated
 }
 
 // --- Login UI Elements ---
@@ -2142,6 +2150,16 @@ function initializeAppUI() {
         
         // Setup listeners first
         setupUIEventListeners();
+
+        // Assign data-index to photo elements
+        const photoElements = document.querySelectorAll('#photos .photo');
+        const availableIndexes = [1, 2, 4, 5];
+        photoElements.forEach((photo, i) => {
+            // This relies on the order in the HTML matching the order of availableIndexes
+            if(i < availableIndexes.length) {
+                photo.dataset.index = availableIndexes[i];
+            }
+        });
         
         // Restore API key if saved
         const savedApiKey = localStorage.getItem('orion_apiKey') || '';
@@ -2163,10 +2181,200 @@ function initializeAppUI() {
         if (savedThemeMode === 'light') document.body.classList.add('light-theme');
         document.body.classList.add(savedColorTheme + '-theme');
         glowManager.updateTheme(savedColorTheme);
+
+        // Load saved background
+        const savedBackground = localStorage.getItem('orion_background') || '-1';
+        applyBackground(savedBackground);
+        // Also update the dropdown text to reflect the loaded background
+        const backgroundDropdown = document.getElementById('background-dropdown');
+        const selectedBackgroundText = document.getElementById('selected-background');
+        const matchingOption = backgroundDropdown.querySelector(`a[data-value="${savedBackground}"]`);
+        if (matchingOption) {
+            selectedBackgroundText.textContent = matchingOption.textContent;
+        }
+
+        // Load saved prism effect state
+        const prismToggle = document.getElementById('prism-toggle');
+        const savedPrismState = localStorage.getItem('orion_prism_effect_on') !== 'false'; // default to true
+        prismToggle.checked = savedPrismState;
+        document.getElementById('prism').style.display = savedPrismState ? '' : 'none';
+
+        const apodApiKey = localStorage.getItem('orion_nasa_api_key');
+        if (apodApiKey) {
+            document.getElementById('nasa-api-key-input').value = apodApiKey;
+        }
+        const lastApodDate = localStorage.getItem('orion_last_apod_date');
+        if (lastApodDate) {
+            apodState.currentDate = new Date(lastApodDate);
+        }
+
     } catch (error) {
         console.error("UI initialization failed:", error);
     }
 }
+
+function applyBackground(selectedIndexStr) {
+    const selectedIndex = parseInt(selectedIndexStr, 10);
+    const photos = document.querySelectorAll('#photos .photo');
+    const apodPhotoContainer = document.getElementById('apod-photo-container');
+    const prism = document.getElementById('prism');
+
+    if (!photos.length || !prism) return;
+
+    // Deactivate all static photos and APOD photo
+    photos.forEach(p => p.classList.remove('active'));
+    if (apodPhotoContainer) apodPhotoContainer.classList.remove('active');
+
+    if (selectedIndex === -1) {
+        prism.classList.add('on-black');
+    } else {
+        prism.classList.remove('on-black');
+        // Find the photo div by its data-index attribute instead of NodeList index.
+        const targetPhoto = document.querySelector(`#photos .photo[data-index="${selectedIndex}"]`);
+        if (targetPhoto) {
+            targetPhoto.classList.add('active');
+        }
+    }
+}
+
+// --- NASA APOD LOGIC ---
+const apodState = {
+    currentDate: new Date(),
+    apiKey: 'DEMO_KEY',
+    cache: new Map()
+};
+
+function formatDateForApi(date) {
+    return date.toISOString().slice(0, 10);
+}
+
+async function fetchApod(date) {
+    const dateString = formatDateForApi(date);
+    if (apodState.cache.has(dateString)) {
+        return apodState.cache.get(dateString);
+    }
+
+    const nasaApiKeyInput = document.getElementById('nasa-api-key-input');
+    apodState.apiKey = nasaApiKeyInput.value.trim() || localStorage.getItem('orion_nasa_api_key') || 'DEMO_KEY';
+    
+    const url = new URL('https://api.nasa.gov/planetary/apod');
+    url.searchParams.set('api_key', apodState.apiKey);
+    url.searchParams.set('date', dateString);
+    url.searchParams.set('thumbs', 'true');
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.msg || `NASA API Error: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        let imageUrl = '';
+        if (data.media_type === 'image') {
+            imageUrl = data.hdurl || data.url;
+        } else if (data.thumbnail_url) {
+            imageUrl = data.thumbnail_url;
+        }
+
+        if (!imageUrl) {
+            throw new Error('No image available for this date.');
+        }
+
+        const result = { ...data, imageUrl };
+        apodState.cache.set(dateString, result);
+        return result;
+
+    } catch (error) {
+        console.error('APOD Fetch Error:', error);
+        alert(`Could not fetch APOD image: ${error.message}`);
+        return null;
+    }
+}
+
+function displayApod(apodData) {
+    if (!apodData || !apodData.imageUrl) return;
+
+    const apodPhotoContainer = document.getElementById('apod-photo-container');
+    const creditContainer = document.getElementById('apod-credit-container');
+    const photos = document.querySelectorAll('#photos .photo');
+
+    // Deactivate all other backgrounds
+    photos.forEach(p => p.classList.remove('active'));
+
+    // Set and activate APOD background
+    apodPhotoContainer.style.backgroundImage = `url('${apodData.imageUrl}')`;
+    apodPhotoContainer.classList.add('active');
+    document.getElementById('prism').classList.remove('on-black');
+
+    // Update credit
+    creditContainer.innerHTML = `
+        <strong>NASA APOD:</strong> ${apodData.title} (${apodData.date})
+        ${apodData.copyright ? `© ${apodData.copyright}` : ''}
+    `;
+    creditContainer.classList.remove('hidden');
+
+    // Update state and UI
+    document.getElementById('selected-background').textContent = `APOD: ${apodData.date}`;
+    localStorage.setItem('orion_last_apod_date', apodState.currentDate.toISOString());
+    localStorage.setItem('orion_background', 'apod'); // Special value for APOD
+}
+
+
+async function changeApodDate(days) {
+    apodState.currentDate.setDate(apodState.currentDate.getDate() + days);
+    // Prevent going into the future
+    if (apodState.currentDate > new Date()) {
+        apodState.currentDate = new Date();
+    }
+    const data = await fetchApod(apodState.currentDate);
+    if (data) {
+        displayApod(data);
+    }
+}
+
+async function setRandomApod() {
+    const startDate = new Date('1995-06-16').getTime();
+    const endDate = new Date().getTime();
+    const randomTime = startDate + Math.random() * (endDate - startDate);
+    apodState.currentDate = new Date(randomTime);
+    
+    const data = await fetchApod(apodState.currentDate);
+    if (data) {
+        displayApod(data);
+    }
+}
+
+function setupApodListeners() {
+    const nasaApiKeyInput = document.getElementById('nasa-api-key-input');
+    const todayBtn = document.getElementById('apod-today-btn');
+    const prevBtn = document.getElementById('apod-prev-btn');
+    const nextBtn = document.getElementById('apod-next-btn');
+    const randomBtn = document.getElementById('apod-random-btn');
+
+    nasaApiKeyInput.addEventListener('change', () => {
+        const key = nasaApiKeyInput.value.trim();
+        if (key) {
+            localStorage.setItem('orion_nasa_api_key', key);
+        } else {
+            localStorage.removeItem('orion_nasa_api_key');
+        }
+        apodState.apiKey = key || 'DEMO_KEY';
+        apodState.cache.clear(); // Clear cache when key changes
+    });
+
+    todayBtn.addEventListener('click', async () => {
+        apodState.currentDate = new Date();
+        const data = await fetchApod(apodState.currentDate);
+        if (data) displayApod(data);
+    });
+
+    prevBtn.addEventListener('click', () => changeApodDate(-1));
+    nextBtn.addEventListener('click', () => changeApodDate(1));
+    randomBtn.addEventListener('click', setRandomApod);
+}
+
+// --- End NASA APOD LOGIC ---
 
 function updateSliderBackground(slider) {
     const min = slider.min;
@@ -2181,6 +2389,56 @@ function updateSliderBackground(slider) {
     slider.style.setProperty('--slider-filled-percentage', `${percentage}%`);
 }
 
+// Apply a preset to currently visible/supported sliders
+function applyParameterPreset(presetName) {
+    const tempEl = document.getElementById('temperature-slider');
+    const topPEl = document.getElementById('top-p-slider');
+    const freqEl = document.getElementById('frequency-penalty-slider');
+    const presEl = document.getElementById('presence-penalty-slider');
+    const repEl = document.getElementById('repetition-penalty-slider');
+
+    const tempValEl = document.getElementById('temperature-value');
+    const topPValEl = document.getElementById('top-p-value');
+    const freqValEl = document.getElementById('frequency-penalty-value');
+    const presValEl = document.getElementById('presence-penalty-value');
+    const repValEl = document.getElementById('repetition-penalty-value');
+
+    // Define representative values for presets
+    const presets = {
+        truth: { temperature: 0.1, top_p: 1.0, frequency_penalty: 0.0, presence_penalty: 0.0, repetition_penalty: 1.0 },
+        default: { temperature: 1.0, top_p: 1.0, frequency_penalty: 0.0, presence_penalty: 0.0, repetition_penalty: 1.0 },
+        creative: { temperature: 1.5, top_p: 0.9, frequency_penalty: 0.7, presence_penalty: 0.7, repetition_penalty: 1.0 }
+    };
+
+    const p = presets[presetName];
+    if (!p) return;
+
+    if (tempEl && document.getElementById('group-temperature').style.display !== 'none') {
+        tempEl.value = p.temperature;
+        tempValEl.textContent = (+p.temperature).toFixed(2);
+        updateSliderBackground(tempEl);
+    }
+    if (topPEl && document.getElementById('group-top-p').style.display !== 'none') {
+        topPEl.value = p.top_p;
+        topPValEl.textContent = (+p.top_p).toFixed(2);
+        updateSliderBackground(topPEl);
+    }
+    if (freqEl && document.getElementById('group-frequency-penalty').style.display !== 'none') {
+        freqEl.value = p.frequency_penalty;
+        freqValEl.textContent = (+p.frequency_penalty).toFixed(2);
+        updateSliderBackground(freqEl);
+    }
+    if (presEl && document.getElementById('group-presence-penalty').style.display !== 'none') {
+        presEl.value = p.presence_penalty;
+        presValEl.textContent = (+p.presence_penalty).toFixed(2);
+        updateSliderBackground(presEl);
+    }
+    if (repEl && document.getElementById('group-repetition-penalty').style.display !== 'none') {
+        repEl.value = p.repetition_penalty;
+        repValEl.textContent = (+p.repetition_penalty).toFixed(2);
+        updateSliderBackground(repEl);
+    }
+}
 
 // --- UI Event Listeners ---
 function setupUIEventListeners() {
@@ -2192,6 +2450,7 @@ function setupUIEventListeners() {
         {header: 'persona-header', toggle: 'persona-toggle', content: 'persona-content-container'},
         {header: 'agent-mode-header', toggle: 'agent-mode-toggle', content: 'agent-mode-content-container'},
         {header: 'themes-header', toggle: 'themes-toggle', content: 'themes-content-container'},
+        {header: 'backgrounds-header', toggle: 'backgrounds-toggle', content: 'backgrounds-content-container'},
         {header: 'parameters-header', toggle: 'parameters-toggle', content: 'parameters-content-container'}
     ];
 
@@ -2232,6 +2491,17 @@ function setupUIEventListeners() {
         document.querySelector('header').classList.remove('shifted');
         settingsButton.classList.remove('hidden-when-sidebar-open'); // Show settings button
     });
+
+    // Prism effect toggle
+    const prismToggle = document.getElementById('prism-toggle');
+    prismToggle.addEventListener('change', () => {
+        const isOn = prismToggle.checked;
+        document.getElementById('prism').style.display = isOn ? '' : 'none';
+        localStorage.setItem('orion_prism_effect_on', isOn);
+    });
+
+    // Setup NASA APOD listeners
+    setupApodListeners();
 
     // Model Tier Toggle
     const modelTierToggle = document.getElementById('modelTierToggle');
@@ -2483,6 +2753,12 @@ function setupUIEventListeners() {
                     localStorage.setItem('orion_color_theme', themeName);
                     document.getElementById(selectedId).textContent = target.textContent;
                     glowManager.updateTheme(themeName);
+                } else if (dropdownId === 'background-dropdown') {
+                    applyBackground(value);
+                    localStorage.setItem('orion_background', value);
+                    document.getElementById('selected-background').textContent = target.textContent;
+                    // Hide APOD credit when a static background is chosen
+                    document.getElementById('apod-credit-container').classList.add('hidden');
                 }
             }
             dropdown.classList.add('hidden');
@@ -2492,6 +2768,7 @@ function setupUIEventListeners() {
     setupDropdown('persona-btn', 'personas-content-container', 'selected-persona');
     setupDropdown('agent-mode-btn', 'agent-mode-selector', 'selected-agent-mode');
     setupDropdown('theme-btn', 'theme-dropdown', 'selected-theme');
+    setupDropdown('background-btn', 'background-dropdown', 'selected-background');
 
     window.addEventListener('click', () => document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.add('hidden')));
 
@@ -2555,6 +2832,14 @@ function setupUIEventListeners() {
     const repPenaltySlider = document.getElementById('repetition-penalty-slider');
     const repPenaltyValue = document.getElementById('repetition-penalty-value');
 
+    // Preset buttons
+    const presetTruthBtn = document.getElementById('preset-truth');
+    const presetDefaultBtn = document.getElementById('preset-default');
+    const presetCreativeBtn = document.getElementById('preset-creative');
+
+    if (presetTruthBtn) presetTruthBtn.addEventListener('click', () => applyParameterPreset('truth'));
+    if (presetDefaultBtn) presetDefaultBtn.addEventListener('click', () => applyParameterPreset('default'));
+    if (presetCreativeBtn) presetCreativeBtn.addEventListener('click', () => applyParameterPreset('creative'));
 
     temperatureSlider.addEventListener('input', (e) => {
         temperatureValue.textContent = parseFloat(e.target.value).toFixed(2);
