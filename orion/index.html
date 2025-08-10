@@ -285,9 +285,8 @@
                             </button>
                             <div id="background-dropdown" class="custom-dropdown-menu hidden">
                                <a href="#" data-value="-1">Default (Black)</a>
-                               <a href="#" data-value="1">Nebula 1</a>
                                <a href="#" data-value="2">Dark Space</a>
-                               <a href="#" data-value="4">Starry Sky 1</a>
+                               <a href="#" data-value="4">Eclipse</a>
                                <a href="#" data-value="5">Starry Sky 2</a>
                             </div>
                         </div>
@@ -295,6 +294,14 @@
                             <label for="prism-toggle" class="text-sm" style="color: var(--sidebar-label-color);">Prism Effect</label>
                             <label class="switch">
                                 <input type="checkbox" id="prism-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <!-- New Glass toggle (no functionality yet) -->
+                        <div class="setting-toggle-container" style="margin-top: 0.75rem;">
+                            <label for="glass-toggle" class="text-sm" style="color: var(--sidebar-label-color);">Glass</label>
+                            <label class="switch">
+                                <input type="checkbox" id="glass-toggle">
                                 <span class="slider"></span>
                             </label>
                         </div>
@@ -314,6 +321,27 @@
                                     <span>Get NASA API Key</span>
                                 </a>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Images Section (new, toggles do nothing yet) -->
+                <div class="sidebar-setting-group">
+                    <h3 style="cursor: pointer;" id="images-header">Images <span id="images-toggle" style="color: #666; transition: transform 0.3s;">></span></h3>
+                    <div id="images-content-container" style="transition: max-height 0.3s ease-out, opacity 0.3s ease-out;">
+                        <div class="setting-toggle-container" style="margin-top: 0.5rem;">
+                            <label for="images-text-only-toggle" class="text-sm" style="color: var(--sidebar-label-color);">Text only</label>
+                            <label class="switch">
+                                <input type="checkbox" id="images-text-only-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-toggle-container" style="margin-top: 0.75rem;">
+                            <label for="images-text-image-toggle" class="text-sm" style="color: var(--sidebar-label-color);">Text + Image</label>
+                            <label class="switch">
+                                <input type="checkbox" id="images-text-image-toggle">
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
                 </div>
