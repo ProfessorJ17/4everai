@@ -2458,9 +2458,7 @@ function setupUIEventListeners() {
         {header: 'agent-mode-header', toggle: 'agent-mode-toggle', content: 'agent-mode-content-container'},
         {header: 'themes-header', toggle: 'themes-toggle', content: 'themes-content-container'},
         {header: 'backgrounds-header', toggle: 'backgrounds-toggle', content: 'backgrounds-content-container'},
-        {header: 'parameters-header', toggle: 'parameters-toggle', content: 'parameters-content-container'},
-        // New Images section (toggles do nothing yet)
-        {header: 'images-header', toggle: 'images-toggle', content: 'images-content-container'}
+        {header: 'parameters-header', toggle: 'parameters-toggle', content: 'parameters-content-container'}
     ];
 
     sections.forEach(section => {
