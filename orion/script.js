@@ -2199,6 +2199,7 @@ function initializeAppUI() {
         prismToggle.checked = savedPrismState;
         document.getElementById('prism').style.display = savedPrismState ? '' : 'none';
 
+        // Load saved NASA key and APOD date
         const apodApiKey = localStorage.getItem('orion_nasa_api_key');
         if (apodApiKey) {
             document.getElementById('nasa-api-key-input').value = apodApiKey;
@@ -2207,6 +2208,12 @@ function initializeAppUI() {
         if (lastApodDate) {
             apodState.currentDate = new Date(lastApodDate);
         }
+
+        // Load saved Glass state
+        const glassToggle = document.getElementById('glass-toggle');
+        const savedGlass = localStorage.getItem('orion_glass_on') === 'true';
+        glassToggle.checked = savedGlass;
+        document.body.classList.toggle('glass-enabled', savedGlass);
 
     } catch (error) {
         console.error("UI initialization failed:", error);
@@ -2451,7 +2458,9 @@ function setupUIEventListeners() {
         {header: 'agent-mode-header', toggle: 'agent-mode-toggle', content: 'agent-mode-content-container'},
         {header: 'themes-header', toggle: 'themes-toggle', content: 'themes-content-container'},
         {header: 'backgrounds-header', toggle: 'backgrounds-toggle', content: 'backgrounds-content-container'},
-        {header: 'parameters-header', toggle: 'parameters-toggle', content: 'parameters-content-container'}
+        {header: 'parameters-header', toggle: 'parameters-toggle', content: 'parameters-content-container'},
+        // New Images section (toggles do nothing yet)
+        {header: 'images-header', toggle: 'images-toggle', content: 'images-content-container'}
     ];
 
     sections.forEach(section => {
@@ -2499,6 +2508,14 @@ function setupUIEventListeners() {
         document.getElementById('prism').style.display = isOn ? '' : 'none';
         localStorage.setItem('orion_prism_effect_on', isOn);
     });
+
+    // Glass toggle
+    const glassToggle = document.getElementById('glass-toggle');
+    const applyGlass = (on) => {
+        document.body.classList.toggle('glass-enabled', !!on);
+        localStorage.setItem('orion_glass_on', !!on);
+    };
+    glassToggle.addEventListener('change', () => applyGlass(glassToggle.checked));
 
     // Setup NASA APOD listeners
     setupApodListeners();
