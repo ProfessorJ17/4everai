@@ -224,6 +224,9 @@ let currentLoadedConversationId = null;
 let nextConversationId = 1;
 let customPersonas = [];
 let attachedFile = null;
+/* add thinking timer state */
+let thinkingInterval = null;
+let thinkingStart = 0;
 let isRegisterMode = false;
 let showingPremiumModels = false;
 let allModels = {
@@ -772,6 +775,7 @@ function typewriterEffect(sender, message) {
     const typingIndicator = chatLog.querySelector('.typing-indicator');
     if (typingIndicator) {
         typingIndicator.remove();
+        if (thinkingInterval) { clearInterval(thinkingInterval); thinkingInterval = null; }
     }
     const messageContainer = document.createElement('div');
     messageContainer.className = `message ${sender === 'user' ? 'user-message' : 'bot-message'}`;
@@ -814,15 +818,28 @@ function showTypingIndicator() {
     typingIndicator.className = 'message bot-message typing-indicator';
     typingIndicator.innerHTML = `
         <div class="message-content">
-            <div style="display: flex; gap: 4px; align-items: center;">
-                <div class="dot" style="width: 8px; height: 8px; background-color: var(--text-color); border-radius: 50%; animation: typing-bounce 1.4s infinite ease-in-out both;"></div>
-                <div class="dot" style="width: 8px; height: 8px; background-color: var(--text-color); border-radius: 50%; animation: typing-bounce 1.4s infinite ease-in-out both; animation-delay: 0.2s;"></div>
-                <div class="dot" style="width: 8px; height: 8px; background-color: var(--text-color); border-radius: 50%; animation: typing-bounce 1.4s infinite ease-in-out both; animation-delay: 0.4s;"></div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <div style="display: flex; gap: 4px; align-items: center;">
+                    <div class="dot" style="width: 8px; height: 8px; background-color: var(--text-color); border-radius: 50%; animation: typing-bounce 1.4s infinite ease-in-out both;"></div>
+                    <div class="dot" style="width: 8px; height: 8px; background-color: var(--text-color); border-radius: 50%; animation: typing-bounce 1.4s infinite ease-in-out both; animation-delay: 0.2s;"></div>
+                    <div class="dot" style="width: 8px; height: 8px; background-color: var(--text-color); border-radius: 50%; animation: typing-bounce 1.4s infinite ease-in-out both; animation-delay: 0.4s;"></div>
+                </div>
+                <span class="thinking-label" style="opacity:.8;">thinking...</span>
+                <span id="thinking-timer" style="font-variant-numeric: tabular-nums; opacity:.7;">0.0s</span>
             </div>
         </div>
     `;
     chatLog.appendChild(typingIndicator);
     chatLog.scrollTop = chatLog.scrollHeight;
+    // start timer
+    thinkingStart = performance.now();
+    if (thinkingInterval) { clearInterval(thinkingInterval); }
+    thinkingInterval = setInterval(() => {
+        const el = document.getElementById('thinking-timer');
+        if (!el) { clearInterval(thinkingInterval); thinkingInterval = null; return; }
+        const secs = (performance.now() - thinkingStart) / 1000;
+        el.textContent = `${secs.toFixed(1)}s`;
+    }, 100);
 }
 
 async function callOpenRouterAPI(apiKey, model, messages, temperature = 1.0, topP = 1.0, topK = 0, freqPenalty = 0, presPenalty = 0, repPenalty = 1.0) {
@@ -954,6 +971,7 @@ async function sendMessage() {
         }
 
         typewriterEffect('bot', botResponse);
+        if (thinkingInterval) { clearInterval(thinkingInterval); thinkingInterval = null; }
         if (messagePairs.length > 0) {
             messagePairs[messagePairs.length - 1].assistantMessage = botResponse;
         }
@@ -972,6 +990,7 @@ async function sendMessage() {
     } catch (error) {
         console.error("Error during API call:", error);
         typewriterEffect('bot', `Error: ${error.message}`);
+        if (thinkingInterval) { clearInterval(thinkingInterval); thinkingInterval = null; }
     }
 }
 
