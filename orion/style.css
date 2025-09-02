@@ -1003,28 +1003,41 @@ input:checked + .slider:before {
     background-clip: padding-box;
     word-break: break-word;
     line-height: 1.6;
+    background: rgba(23, 23, 23, 0.15) !important;
+    backdrop-filter: blur(6px) saturate(120%);
+    -webkit-backdrop-filter: blur(6px) saturate(120%);
 }
 
 .bot-message .message-content {
-    background: var(--message-agent-bg);
     margin-right: 12px;
 }
 
 .user-message .message-content {
-    background: var(--message-user-bg);
     margin-left: 12px;
+}
+
+/* Light theme adjustments for glass text backgrounds */
+body.light-theme .message-content {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(6px) saturate(120%);
+    -webkit-backdrop-filter: blur(6px) saturate(120%);
 }
 
 .message-content::before {
     content: '';
     position: absolute;
-    top: -2px;
-    right: -2px;
-    bottom: -2px;
-    left: -2px;
-    z-index: -1;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 2px;
     border-radius: 12px;
     background: linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    z-index: -1;
 }
 
 .bot-message pre {
@@ -1683,7 +1696,7 @@ body.google-ai-mode-theme .message-content::before {
   left: 0;
   width: calc(((100vmin + 100vmax) / 2) * var(--size));
   height: calc(((100vmin + 100vmax) / 2) * var(--size));
-  background-image: linear-gradient(to bottom in oklch decreasing hue, oklch(0.8 0.3 300deg) 24%, oklch(0.8 0.2 300deg), oklch(0.8 0.2 300deg), oklch(0.95 0.2 270deg), oklch(0.95 0.2 270deg), oklch(0.95 0.2 240deg), oklch(0.95 0.2 240deg), oklch(0.95 0.1 210deg), oklch(0.95 0.1 210deg), oklch(0.95 0.1 180deg), oklch(0.95 0.1 180deg), oklch(0.95 0.1 150deg), oklch(0.95 0.1 150deg), oklch(0.95 0.1 120deg), oklch(0.95 0.1 120deg), oklch(0.95 0.2 90deg) 78%);
+  background-image: linear-gradient(to bottom in oklch decreasing hue, oklch(0.8 0.3 300deg) 24%, oklch(0.8 0.2 300deg), oklch(0.8 0.2 300deg), oklch(0.95 0.2 270deg), oklch(0.95 0.2 270deg), oklch(0.95 0.2 240deg), oklch(0.95 0.2 240deg), oklch(0.95 0.1 210deg), oklch(0.95 0.1 210deg), oklch(0.95 0.1 180deg), oklch(0.95 0.1 180deg), oklch(0.95 0.1 150deg), oklch(0.95 0.1 150deg), oklch(0.95 0.2 90deg) 78%);
   background-position: center;
   background-repeat: no-repeat;
   background-size: 100% 100%;
