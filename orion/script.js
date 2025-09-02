@@ -557,30 +557,50 @@ function addLocalCreditUsage(userId) {
     }
 }
 
-async function fetchSubscriptionStatus(user) {
-    let detailsToDisplay = { ...subscriptionDetails }; // Start with default
+// Add robust date parser
+function parseDateFlexible(v) {
+    if (!v) return null;
+    // Firestore Timestamp
+    if (v?.seconds) return new Date(v.seconds * 1000);
+    // Number (ms)
+    if (typeof v === 'number') return new Date(v);
+    // String (ISO-ish)
+    if (typeof v === 'string') {
+        // Normalize single-digit month/day like 2025-07-4 -> 2025-07-04
+        const m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(T.*)?$/);
+        if (m) {
+            const yyyy = m[1];
+            const mm = m[2].padStart(2, '0');
+            const dd = m[3].padStart(2, '0');
+            const rest = m[4] || 'T00:00:00.000Z';
+            return new Date(`${yyyy}-${mm}-${dd}${rest}`);
+        }
+        return new Date(v);
+    }
+    try { return new Date(v); } catch { return null; }
+}
 
+async function fetchSubscriptionStatus(user) {
+    let detailsToDisplay = { ...subscriptionDetails };
     if (user) {
         try {
             const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
             const userDoc = await getDoc(userDocRef);
-
             if (userDoc.exists()) {
                 const data = userDoc.data();
                 detailsToDisplay = {
                     purchased: true,
-                    startDate: data.startDay ? new Date(data.startDay) : null,
-                    endDate: data.endDay ? new Date(data.endDay) : null,
-                    status: 'Inactive' // Will be recalculated in updateSubscriptionDisplay
+                    startDate: parseDateFlexible(data.startDay),
+                    endDate: parseDateFlexible(data.endDay),
+                    status: 'Inactive'
                 };
             }
         } catch (error) {
             console.error("Error fetching subscription status:", error);
         }
     }
-    
     updateSubscriptionDisplay(detailsToDisplay);
-    updateAdVisibility(); // Call this after subscription status is known
+    updateAdVisibility();
 }
 
 // --- Suggestions Manager ---
@@ -1875,29 +1895,27 @@ onAuthStateChanged(auth, async (user) => {
         try {
             const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
             const userDocSnap = await getDoc(userDocRef);
-
             if (userDocSnap.exists()) {
                 const data = userDocSnap.data();
-                console.log("Subscription data found:", data);
-                
-                /* @tweakable This logic determines if a subscription is active. It checks if 'purchased' is true and if the current date is between the start and end dates. */
                 const now = new Date();
-                const startDate = data.startDay ? new Date(data.startDay) : null;
-                const endDate = data.endDay ? new Date(data.endDay) : null;
+                const startDate = parseDateFlexible(data.startDay);
+                const endDate = parseDateFlexible(data.endDay);
                 const isPurchased = data.purchased === true;
-                
+                // Inclusive end-of-day if no explicit time provided
+                if (endDate && endDate.getHours() === 0 && endDate.getMinutes() === 0 && endDate.getSeconds() === 0 && endDate.getMilliseconds() === 0) {
+                    endDate.setHours(23, 59, 59, 999);
+                }
                 let isActive = false;
                 if (isPurchased && startDate && endDate) {
                     isActive = now >= startDate && now <= endDate;
                 }
-
                 subscriptionDetails = {
                     purchased: isPurchased,
                     startDate: data.startDay || null,
                     endDate: data.endDay || null,
                     status: isActive ? 'Active' : 'Inactive'
                 };
-                 console.log("Processed subscription status:", subscriptionDetails.status);
+                console.log("Processed subscription status:", subscriptionDetails.status);
             } else {
                 console.log(`No subscription document found for user UID: ${user.uid} in collection '${config.USER_DATA_COLLECTION_NAME}'.`);
                  subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
