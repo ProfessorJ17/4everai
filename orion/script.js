@@ -557,50 +557,30 @@ function addLocalCreditUsage(userId) {
     }
 }
 
-// Add robust date parser
-function parseDateFlexible(v) {
-    if (!v) return null;
-    // Firestore Timestamp
-    if (v?.seconds) return new Date(v.seconds * 1000);
-    // Number (ms)
-    if (typeof v === 'number') return new Date(v);
-    // String (ISO-ish)
-    if (typeof v === 'string') {
-        // Normalize single-digit month/day like 2025-07-4 -> 2025-07-04
-        const m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(T.*)?$/);
-        if (m) {
-            const yyyy = m[1];
-            const mm = m[2].padStart(2, '0');
-            const dd = m[3].padStart(2, '0');
-            const rest = m[4] || 'T00:00:00.000Z';
-            return new Date(`${yyyy}-${mm}-${dd}${rest}`);
-        }
-        return new Date(v);
-    }
-    try { return new Date(v); } catch { return null; }
-}
-
 async function fetchSubscriptionStatus(user) {
-    let detailsToDisplay = { ...subscriptionDetails };
+    let detailsToDisplay = { ...subscriptionDetails }; // Start with default
+
     if (user) {
         try {
             const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
             const userDoc = await getDoc(userDocRef);
+
             if (userDoc.exists()) {
                 const data = userDoc.data();
                 detailsToDisplay = {
                     purchased: true,
-                    startDate: parseDateFlexible(data.startDay),
-                    endDate: parseDateFlexible(data.endDay),
-                    status: 'Inactive'
+                    startDate: data.startDay ? new Date(data.startDay) : null,
+                    endDate: data.endDay ? new Date(data.endDay) : null,
+                    status: 'Inactive' // Will be recalculated in updateSubscriptionDisplay
                 };
             }
         } catch (error) {
             console.error("Error fetching subscription status:", error);
         }
     }
+    
     updateSubscriptionDisplay(detailsToDisplay);
-    updateAdVisibility();
+    updateAdVisibility(); // Call this after subscription status is known
 }
 
 // --- Suggestions Manager ---
@@ -1895,27 +1875,29 @@ onAuthStateChanged(auth, async (user) => {
         try {
             const userDocRef = doc(db, config.USER_DATA_COLLECTION_NAME, user.uid);
             const userDocSnap = await getDoc(userDocRef);
+
             if (userDocSnap.exists()) {
                 const data = userDocSnap.data();
+                console.log("Subscription data found:", data);
+                
+                /* @tweakable This logic determines if a subscription is active. It checks if 'purchased' is true and if the current date is between the start and end dates. */
                 const now = new Date();
-                const startDate = parseDateFlexible(data.startDay);
-                const endDate = parseDateFlexible(data.endDay);
+                const startDate = data.startDay ? new Date(data.startDay) : null;
+                const endDate = data.endDay ? new Date(data.endDay) : null;
                 const isPurchased = data.purchased === true;
-                // Inclusive end-of-day if no explicit time provided
-                if (endDate && endDate.getHours() === 0 && endDate.getMinutes() === 0 && endDate.getSeconds() === 0 && endDate.getMilliseconds() === 0) {
-                    endDate.setHours(23, 59, 59, 999);
-                }
+                
                 let isActive = false;
                 if (isPurchased && startDate && endDate) {
                     isActive = now >= startDate && now <= endDate;
                 }
+
                 subscriptionDetails = {
                     purchased: isPurchased,
                     startDate: data.startDay || null,
                     endDate: data.endDay || null,
                     status: isActive ? 'Active' : 'Inactive'
                 };
-                console.log("Processed subscription status:", subscriptionDetails.status);
+                 console.log("Processed subscription status:", subscriptionDetails.status);
             } else {
                 console.log(`No subscription document found for user UID: ${user.uid} in collection '${config.USER_DATA_COLLECTION_NAME}'.`);
                  subscriptionDetails = { purchased: false, startDate: null, endDate: null, status: 'Inactive' };
@@ -2592,6 +2574,11 @@ function setupUIEventListeners() {
                 <p><strong>User ID:</strong> <span style="font-size: 0.8em; word-break: break-all;">${uid}</span></p>
                 <p><strong>Active From:</strong> ${startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}</p>
                 <p><strong>Expires On:</strong> ${endDate ? new Date(endDate).toLocaleDateString() : 'N/A'} <span style="color: var(--placeholder-color);">${daysLeftText}</span></p>
+                <div style="display:flex; gap:8px; margin-top:1rem; justify-content:center;">
+                  <a href="https://caimeo.shop/ai/caimeo.html?plan=1d#plans" target="_blank" rel="noopener noreferrer" class="preset-btn animated-container" style="text-decoration:none;"><div class="glow-overlay"></div><span>Buy 1 Day</span></a>
+                  <a href="https://caimeo.shop/ai/caimeo.html?plan=1w#plans" target="_blank" rel="noopener noreferrer" class="preset-btn animated-container" style="text-decoration:none;"><div class="glow-overlay"></div><span>Buy 1 Week</span></a>
+                  <a href="https://caimeo.shop/ai/caimeo.html?plan=1m#plans" target="_blank" rel="noopener noreferrer" class="preset-btn animated-container" style="text-decoration:none;"><div class="glow-overlay"></div><span>Buy 1 Month</span></a>
+                </div>
             `;
         } else {
              const inactiveReasonText = "You do not have an active subscription or your subscription has expired.";
@@ -2601,7 +2588,11 @@ function setupUIEventListeners() {
                 <p><strong>User ID:</strong> <span style="font-size: 0.8em; word-break: break-all;">${uid}</span></p>
                 <p><strong>Start Date:</strong> ${startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}</p>
                 <p><strong>End Date:</strong> ${endDate ? new Date(endDate).toLocaleDateString() : 'N/A'}</p>
-                <p style="margin-top: 1rem;">${inactiveReasonText}</p>
+                <div style="display:flex; gap:8px; margin-top:1rem; justify-content:center;">
+                  <a href="https://caimeo.shop/ai/caimeo.html?plan=1d#plans" target="_blank" rel="noopener noreferrer" class="preset-btn animated-container" style="text-decoration:none;"><div class="glow-overlay"></div><span>Buy 1 Day</span></a>
+                  <a href="https://caimeo.shop/ai/caimeo.html?plan=1w#plans" target="_blank" rel="noopener noreferrer" class="preset-btn animated-container" style="text-decoration:none;"><div class="glow-overlay"></div><span>Buy 1 Week</span></a>
+                  <a href="https://caimeo.shop/ai/caimeo.html?plan=1m#plans" target="_blank" rel="noopener noreferrer" class="preset-btn animated-container" style="text-decoration:none;"><div class="glow-overlay"></div><span>Buy 1 Month</span></a>
+                </div>
             `;
         }
 
