@@ -1,802 +1,964 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-[#08090c] text-slate-100 antialiased selection:bg-[#00E5A3] selection:text-black">
+<html lang="en" class="h-full bg-[#08090c] text-slate-100 antialiased">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNREDACTED TRUTH - Secured Terminal</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        bch: {
-                            DEFAULT: '#0AC18E',
-                            bright: '#00E5A3',
-                            glow: 'rgba(0, 229, 163, 0.35)',
-                            dark: '#05543d'
-                        },
-                        dark: {
-                            950: '#050608',
-                            900: '#090b0e',
-                            850: '#0f1218',
-                            800: '#151922',
-                            750: '#1c222e',
-                            700: '#242b3b',
-                            600: '#323c52'
-                        }
-                    },
-                    boxShadow: {
-                        'bch-glow': '0 0 15px rgba(0, 229, 163, 0.35)',
-                        'bch-card': '0 0 25px rgba(0, 229, 163, 0.15)'
-                    }
-                }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UNREDACTED TRUTH — P2P</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bch: { DEFAULT: '#0AC18E', bright: '#00E5A3', dark: '#05543d' },
+            dark: {
+              950: '#050608', 900: '#090b0e', 850: '#0f1218',
+              800: '#151922', 750: '#1c222e', 700: '#242b3b', 600: '#323c52'
             }
+          },
+          boxShadow: {
+            'bch-glow': '0 0 15px rgba(0,229,163,0.35)',
+            'bch-card': '0 0 25px rgba(0,229,163,0.15)'
+          }
         }
-    </script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .font-mono-code { font-family: 'JetBrains Mono', monospace; }
-        
-        /* Custom Scrollbars */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #090b0e; }
-        ::-webkit-scrollbar-thumb { background: #242b3b; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #0AC18E; }
-
-        .admin-badge-glow {
-            box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
-        }
-    </style>
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:#090b0e; }
+    ::-webkit-scrollbar-thumb { background:#242b3b; border-radius:3px; }
+    ::-webkit-scrollbar-thumb:hover { background:#0AC18E; }
+    .pq-badge { background:linear-gradient(135deg,#1a0a2e,#0a1a2e); border:1px solid #7c3aed44; }
+    @keyframes pulse-glow {
+      0%,100%{box-shadow:0 0 4px #00E5A344;}
+      50%{box-shadow:0 0 12px #00E5A388;}
+    }
+    .mining-pulse { animation: pulse-glow 1s ease-in-out infinite; }
+    .block-card {
+      background:#0f1218;
+      border:1px solid #242b3b;
+      border-radius:8px;
+      padding:12px;
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px;
+    }
+    .block-card.genesis { border-color:#f59e0b44; }
+    .hash-text { color:#38bdf8; word-break:break-all; }
+    .prev-text { color:#f472b6; word-break:break-all; }
+    .sig-text  { color:#a78bfa; word-break:break-all; }
+  </style>
 </head>
 <body class="h-full flex flex-col overflow-hidden text-sm bg-dark-950">
 
-    <!-- TOP SECURITY BAR -->
-    <header class="h-11 bg-dark-950 border-b border-dark-700/80 flex items-center justify-between px-4 z-30 shrink-0 select-none">
-        <div class="flex items-center gap-3">
-            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-bch/10 text-bch-bright border border-bch/30 font-mono-code tracking-wider">
-                <span class="w-2 h-2 rounded-full bg-bch-bright animate-pulse"></span> P2P NODE ACTIVE
-            </span>
-            <h1 class="font-extrabold tracking-wider text-white text-xs uppercase flex items-center gap-2">
-                <i class="fa-solid fa-user-secret text-bch-bright"></i> UNREDACTED TRUTH
-            </h1>
-            <span class="hidden md:inline text-slate-400 text-xs italic border-l border-dark-700 pl-3">
-                "The only place for Unredacted Truths From Unreliable Sources."
-            </span>
+<!-- TOP BAR -->
+<header class="h-11 bg-dark-950 border-b border-dark-700/80 flex items-center justify-between px-4 z-30 shrink-0">
+  <div class="flex items-center gap-3">
+    <h1 class="font-extrabold tracking-wider text-white text-xs uppercase flex items-center gap-2">
+      <i class="fa-solid fa-user-secret text-bch-bright"></i> UNREDACTED TRUTH
+    </h1>
+    <span class="hidden md:inline text-slate-400 text-xs italic border-l border-dark-700 pl-3">
+      P2P • Blockchain • Post-Quantum
+    </span>
+  </div>
+  <div class="flex items-center gap-2">
+    <!-- PQ Status Badge -->
+    <div id="pqBadge" class="pq-badge hidden items-center gap-1.5 px-2 py-1 rounded text-[10px] font-mono-code">
+      <i class="fa-solid fa-atom text-violet-400 text-[9px]"></i>
+      <span class="text-violet-300">ML-DSA</span>
+      <span id="pqStatus" class="text-slate-400">loading…</span>
+    </div>
+    <!-- Peers Badge -->
+    <div class="bg-dark-800 border border-dark-700 flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-mono-code">
+      <i class="fa-solid fa-network-wired text-bch-bright text-[9px]"></i>
+      <span class="text-slate-300">peers:</span>
+      <span id="peerCount" class="text-bch-bright font-bold">0</span>
+    </div>
+    <!-- Auth -->
+    <div id="authStatusContainer">
+      <button onclick="showPanel('auth')"
+        class="bg-bch hover:bg-bch-bright text-black font-bold px-3 py-1 rounded text-xs transition">
+        Login / Register
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="flex-1 flex overflow-hidden relative">
+
+  <!-- SERVER RAIL -->
+  <nav class="w-16 bg-dark-950 border-r border-dark-700/80 flex flex-col items-center py-3 gap-2 z-20 shrink-0">
+    <div id="serverList" class="flex flex-col items-center gap-2 flex-1 overflow-y-auto w-full px-2"></div>
+    <button onclick="showPanel('createServer')" title="Create / Join Room"
+      class="w-11 h-11 rounded-[20px] hover:rounded-[12px] bg-dark-800 hover:bg-bch text-slate-300 hover:text-black transition-all duration-200 flex items-center justify-center text-xl font-bold">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+    <!-- Blockchain Explorer Button -->
+    <button onclick="showPanel('chain')" title="Blockchain Explorer"
+      class="w-11 h-11 rounded-[20px] hover:rounded-[12px] bg-dark-800 hover:bg-violet-600 text-violet-400 hover:text-white transition-all duration-200 flex items-center justify-center text-sm">
+      <i class="fa-solid fa-link"></i>
+    </button>
+  </nav>
+
+  <!-- CHANNELS SIDEBAR -->
+  <aside class="w-60 bg-dark-900 border-r border-dark-700/80 flex flex-col shrink-0">
+    <div class="h-12 border-b border-dark-700/80 px-4 flex items-center justify-between">
+      <span id="currentServerName" class="font-bold text-white text-sm truncate">Select a Room</span>
+    </div>
+    <div class="flex-1 overflow-y-auto px-2 py-3">
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1.5 font-mono-code flex justify-between items-center">
+        <span>Channels</span>
+        <button id="addChannelBtn" onclick="showPanel('createChannel')"
+          class="hidden text-bch-bright hover:text-white text-xs"><i class="fa-solid fa-plus"></i></button>
+      </div>
+      <div id="channelsList" class="space-y-0.5"></div>
+    </div>
+    <!-- User card -->
+    <div class="h-14 bg-dark-950 border-t border-dark-700/80 px-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="relative shrink-0">
+          <img id="userCardAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest"
+            class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600">
+          <span id="userCardStatusDot" class="w-2.5 h-2.5 bg-slate-500 rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-950"></span>
         </div>
-
-        <div class="flex items-center gap-3 text-xs">
-            <!-- Admin Panel Trigger (Only shown if admin) -->
-            <button id="adminPanelBtn" onclick="toggleAdminPanel()" class="hidden bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded text-xs font-bold items-center gap-1.5 transition">
-                <i class="fa-solid fa-shield-halved"></i> Admin Panel
-            </button>
-
-            <!-- User Auth Status -->
-            <div id="authStatusContainer" class="flex items-center gap-2">
-                <button onclick="openAuthModal('login')" id="loginHeaderBtn" class="bg-bch hover:bg-bch-bright text-black font-bold px-3 py-1 rounded transition text-xs">
-                    Login / Register
-                </button>
-            </div>
+        <div class="min-w-0">
+          <div id="userCardHandle" class="font-bold text-white text-xs truncate">Guest</div>
+          <div id="userCardRole" class="text-[10px] text-slate-400 font-mono-code truncate">Not signed in</div>
         </div>
-    </header>
+      </div>
+      <button onclick="showPanel('auth')" class="text-slate-400 hover:text-white p-1.5 rounded hover:bg-dark-800">
+        <i class="fa-solid fa-gear"></i>
+      </button>
+    </div>
+  </aside>
 
-    <!-- MAIN APP CANVAS -->
-    <div class="flex-1 flex overflow-hidden relative">
-
-        <!-- 1. SERVER SIDEBAR -->
-        <nav class="w-16 bg-dark-950 border-r border-dark-700/80 flex flex-col items-center py-3 gap-2 z-20 shrink-0 select-none">
-            <!-- Home -->
-            <button onclick="switchServer('home', 'Direct Intel')" class="server-icon group relative w-11 h-11 rounded-[20px] hover:rounded-[12px] bg-dark-800 hover:bg-bch transition-all duration-200 flex items-center justify-center text-slate-300 hover:text-black">
-                <i class="fa-solid fa-folder-closed text-lg"></i>
-                <span class="absolute left-16 bg-dark-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded shadow-xl whitespace-nowrap hidden group-hover:block z-50 border border-dark-700">
-                    Direct Intelligence
-                </span>
-            </button>
-
-            <div class="w-8 h-[2px] bg-dark-700/80 rounded my-1"></div>
-
-            <!-- Main Server: Unredacted Truth -->
-            <button onclick="switchServer('unredacted', 'UNREDACTED TRUTH')" id="server-unredacted" class="server-icon active group relative w-11 h-11 rounded-[12px] bg-bch text-black shadow-bch-glow transition-all duration-200 flex items-center justify-center font-bold text-lg">
-                <i class="fa-solid fa-eye text-lg"></i>
-                <span class="absolute left-16 bg-dark-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded shadow-xl whitespace-nowrap hidden group-hover:block z-50 border border-dark-700">
-                    Unredacted Truth
-                </span>
-            </button>
-
-            <!-- Server: Crypto Vault -->
-            <button onclick="switchServer('crypto', 'BCH Vault')" id="server-crypto" class="server-icon group relative w-11 h-11 rounded-[20px] hover:rounded-[12px] bg-dark-800 hover:bg-bch hover:text-black transition-all duration-200 flex items-center justify-center text-slate-300">
-                <i class="fa-brands fa-bitcoin text-lg"></i>
-                <span class="absolute left-16 bg-dark-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded shadow-xl whitespace-nowrap hidden group-hover:block z-50 border border-dark-700">
-                    BCH & Crypto Leaks
-                </span>
-            </button>
-        </nav>
-
-        <!-- 2. CHANNELS SIDEBAR -->
-        <aside class="w-60 bg-dark-900 border-r border-dark-700/80 flex flex-col shrink-0 select-none">
-            <div class="h-12 border-b border-dark-700/80 px-4 flex items-center justify-between font-bold text-white shadow-sm">
-                <span id="currentServerName" class="truncate text-sm tracking-wide">UNREDACTED TRUTH</span>
-                <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
-            </div>
-
-            <!-- Channels List -->
-            <div class="flex-1 overflow-y-auto px-2 py-3 space-y-4">
-                <div>
-                    <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1.5 font-mono-code">
-                        <span>Text Channels</span>
-                    </div>
-
-                    <div class="space-y-0.5" id="channelsList">
-                        <button onclick="switchChannel('general', 'general')" id="chan-general" class="channel-btn active w-full flex items-center gap-2 px-2.5 py-1.5 rounded bg-dark-800 text-bch-bright font-medium transition border-l-2 border-bch-bright">
-                            <span class="text-bch-bright font-bold">#</span>
-                            <span class="truncate">general</span>
-                        </button>
-
-                        <button onclick="switchChannel('unreliable-sources', 'unreliable-sources')" id="chan-unreliable-sources" class="channel-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-slate-300 hover:bg-dark-800 hover:text-white transition">
-                            <span class="text-slate-500 font-bold">#</span>
-                            <span class="truncate">unreliable-sources</span>
-                        </button>
-
-                        <button onclick="switchChannel('leak-drops', 'leak-drops')" id="chan-leak-drops" class="channel-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-slate-300 hover:bg-dark-800 hover:text-white transition">
-                            <span class="text-slate-500 font-bold">#</span>
-                            <span class="truncate">leak-drops</span>
-                        </button>
-
-                        <button onclick="switchChannel('cikada-ai-logs', 'cikada-ai-logs')" id="chan-cikada-ai-logs" class="channel-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-slate-300 hover:bg-dark-800 hover:text-white transition">
-                            <span class="text-slate-500 font-bold">#</span>
-                            <span class="truncate">cikada-ai-logs</span>
-                        </button>
-
-                        <button onclick="switchChannel('lounge', 'lounge')" id="chan-lounge" class="channel-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-slate-300 hover:bg-dark-800 hover:text-white transition">
-                            <span class="text-slate-500 font-bold">#</span>
-                            <span class="truncate">lounge</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Current Logged In Operative Card -->
-            <div class="h-14 bg-dark-950 border-t border-dark-700/80 px-3 flex items-center justify-between">
-                <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="relative shrink-0">
-                        <img id="userCardAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600">
-                        <span id="userCardStatusDot" class="w-2.5 h-2.5 bg-slate-500 rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-950"></span>
-                    </div>
-                    <div class="min-w-0">
-                        <div id="userCardHandle" class="font-bold text-white text-xs truncate">Guest Operative</div>
-                        <div id="userCardRole" class="text-[10px] text-slate-400 font-mono-code truncate">Read Only</div>
-                    </div>
-                </div>
-                <button onclick="openAuthModal('login')" class="text-slate-400 hover:text-white p-1.5 rounded hover:bg-dark-800 transition" title="Account Settings">
-                    <i class="fa-solid fa-gear"></i>
-                </button>
-            </div>
-        </aside>
-
-        <!-- 3. MAIN CHAT STREAM -->
-        <main class="flex-1 flex flex-col bg-dark-850 relative min-w-0">
-            <!-- Channel Header -->
-            <div class="h-12 border-b border-dark-700/80 px-4 flex items-center justify-between bg-dark-900/90 backdrop-blur shrink-0 z-10">
-                <div class="flex items-center gap-2 min-w-0">
-                    <i class="fa-solid fa-hashtag text-slate-400"></i>
-                    <span id="activeChannelHeader" class="font-bold text-white text-sm truncate">general</span>
-                    <span class="text-slate-600 hidden sm:inline">|</span>
-                    <span id="channelTopic" class="text-xs text-slate-400 truncate hidden sm:inline">Unredacted Public Feeds & General Telemetry</span>
-                </div>
-                <div id="channelLockBadge" class="hidden bg-red-500/20 text-red-400 border border-red-500/40 text-[10px] font-mono-code px-2 py-0.5 rounded">
-                    <i class="fa-solid fa-lock"></i> CHANNEL LOCKED BY ADMIN
-                </div>
-            </div>
-
-            <!-- Messages Stream Container -->
-            <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
-                <div id="messageFeed" class="space-y-4"></div>
-            </div>
-
-            <!-- Message Input Area -->
-            <div class="p-3 bg-dark-900/80 border-t border-dark-700/80 shrink-0">
-                <form id="messageForm" onsubmit="handleSendMessage(event)" class="bg-dark-800 border border-dark-700 focus-within:border-bch rounded-lg p-2.5 transition flex flex-col gap-2">
-                    <div class="flex items-center gap-2">
-                        <button type="button" onclick="alert('Attachments restricted to encrypted channels.')" class="w-7 h-7 rounded-full bg-dark-700 hover:bg-dark-600 text-slate-400 hover:text-white flex items-center justify-center transition shrink-0">
-                            <i class="fa-solid fa-paperclip text-xs"></i>
-                        </button>
-                        <input type="text" id="chatInput" placeholder="Message #general... (Login to post)" autocomplete="off" class="flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-slate-500">
-                        <button type="submit" id="sendBtn" class="bg-bch hover:bg-bch-bright text-black font-bold px-3 py-1.5 rounded text-xs transition flex items-center gap-1.5 shrink-0">
-                            <span>Send</span>
-                            <i class="fa-solid fa-paper-plane text-xs"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </main>
-
-        <!-- 4. ONLINE MEMBERS SIDEBAR -->
-        <aside class="w-56 bg-dark-900 border-l border-dark-700/80 p-3 overflow-y-auto shrink-0 select-none hidden lg:block">
-            <!-- Admin Member Section -->
-            <div class="mb-4">
-                <div class="text-[10px] font-bold text-amber-400/90 uppercase tracking-wider mb-2 font-mono-code flex items-center gap-1">
-                    <i class="fa-solid fa-crown text-[10px]"></i> System Administrator
-                </div>
-                <div class="space-y-1">
-                    <div class="flex items-center gap-2 p-1.5 rounded bg-amber-500/5 border border-amber-500/20">
-                        <div class="relative shrink-0">
-                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=moddarkrevolt" class="w-8 h-8 rounded-full bg-dark-950 border border-amber-400">
-                            <span class="w-2.5 h-2.5 bg-bch-bright rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-900"></span>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="font-bold text-amber-300 text-xs truncate flex items-center gap-1">
-                                moddarkrevolt
-                            </div>
-                            <span class="bg-amber-500/20 text-amber-300 text-[9px] px-1 rounded font-mono-code font-bold uppercase border border-amber-500/40">ADMIN</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Automated Intelligence Systems -->
-            <div class="mb-4">
-                <div class="text-[10px] font-bold text-bch-bright uppercase tracking-wider mb-2 font-mono-code">
-                    AI Nodes — 2
-                </div>
-                <div class="space-y-1">
-                    <div class="flex items-center gap-2 p-1.5 rounded hover:bg-dark-800">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=CIKADA" class="w-8 h-8 rounded-full bg-dark-950 border border-bch/50 shrink-0">
-                        <div class="min-w-0">
-                            <div class="font-bold text-bch-bright text-xs truncate">CIKADA_AI <span class="bg-bch/20 text-[9px] px-1 rounded font-mono-code">BOT</span></div>
-                            <div class="text-[10px] text-slate-400 truncate">Telemetry Monitor</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 p-1.5 rounded hover:bg-dark-800">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=ProfessorJ" class="w-8 h-8 rounded-full bg-dark-950 border border-bch/50 shrink-0">
-                        <div class="min-w-0">
-                            <div class="font-bold text-slate-200 text-xs truncate">Professor_J <i class="fa-solid fa-check text-bch-bright text-[10px]"></i></div>
-                            <div class="text-[10px] text-slate-400 truncate">Core Operative</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Active Registered Users -->
-            <div>
-                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 font-mono-code">
-                    Active Operatives
-                </div>
-                <div id="activeUsersList" class="space-y-1">
-                    <!-- Populated via Firestore / State -->
-                </div>
-            </div>
-        </aside>
-
+  <!-- MAIN CHAT -->
+  <main class="flex-1 flex flex-col bg-dark-850 min-w-0">
+    <div class="h-12 border-b border-dark-700/80 px-4 flex items-center justify-between bg-dark-900/90">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-hashtag text-slate-400"></i>
+        <span id="activeChannelHeader" class="font-bold text-white text-sm">—</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div id="miningIndicator" class="hidden items-center gap-1.5 text-[10px] font-mono-code text-amber-400">
+          <i class="fa-solid fa-microchip fa-spin"></i> mining…
+        </div>
+        <div id="channelLockBadge" class="hidden bg-red-500/20 text-red-400 border border-red-500/40 text-[10px] font-mono-code px-2 py-0.5 rounded">
+          <i class="fa-solid fa-lock"></i> LOCKED
+        </div>
+      </div>
     </div>
 
-    <!-- AUTHENTICATION MODAL (LOGIN & REGISTRATION) -->
-    <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-dark-900 border border-bch/30 w-full max-w-md rounded-xl p-6 shadow-bch-card relative">
-            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-
-            <!-- Tabs Header -->
-            <div class="flex border-b border-dark-700 mb-6">
-                <button id="tabLogin" onclick="switchAuthTab('login')" class="flex-1 py-2 font-bold text-sm text-bch-bright border-b-2 border-bch-bright">LOGIN</button>
-                <button id="tabRegister" onclick="switchAuthTab('register')" class="flex-1 py-2 font-bold text-sm text-slate-400 border-b-2 border-transparent hover:text-white">REGISTER</button>
-            </div>
-
-            <!-- Login Form -->
-            <form id="loginForm" onsubmit="handleAuthLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Email Address</label>
-                    <input type="email" id="loginEmail" required placeholder="operativedark@gmail.com" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Password</label>
-                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
-                </div>
-                <button type="submit" class="w-full py-2.5 bg-bch hover:bg-bch-bright text-black font-bold rounded-lg text-sm transition shadow-bch-glow">
-                    AUTHENTICATE
-                </button>
-                <button type="button" onclick="handleAnonymousAuth()" class="w-full py-2 bg-dark-800 hover:bg-dark-700 text-slate-300 font-bold rounded-lg text-xs transition border border-dark-700">
-                    CONTINUE ANONYMOUSLY
-                </button>
-            </form>
-
-            <!-- Register Form -->
-            <form id="registerForm" onsubmit="handleAuthRegister(event)" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Operative Handle / Alias</label>
-                    <input type="text" id="regHandle" required placeholder="Agent_Shadow" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Email Address</label>
-                    <input type="email" id="regEmail" required placeholder="moddarkrevolt@gmail.com" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Password</label>
-                    <input type="password" id="regPassword" required minlength="6" placeholder="Min 6 characters" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
-                </div>
-                <button type="submit" class="w-full py-2.5 bg-bch hover:bg-bch-bright text-black font-bold rounded-lg text-sm transition shadow-bch-glow">
-                    CREATE UNREDACTED ACCOUNT
-                </button>
-            </form>
-
-            <div id="authErrorMsg" class="mt-4 text-xs text-red-400 text-center font-mono-code hidden"></div>
+    <div id="messagesContainer" class="flex-1 overflow-y-auto p-4">
+      <div id="messageFeed" class="space-y-4">
+        <div class="text-center py-16 text-slate-500 font-mono-code text-xs">
+          <i class="fa-solid fa-link text-2xl mb-3 block text-dark-700"></i>
+          Select or create a room to begin.<br>Messages are blockchain-anchored & post-quantum signed.
         </div>
+      </div>
     </div>
 
-    <!-- ADMIN CONTROL PANEL MODAL (MODDARKREVOLT ONLY) -->
-    <div id="adminModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-dark-900 border border-amber-500/40 w-full max-w-lg rounded-xl p-6 shadow-2xl relative">
-            <button onclick="toggleAdminPanel()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-
-            <div class="flex items-center gap-3 mb-6 pb-3 border-b border-dark-700">
-                <i class="fa-solid fa-shield-halved text-amber-400 text-2xl"></i>
-                <div>
-                    <h2 class="text-base font-extrabold text-amber-300 uppercase tracking-wide">ADMINISTRATOR COMMAND TERMINAL</h2>
-                    <p class="text-xs text-slate-400">Targeted Node: moddarkrevolt@gmail.com</p>
-                </div>
-            </div>
-
-            <div class="space-y-4">
-                <div class="p-3 bg-dark-950 rounded border border-dark-700 space-y-2">
-                    <h3 class="text-xs font-bold text-slate-200 uppercase">Channel Controls</h3>
-                    <div class="flex gap-2">
-                        <button onclick="adminPurgeMessages()" class="flex-1 py-2 bg-red-900/40 hover:bg-red-900/60 text-red-300 border border-red-500/40 rounded text-xs font-bold transition">
-                            <i class="fa-solid fa-trash me-1"></i> Purge Current Channel
-                        </button>
-                        <button onclick="adminToggleChannelLock()" class="flex-1 py-2 bg-amber-900/40 hover:bg-amber-900/60 text-amber-300 border border-amber-500/40 rounded text-xs font-bold transition">
-                            <i class="fa-solid fa-lock me-1"></i> Toggle Lock
-                        </button>
-                    </div>
-                </div>
-
-                <div class="p-3 bg-dark-950 rounded border border-dark-700 space-y-2">
-                    <h3 class="text-xs font-bold text-slate-200 uppercase">Broadcast System Announcement</h3>
-                    <textarea id="adminAnnouncementInput" rows="2" placeholder="Broadcast unredacted system warning..." class="w-full bg-dark-900 border border-dark-700 rounded p-2 text-xs text-white focus:outline-none focus:border-amber-400"></textarea>
-                    <button onclick="adminBroadcastAnnouncement()" class="w-full py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded text-xs transition">
-                        Broadcast System Message
-                    </button>
-                </div>
-            </div>
+    <div class="p-3 bg-dark-900/80 border-t border-dark-700/80">
+      <!-- Chain height indicator -->
+      <div class="flex items-center gap-2 mb-2 px-1">
+        <div class="text-[10px] font-mono-code text-slate-500 flex items-center gap-1.5">
+          <i class="fa-solid fa-cube text-violet-500"></i>
+          Chain height: <span id="chainHeightBadge" class="text-violet-400 font-bold">0</span>
+          &nbsp;|&nbsp;
+          <i class="fa-solid fa-check-double text-bch-bright"></i>
+          <span id="chainValidBadge" class="text-bch-bright">valid</span>
         </div>
+      </div>
+      <form id="messageForm" onsubmit="handleSendMessage(event)"
+        class="bg-dark-800 border border-dark-700 focus-within:border-bch rounded-lg p-2.5 flex items-center gap-2">
+        <input type="text" id="chatInput"
+          placeholder="Select a channel and login to post…"
+          autocomplete="off"
+          class="flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-slate-500" disabled>
+        <button type="submit"
+          class="bg-bch hover:bg-bch-bright text-black font-bold px-3 py-1.5 rounded text-xs transition flex items-center gap-1.5">
+          Send <i class="fa-solid fa-paper-plane text-xs"></i>
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <!-- MEMBERS SIDEBAR -->
+  <aside class="w-56 bg-dark-900 border-l border-dark-700/80 p-3 overflow-y-auto shrink-0 hidden lg:block">
+    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 font-mono-code">Online Peers</div>
+    <div id="membersList" class="space-y-1"></div>
+  </aside>
+</div>
+
+<!-- ─────────────── PANELS (modals) ─────────────── -->
+
+<!-- AUTH PANEL -->
+<div id="panel-auth" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-bch/30 w-full max-w-md rounded-xl p-6 shadow-bch-card relative">
+    <button onclick="hidePanel('auth')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+      <i class="fa-solid fa-xmark text-lg"></i>
+    </button>
+    <div class="flex border-b border-dark-700 mb-6">
+      <button id="tabLogin" onclick="switchAuthTab('login')"
+        class="flex-1 py-2 font-bold text-sm text-bch-bright border-b-2 border-bch-bright">LOGIN</button>
+      <button id="tabRegister" onclick="switchAuthTab('register')"
+        class="flex-1 py-2 font-bold text-sm text-slate-400 border-b-2 border-transparent">REGISTER</button>
     </div>
 
-    <!-- FIREBASE MODULE & APPLICATION LOGIC -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            signInWithEmailAndPassword, 
-            createUserWithEmailAndPassword, 
-            signInAnonymously, 
-            signInWithCustomToken, 
-            onAuthStateChanged, 
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            getDoc, 
-            setDoc, 
-            collection, 
-            addDoc, 
-            onSnapshot, 
-            deleteDoc, 
-            getDocs 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Alias / Handle</label>
+        <input type="text" id="loginAlias" required placeholder="Agent_Shadow"
+          class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
+      </div>
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Passphrase</label>
+        <input type="password" id="loginPass" required
+          class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
+      </div>
+      <button type="submit" class="w-full py-2.5 bg-bch hover:bg-bch-bright text-black font-bold rounded-lg text-sm">
+        AUTHENTICATE
+      </button>
+      <button type="button" onclick="handleAnon()"
+        class="w-full py-2 bg-dark-800 hover:bg-dark-700 text-slate-300 font-bold rounded-lg text-xs border border-dark-700">
+        CONTINUE ANONYMOUSLY (no PQ signing)
+      </button>
+    </form>
 
-        // Global environment variables
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'unredacted-truth-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyDummyKeyForFallbackOnly",
-            authDomain: "unredacted-truth.firebaseapp.com",
-            projectId: "unredacted-truth",
-            storageBucket: "unredacted-truth.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abc123def456"
-        };
+    <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Alias / Handle</label>
+        <input type="text" id="regAlias" required placeholder="Agent_Shadow"
+          class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
+      </div>
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Passphrase</label>
+        <input type="password" id="regPass" required minlength="8"
+          class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
+      </div>
+      <div class="pq-badge rounded-lg p-3 text-[11px] font-mono-code text-violet-300">
+        <i class="fa-solid fa-atom mr-1"></i>
+        Registering generates an <strong>ML-DSA-44</strong> keypair (NIST FIPS 204).<br>
+        Your private key never leaves this browser.
+      </div>
+      <button type="submit" class="w-full py-2.5 bg-bch hover:bg-bch-bright text-black font-bold rounded-lg text-sm">
+        CREATE ACCOUNT + PQ KEYPAIR
+      </button>
+    </form>
+    <div id="authError" class="mt-4 text-xs text-red-400 text-center font-mono-code hidden"></div>
+  </div>
+</div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+<!-- CREATE/JOIN ROOM PANEL -->
+<div id="panel-createServer" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-bch/30 w-full max-w-sm rounded-xl p-6 shadow-bch-card relative">
+    <button onclick="hidePanel('createServer')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <h2 class="text-lg font-bold text-white mb-1">Create or Join a Room</h2>
+    <p class="text-xs text-slate-400 mb-4 font-mono-code">Rooms are P2P Gun.js namespaces.<br>Anyone with the same name auto-joins the same mesh.</p>
+    <div class="space-y-3">
+      <input type="text" id="newRoomName" placeholder="room-name (e.g. truth-seekers)"
+        class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
+      <button onclick="joinRoom()" class="w-full py-2.5 bg-bch hover:bg-bch-bright text-black font-bold rounded-lg text-sm">
+        <i class="fa-solid fa-satellite-dish mr-1"></i> Create / Join Room
+      </button>
+    </div>
+    <div class="mt-4">
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 font-mono-code">Saved Rooms</div>
+      <div id="savedRoomsList" class="space-y-1"></div>
+    </div>
+  </div>
+</div>
 
-        // Application State
-        window.appState = {
-            currentUser: null,
-            userProfile: null,
-            currentChannel: 'general',
-            currentServer: 'unredacted',
-            isChannelLocked: false,
-            unsubscribeChat: null
-        };
+<!-- CREATE CHANNEL PANEL -->
+<div id="panel-createChannel" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-bch/30 w-full max-w-sm rounded-xl p-6 relative">
+    <button onclick="hidePanel('createChannel')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <h2 class="text-lg font-bold text-white mb-4">Add Channel</h2>
+    <div class="space-y-3">
+      <input type="text" id="newChanName" placeholder="channel-name"
+        class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
+      <button onclick="createChannel()" class="w-full py-2.5 bg-bch hover:bg-bch-bright text-black font-bold rounded-lg text-sm">
+        Create Channel
+      </button>
+    </div>
+  </div>
+</div>
 
-        const ADMIN_EMAIL = "moddarkrevolt@gmail.com";
+<!-- BLOCKCHAIN EXPLORER PANEL -->
+<div id="panel-chain" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-violet-500/30 w-full max-w-2xl rounded-xl p-6 relative max-h-[90vh] flex flex-col">
+    <button onclick="hidePanel('chain')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="flex items-center gap-3 mb-4">
+      <i class="fa-solid fa-link text-violet-400 text-xl"></i>
+      <div>
+        <h2 class="text-base font-extrabold text-white">Blockchain Explorer</h2>
+        <p class="text-[10px] text-slate-400 font-mono-code">SHA-256 PoW · ML-DSA-44 signatures · localStorage + P2P sync</p>
+      </div>
+      <div class="ml-auto flex items-center gap-2">
+        <span id="explorerHeight" class="pq-badge px-2 py-1 rounded text-[10px] font-mono-code text-violet-300">height: 0</span>
+        <span id="explorerValid" class="bg-dark-800 border border-bch/30 px-2 py-1 rounded text-[10px] font-mono-code text-bch-bright">✓ valid</span>
+      </div>
+    </div>
+    <div class="overflow-y-auto flex-1 space-y-3" id="chainExplorer"></div>
+  </div>
+</div>
 
-        // --- AUTHENTICATION INIT & WATCHER ---
-        window.onload = async () => {
-            // Attempt Custom Token auth if provided by iframe environment
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                try {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } catch (e) {
-                    console.log("Custom token login fallback:", e);
-                }
-            }
+<!-- ─────────────── SCRIPTS ─────────────── -->
 
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    window.appState.currentUser = user;
-                    await fetchOrCreateUserProfile(user);
-                } else {
-                    window.appState.currentUser = null;
-                    window.appState.userProfile = null;
-                }
-                updateAuthUI();
-                listenToCurrentChannelMessages();
-            });
-        };
+<!-- Gun.js — P2P graph database with built-in WebRTC -->
+<script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gun/axe.js"></script>
 
-        async function fetchOrCreateUserProfile(user) {
-            const userRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
-            try {
-                const snap = await getDoc(userRef);
-                const isAdmin = user.email === ADMIN_EMAIL;
+<!-- noble-post-quantum — ML-DSA (CRYSTALS-Dilithium FIPS-204) in pure JS -->
+<script type="module">
+// ─────────────────────────────────────────────────────────────
+//  IMPORTS
+// ─────────────────────────────────────────────────────────────
+import { ml_dsa44 } from 'https://esm.run/@noble/post-quantum@0.2.1/ml-dsa.js';
 
-                if (snap.exists()) {
-                    window.appState.userProfile = snap.data();
-                    if (isAdmin) window.appState.userProfile.role = 'admin';
-                } else {
-                    const profileData = {
-                        uid: user.uid,
-                        email: user.email || 'anonymous@node.local',
-                        handle: user.email ? user.email.split('@')[0] : `Operative_${user.uid.slice(0, 5)}`,
-                        role: isAdmin ? 'admin' : 'user',
-                        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`,
-                        createdAt: new Date().toISOString()
-                    };
-                    await setDoc(userRef, profileData);
-                    window.appState.userProfile = profileData;
-                }
-            } catch (e) {
-                console.warn("Firestore user profile sync warning:", e);
-                window.appState.userProfile = {
-                    uid: user.uid,
-                    email: user.email || 'anonymous@node.local',
-                    handle: user.email ? user.email.split('@')[0] : 'Operative',
-                    role: user.email === ADMIN_EMAIL ? 'admin' : 'user',
-                    avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`
-                };
-            }
+// ─────────────────────────────────────────────────────────────
+//  GUN INIT  (public community relay peers — no "your" server)
+// ─────────────────────────────────────────────────────────────
+const RELAY_PEERS = [
+  'https://gun-manhattan.herokuapp.com/gun',
+  'https://peer.wallie.io/gun'
+];
+
+const gun = Gun({ peers: RELAY_PEERS, localStorage: true });
+
+// Track peer count
+let peerCount = 0;
+gun.on('hi',  () => { peerCount++; updatePeers(); });
+gun.on('bye', () => { peerCount = Math.max(0, peerCount-1); updatePeers(); });
+function updatePeers() {
+  document.getElementById('peerCount').textContent = peerCount;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────────────
+const STATE = {
+  user: null,          // { alias, avatar, seed }
+  pqKeyPair: null,     // { publicKey, secretKey } — ML-DSA-44
+  anon: false,
+  currentRoom: null,
+  currentChannel: 'general',
+  rooms: JSON.parse(localStorage.getItem('ut_rooms') || '[]'),
+  locked: false,
+  chainUnsub: null,
+};
+
+// ─────────────────────────────────────────────────────────────
+//  BLOCKCHAIN (local + broadcast via Gun)
+// ─────────────────────────────────────────────────────────────
+class Block {
+  constructor(index, data, previousHash) {
+    this.index        = index;
+    this.timestamp    = Date.now();
+    this.data         = data;           // { handle, content, sig, pubKey, room, channel }
+    this.previousHash = previousHash;
+    this.nonce        = 0;
+    this.hash         = '';
+  }
+  _content() {
+    return JSON.stringify({
+      index: this.index, timestamp: this.timestamp,
+      data: this.data, previousHash: this.previousHash, nonce: this.nonce
+    });
+  }
+  async mine(difficulty = 2) {
+    const target = '0'.repeat(difficulty);
+    do {
+      this.nonce++;
+      this.hash = await sha256(this._content());
+    } while (!this.hash.startsWith(target));
+  }
+}
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function chainKey(room, channel) { return `ut_chain_${room}_${channel}`; }
+
+function loadChain(room, channel) {
+  try { return JSON.parse(localStorage.getItem(chainKey(room, channel)) || '[]'); }
+  catch { return []; }
+}
+
+function saveChain(room, channel, chain) {
+  localStorage.setItem(chainKey(room, channel), JSON.stringify(chain));
+  updateChainUI(chain);
+}
+
+async function validateChain(chain) {
+  if (chain.length === 0) return true;
+  for (let i = 1; i < chain.length; i++) {
+    const cur  = chain[i];
+    const prev = chain[i-1];
+    if (cur.previousHash !== prev.hash) return false;
+    const recalc = await sha256(JSON.stringify({
+      index: cur.index, timestamp: cur.timestamp,
+      data: cur.data, previousHash: cur.previousHash, nonce: cur.nonce
+    }));
+    if (recalc !== cur.hash) return false;
+  }
+  return true;
+}
+
+function updateChainUI(chain) {
+  const h = chain.length;
+  document.getElementById('chainHeightBadge').textContent = h;
+  document.getElementById('explorerHeight').textContent = `height: ${h}`;
+  validateChain(chain).then(v => {
+    const badge = document.getElementById('chainValidBadge');
+    const chatBadge = document.getElementById('chainValidBadge');
+    badge.textContent = v ? '✓ valid' : '✗ INVALID';
+    badge.className = v
+      ? 'bg-dark-800 border border-bch/30 px-2 py-1 rounded text-[10px] font-mono-code text-bch-bright'
+      : 'bg-red-900/30 border border-red-500/40 px-2 py-1 rounded text-[10px] font-mono-code text-red-400';
+  });
+}
+
+async function addMessageToChain(room, channel, msgData) {
+  const chain = loadChain(room, channel);
+  const prevHash = chain.length ? chain[chain.length-1].hash : '0'.repeat(64);
+  const block = new Block(chain.length, msgData, prevHash);
+
+  setMining(true);
+  await block.mine(2);   // difficulty 2 — fast but real PoW
+  setMining(false);
+
+  chain.push(block);
+  saveChain(room, channel, chain);
+
+  // Broadcast block to Gun P2P network
+  const blockRef = gun.get(`ut/${room}/${channel}/blocks`).get(block.hash);
+  blockRef.put(JSON.stringify(block));
+
+  return block;
+}
+
+// Sync incoming blocks from Gun peers
+function listenChainSync(room, channel) {
+  gun.get(`ut/${room}/${channel}/blocks`).map().on(async (data) => {
+    if (!data) return;
+    try {
+      const block = JSON.parse(data);
+      const chain = loadChain(room, channel);
+      // Only add if we don't have this hash
+      if (!chain.find(b => b.hash === block.hash)) {
+        // Validate the block fits
+        const expectedPrev = chain.length ? chain[chain.length-1].hash : '0'.repeat(64);
+        if (block.previousHash === expectedPrev || chain.length === 0) {
+          chain.push(block);
+          chain.sort((a,b) => a.index - b.index);
+          saveChain(room, channel, chain);
+          // Re-render messages from chain
+          renderChainMessages(chain);
         }
+      }
+    } catch {}
+  });
+}
 
-        function updateAuthUI() {
-            const user = window.appState.currentUser;
-            const profile = window.appState.userProfile;
-            const statusContainer = document.getElementById('authStatusContainer');
-            const adminBtn = document.getElementById('adminPanelBtn');
+// ─────────────────────────────────────────────────────────────
+//  POST-QUANTUM  — ML-DSA-44 (NIST FIPS 204)
+// ─────────────────────────────────────────────────────────────
+async function generatePQKeypair(passphrase) {
+  // Derive seed from passphrase via SHA-256 (32 bytes)
+  const seed = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(passphrase)));
+  const { publicKey, secretKey } = ml_dsa44.keygen(seed);
+  return { publicKey, secretKey };
+}
 
-            if (user && profile) {
-                const isAdmin = profile.email === ADMIN_EMAIL || profile.role === 'admin';
+async function signMessage(content, secretKey) {
+  const msg = new TextEncoder().encode(content);
+  const sig = ml_dsa44.sign(secretKey, msg);
+  return bytesToHex(sig);
+}
 
-                statusContainer.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <img src="${profile.avatar}" class="w-6 h-6 rounded-full border border-bch/40">
-                        <span class="font-bold ${isAdmin ? 'text-amber-300' : 'text-slate-200'} font-mono-code">${profile.handle}</span>
-                        ${isAdmin ? '<span class="bg-amber-500/20 text-amber-300 text-[9px] px-1 rounded font-mono-code border border-amber-500/40">ADMIN</span>' : ''}
-                        <button onclick="handleSignOut()" class="hover:text-red-400 text-slate-400 ml-1" title="Sign Out"><i class="fa-solid fa-right-from-bracket"></i></button>
-                    </div>
-                `;
+function verifyMessage(content, sigHex, pubKeyHex) {
+  try {
+    const msg = new TextEncoder().encode(content);
+    const sig = hexToBytes(sigHex);
+    const pub = hexToBytes(pubKeyHex);
+    return ml_dsa44.verify(pub, msg, sig);
+  } catch { return false; }
+}
 
-                document.getElementById('userCardHandle').textContent = profile.handle;
-                document.getElementById('userCardRole').textContent = isAdmin ? 'SYSTEM ADMIN' : 'Active Operative';
-                document.getElementById('userCardAvatar').src = profile.avatar;
-                document.getElementById('userCardStatusDot').className = "w-2.5 h-2.5 bg-bch-bright rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-950";
+function bytesToHex(arr) {
+  return Array.from(arr).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+function hexToBytes(hex) {
+  const arr = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < arr.length; i++)
+    arr[i] = parseInt(hex.slice(i*2, i*2+2), 16);
+  return arr;
+}
 
-                if (isAdmin) {
-                    adminBtn.classList.remove('hidden');
-                    adminBtn.classList.add('flex');
-                } else {
-                    adminBtn.classList.add('hidden');
-                }
-            } else {
-                statusContainer.innerHTML = `
-                    <button onclick="openAuthModal('login')" class="bg-bch hover:bg-bch-bright text-black font-bold px-3 py-1 rounded transition text-xs">
-                        Login / Register
-                    </button>
-                `;
-                adminBtn.classList.add('hidden');
-                document.getElementById('userCardHandle').textContent = "Guest Operative";
-                document.getElementById('userCardRole').textContent = "Read Only";
-                document.getElementById('userCardStatusDot').className = "w-2.5 h-2.5 bg-slate-500 rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-950";
-            }
-        }
+// ─────────────────────────────────────────────────────────────
+//  AUTH
+// ─────────────────────────────────────────────────────────────
+window.handleLogin = async (e) => {
+  e.preventDefault();
+  showAuthError('');
+  const alias = document.getElementById('loginAlias').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  if (!alias || !pass) return;
 
-        // --- FIRESTORE CHAT ENGINE ---
-        function listenToCurrentChannelMessages() {
-            if (window.appState.unsubscribeChat) {
-                window.appState.unsubscribeChat();
-            }
+  try {
+    // Restore or create PQ keypair from passphrase
+    const kp = await generatePQKeypair(alias + ':' + pass);
+    STATE.user = {
+      alias,
+      avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alias)}`,
+      pubKeyHex: bytesToHex(kp.publicKey)
+    };
+    STATE.pqKeyPair = kp;
+    STATE.anon = false;
 
-            const channelName = window.appState.currentChannel;
-            const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', `messages_${channelName}`);
+    document.getElementById('pqBadge').classList.remove('hidden');
+    document.getElementById('pqBadge').classList.add('flex');
+    document.getElementById('pqStatus').textContent = '✓ active';
 
-            window.appState.unsubscribeChat = onSnapshot(messagesRef, (snapshot) => {
-                const messages = [];
-                snapshot.forEach(doc => {
-                    messages.push({ id: doc.id, ...doc.data() });
-                });
+    updateUserUI();
+    hidePanel('auth');
+  } catch (err) {
+    showAuthError(err.message);
+  }
+};
 
-                // In-memory sort by timestamp to adhere to rule against compound Firestore queries
-                messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-                renderMessages(messages);
-            }, (error) => {
-                console.error("Firestore chat listener error:", error);
-            });
-        }
+window.handleRegister = async (e) => {
+  e.preventDefault();
+  showAuthError('');
+  const alias = document.getElementById('regAlias').value.trim();
+  const pass  = document.getElementById('regPass').value;
+  if (!alias || pass.length < 8) { showAuthError('Passphrase must be ≥ 8 chars'); return; }
 
-        function renderMessages(messages) {
-            const feed = document.getElementById('messageFeed');
-            feed.innerHTML = '';
+  document.getElementById('pqStatus').textContent = 'keygen…';
+  document.getElementById('pqBadge').classList.remove('hidden');
+  document.getElementById('pqBadge').classList.add('flex');
 
-            if (messages.length === 0) {
-                feed.innerHTML = `
-                    <div class="text-center py-12 text-slate-500 font-mono-code text-xs">
-                        <i class="fa-solid fa-comment-slash text-2xl mb-2 block text-slate-600"></i>
-                        No transmissions logged in #${window.appState.currentChannel}. Be the first to publish intel.
-                    </div>
-                `;
-                return;
-            }
+  try {
+    const kp = await generatePQKeypair(alias + ':' + pass);
+    STATE.user = {
+      alias,
+      avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(alias)}`,
+      pubKeyHex: bytesToHex(kp.publicKey)
+    };
+    STATE.pqKeyPair = kp;
+    STATE.anon = false;
 
-            messages.forEach(msg => {
-                const isAdmin = msg.email === ADMIN_EMAIL || msg.role === 'admin';
-                const dateStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
+    // Store public key in Gun so others can verify
+    gun.get(`ut/users/${alias}`).put({ alias, pubKeyHex: STATE.user.pubKeyHex });
 
-                const div = document.createElement('div');
-                div.className = "flex items-start gap-3 group hover:bg-dark-800/40 p-2 rounded transition";
-                div.innerHTML = `
-                    <img src="${msg.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=Anon'}" class="w-8 h-8 rounded-full bg-dark-950 border ${isAdmin ? 'border-amber-400 admin-badge-glow' : 'border-dark-600'} shrink-0">
-                    <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-xs ${isAdmin ? 'text-amber-300' : 'text-slate-100'}">${escapeHTML(msg.handle || 'Operative')}</span>
-                            ${isAdmin ? '<span class="bg-amber-500/20 text-amber-300 text-[9px] px-1.5 py-0.2 rounded font-mono-code font-bold uppercase border border-amber-500/40">ADMIN</span>' : ''}
-                            <span class="text-[10px] text-slate-500 font-mono-code">${dateStr}</span>
-                        </div>
-                        <p class="text-xs text-slate-200 mt-1 leading-relaxed break-words">${escapeHTML(msg.content)}</p>
-                    </div>
-                `;
-                feed.appendChild(div);
-            });
+    document.getElementById('pqStatus').textContent = '✓ active';
+    updateUserUI();
+    hidePanel('auth');
+  } catch (err) {
+    showAuthError(err.message);
+  }
+};
 
-            const container = document.getElementById('messagesContainer');
-            container.scrollTop = container.scrollHeight;
-        }
+window.handleAnon = () => {
+  const id = Math.random().toString(36).slice(2,8);
+  STATE.user  = { alias: `Anon_${id}`, avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${id}`, pubKeyHex: null };
+  STATE.pqKeyPair = null;
+  STATE.anon  = true;
+  updateUserUI();
+  hidePanel('auth');
+};
 
-        window.handleSendMessage = async (e) => {
-            e.preventDefault();
-            const input = document.getElementById('chatInput');
-            const content = input.value.trim();
-            if (!content) return;
+window.handleSignOut = () => {
+  STATE.user = null; STATE.pqKeyPair = null; STATE.anon = false;
+  document.getElementById('pqBadge').classList.add('hidden');
+  updateUserUI();
+};
 
-            if (!window.appState.currentUser) {
-                openAuthModal('login');
-                showAuthError("Authentication required to broadcast message.");
-                return;
-            }
+function updateUserUI() {
+  const container = document.getElementById('authStatusContainer');
+  if (STATE.user) {
+    document.getElementById('userCardHandle').textContent = STATE.user.alias;
+    document.getElementById('userCardRole').textContent   = STATE.anon ? 'Anonymous' : 'PQ Signed';
+    document.getElementById('userCardAvatar').src         = STATE.user.avatar;
+    document.getElementById('userCardStatusDot').className =
+      'w-2.5 h-2.5 bg-bch-bright rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-950';
+    document.getElementById('chatInput').disabled = !STATE.currentChannel;
+    container.innerHTML = `
+      <div class="flex items-center gap-2">
+        <img src="${STATE.user.avatar}" class="w-6 h-6 rounded-full border border-bch/40">
+        <span class="font-bold text-slate-200 font-mono-code text-xs">${esc(STATE.user.alias)}</span>
+        <button onclick="handleSignOut()" class="text-slate-400 hover:text-red-400 ml-1 text-xs">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>`;
+  } else {
+    document.getElementById('userCardHandle').textContent = 'Guest';
+    document.getElementById('userCardRole').textContent   = 'Not signed in';
+    document.getElementById('chatInput').disabled = true;
+    container.innerHTML = `
+      <button onclick="showPanel('auth')"
+        class="bg-bch hover:bg-bch-bright text-black font-bold px-3 py-1 rounded text-xs transition">
+        Login / Register
+      </button>`;
+  }
+}
 
-            if (window.appState.isChannelLocked && window.appState.userProfile?.email !== ADMIN_EMAIL) {
-                alert("Channel is currently locked by the Administrator.");
-                return;
-            }
+// ─────────────────────────────────────────────────────────────
+//  ROOMS (Servers)
+// ─────────────────────────────────────────────────────────────
+window.joinRoom = () => {
+  let name = document.getElementById('newRoomName').value.trim()
+    .toLowerCase().replace(/[^a-z0-9\-]/g,'-').slice(0,40);
+  if (!name) return;
+  if (!STATE.rooms.includes(name)) {
+    STATE.rooms.push(name);
+    localStorage.setItem('ut_rooms', JSON.stringify(STATE.rooms));
+  }
+  renderServerRail();
+  switchRoom(name);
+  hidePanel('createServer');
+  document.getElementById('newRoomName').value = '';
+};
 
-            const profile = window.appState.userProfile || {};
-            const channelName = window.appState.currentChannel;
-            const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', `messages_${channelName}`);
+function renderServerRail() {
+  const list = document.getElementById('serverList');
+  list.innerHTML = '';
+  STATE.rooms.forEach(r => {
+    const btn = document.createElement('button');
+    btn.className = `server-icon group relative w-11 h-11 rounded-[20px] hover:rounded-[12px]
+      bg-dark-800 hover:bg-bch text-slate-300 hover:text-black transition-all duration-200
+      flex items-center justify-center font-bold text-sm
+      ${STATE.currentRoom === r ? 'bg-bch text-black rounded-[12px] shadow-bch-glow' : ''}`;
+    btn.title = r;
+    btn.innerHTML = `<i class="fa-solid fa-eye"></i>`;
+    btn.onclick = () => switchRoom(r);
+    list.appendChild(btn);
+  });
 
-            try {
-                await addDoc(messagesRef, {
-                    uid: window.appState.currentUser.uid,
-                    handle: profile.handle || 'Operative',
-                    email: profile.email || 'anon@node',
-                    role: profile.role || 'user',
-                    avatar: profile.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${window.appState.currentUser.uid}`,
-                    content: content,
-                    timestamp: Date.now()
-                });
-                input.value = '';
-            } catch (err) {
-                console.error("Error sending message:", err);
-            }
-        };
+  // Refresh saved rooms in panel
+  const saved = document.getElementById('savedRoomsList');
+  saved.innerHTML = '';
+  STATE.rooms.forEach(r => {
+    const d = document.createElement('button');
+    d.className = 'w-full text-left px-2 py-1.5 rounded text-xs text-slate-300 hover:bg-dark-800 font-mono-code flex items-center gap-2';
+    d.innerHTML = `<i class="fa-solid fa-hashtag text-slate-500"></i>${esc(r)}`;
+    d.onclick = () => { switchRoom(r); hidePanel('createServer'); };
+    saved.appendChild(d);
+  });
+}
 
-        // --- AUTHENTICATION HANDLERS ---
-        window.handleAuthLogin = async (e) => {
-            e.preventDefault();
-            hideAuthError();
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
+function switchRoom(name) {
+  STATE.currentRoom    = name;
+  STATE.currentChannel = 'general';
+  document.getElementById('currentServerName').textContent = name;
+  document.getElementById('addChannelBtn').classList.remove('hidden');
+  renderServerRail();
+  listenChannels(name);
+  switchChannel('general');
+}
 
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                closeAuthModal();
-            } catch (err) {
-                showAuthError(err.message);
-            }
-        };
+// ─────────────────────────────────────────────────────────────
+//  CHANNELS
+// ─────────────────────────────────────────────────────────────
+let _chanUnsub = null;
+function listenChannels(room) {
+  // Register general by default
+  gun.get(`ut/${room}/channels/general`).put({ name:'general', createdAt: Date.now() });
 
-        window.handleAuthRegister = async (e) => {
-            e.preventDefault();
-            hideAuthError();
-            const handle = document.getElementById('regHandle').value.trim();
-            const email = document.getElementById('regEmail').value.trim();
-            const password = document.getElementById('regPassword').value;
+  gun.get(`ut/${room}/channels`).map().on((data, key) => {
+    if (!data || !data.name) return;
+    renderChannels();
+  });
+}
 
-            try {
-                const cred = await createUserWithEmailAndPassword(auth, email, password);
-                const isAdmin = email === ADMIN_EMAIL;
-                
-                const profileData = {
-                    uid: cred.user.uid,
-                    email: email,
-                    handle: handle,
-                    role: isAdmin ? 'admin' : 'user',
-                    avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${cred.user.uid}`,
-                    createdAt: new Date().toISOString()
-                };
+const _channels = new Set(['general']);
+function renderChannels() {
+  if (STATE.currentRoom) {
+    gun.get(`ut/${STATE.currentRoom}/channels`).map().once((data) => {
+      if (data && data.name) _channels.add(data.name);
+    });
+  }
+  const list = document.getElementById('channelsList');
+  list.innerHTML = '';
+  [..._channels].sort().forEach(c => {
+    const btn = document.createElement('button');
+    btn.id = `chan-${c}`;
+    btn.className = `channel-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-slate-300
+      hover:bg-dark-800 hover:text-white transition
+      ${STATE.currentChannel === c ? 'bg-dark-800 text-bch-bright border-l-2 border-bch-bright' : ''}`;
+    btn.innerHTML = `<span class="text-slate-500 font-bold">#</span><span class="truncate">${esc(c)}</span>`;
+    btn.onclick = () => switchChannel(c);
+    list.appendChild(btn);
+  });
+}
 
-                const userRef = doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile', 'data');
-                await setDoc(userRef, profileData);
-                window.appState.userProfile = profileData;
+window.createChannel = () => {
+  let name = document.getElementById('newChanName').value.trim()
+    .toLowerCase().replace(/[^a-z0-9\-]/g,'-').slice(0,30);
+  if (!name || !STATE.currentRoom) return;
+  _channels.add(name);
+  gun.get(`ut/${STATE.currentRoom}/channels/${name}`).put({ name, createdAt: Date.now() });
+  renderChannels();
+  switchChannel(name);
+  hidePanel('createChannel');
+  document.getElementById('newChanName').value = '';
+};
 
-                closeAuthModal();
-            } catch (err) {
-                showAuthError(err.message);
-            }
-        };
+function switchChannel(channel) {
+  STATE.currentChannel = channel;
+  document.getElementById('activeChannelHeader').textContent = channel;
+  document.getElementById('chatInput').disabled = !STATE.user;
+  document.getElementById('chatInput').placeholder = STATE.user ? `Message #${channel}` : 'Login to post…';
+  renderChannels();
 
-        window.handleAnonymousAuth = async () => {
-            hideAuthError();
-            try {
-                await signInAnonymously(auth);
-                closeAuthModal();
-            } catch (err) {
-                showAuthError(err.message);
-            }
-        };
+  // Load local chain + start Gun sync
+  const chain = loadChain(STATE.currentRoom, channel);
+  renderChainMessages(chain);
+  updateChainUI(chain);
+  listenChainSync(STATE.currentRoom, channel);
+  listenPresence();
+}
 
-        window.handleSignOut = async () => {
-            await signOut(auth);
-        };
+// ─────────────────────────────────────────────────────────────
+//  PRESENCE  (members list)
+// ─────────────────────────────────────────────────────────────
+function listenPresence() {
+  if (!STATE.currentRoom || !STATE.user) return;
+  const presRef = gun.get(`ut/${STATE.currentRoom}/presence/${STATE.user.alias}`);
+  presRef.put({ alias: STATE.user.alias, avatar: STATE.user.avatar, ts: Date.now(), pq: !STATE.anon });
 
-        // --- ADMIN CONTROLS (MODDARKREVOLT) ---
-        window.adminPurgeMessages = async () => {
-            if (window.appState.userProfile?.email !== ADMIN_EMAIL) return;
-            if (!confirm("Are you sure you want to purge all messages in this channel?")) return;
+  // Heartbeat
+  setInterval(() => presRef.put({ alias: STATE.user.alias, avatar: STATE.user.avatar, ts: Date.now(), pq: !STATE.anon }), 15000);
 
-            const channelName = window.appState.currentChannel;
-            const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', `messages_${channelName}`);
-            
-            try {
-                const snapshot = await getDocs(messagesRef);
-                snapshot.forEach(async (document) => {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', `messages_${channelName}`, document.id));
-                });
-                toggleAdminPanel();
-            } catch (err) {
-                console.error("Purge error:", err);
-            }
-        };
+  gun.get(`ut/${STATE.currentRoom}/presence`).map().on((data) => {
+    if (!data || !data.alias) return;
+    if (Date.now() - (data.ts||0) > 60000) return; // 60s timeout
+    renderMember(data);
+  });
+}
 
-        window.adminToggleChannelLock = () => {
-            if (window.appState.userProfile?.email !== ADMIN_EMAIL) return;
-            window.appState.isChannelLocked = !window.appState.isChannelLocked;
-            const badge = document.getElementById('channelLockBadge');
-            if (window.appState.isChannelLocked) {
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-            toggleAdminPanel();
-        };
+const _members = new Map();
+function renderMember(m) {
+  _members.set(m.alias, m);
+  const list = document.getElementById('membersList');
+  list.innerHTML = '';
+  [..._members.values()].forEach(mem => {
+    if (Date.now() - (mem.ts||0) > 60000) { _members.delete(mem.alias); return; }
+    const d = document.createElement('div');
+    d.className = 'flex items-center gap-2 p-1.5 rounded hover:bg-dark-800';
+    d.innerHTML = `
+      <img src="${mem.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x'}"
+        class="w-7 h-7 rounded-full bg-dark-950 border border-dark-600">
+      <div class="min-w-0">
+        <div class="font-bold text-xs text-slate-200 truncate">${esc(mem.alias)}</div>
+        <div class="text-[10px] ${mem.pq ? 'text-violet-400' : 'text-slate-500'}">
+          ${mem.pq ? '<i class="fa-solid fa-atom mr-0.5"></i> PQ signed' : 'Anonymous'}
+        </div>
+      </div>`;
+    list.appendChild(d);
+  });
+}
 
-        window.adminBroadcastAnnouncement = async () => {
-            if (window.appState.userProfile?.email !== ADMIN_EMAIL) return;
-            const text = document.getElementById('adminAnnouncementInput').value.trim();
-            if (!text) return;
+// ─────────────────────────────────────────────────────────────
+//  SEND MESSAGE
+// ─────────────────────────────────────────────────────────────
+window.handleSendMessage = async (e) => {
+  e.preventDefault();
+  const input   = document.getElementById('chatInput');
+  const content = input.value.trim();
+  if (!content || !STATE.user || !STATE.currentRoom || !STATE.currentChannel) return;
+  if (STATE.locked) { alert('Channel is locked.'); return; }
 
-            const channelName = window.appState.currentChannel;
-            const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', `messages_${channelName}`);
+  input.value = '';
+  input.disabled = true;
 
-            await addDoc(messagesRef, {
-                uid: window.appState.currentUser.uid,
-                handle: 'SYSTEM_ANNOUNCEMENT',
-                email: ADMIN_EMAIL,
-                role: 'admin',
-                avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=admin_announcement`,
-                content: `⚠️ BROADCAST: ${text}`,
-                timestamp: Date.now()
-            });
+  // PQ sign the message
+  let sig = null;
+  if (STATE.pqKeyPair && !STATE.anon) {
+    sig = await signMessage(content, STATE.pqKeyPair.secretKey);
+  }
 
-            document.getElementById('adminAnnouncementInput').value = '';
-            toggleAdminPanel();
-        };
+  const msgData = {
+    handle:  STATE.user.alias,
+    avatar:  STATE.user.avatar,
+    content,
+    sig,
+    pubKeyHex: STATE.user.pubKeyHex || null,
+    room:    STATE.currentRoom,
+    channel: STATE.currentChannel
+  };
 
-        // --- UI HELPERS ---
-        window.switchChannel = (chanId, chanName) => {
-            window.appState.currentChannel = chanId;
-            document.getElementById('activeChannelHeader').textContent = chanName;
+  try {
+    const block = await addMessageToChain(STATE.currentRoom, STATE.currentChannel, msgData);
+    // Also broadcast raw message for fast UI (chain is ground truth)
+    gun.get(`ut/${STATE.currentRoom}/${STATE.currentChannel}/msgs`).get(block.hash).put(JSON.stringify({
+      ...msgData, blockHash: block.hash, blockIndex: block.index, ts: block.timestamp
+    }));
+  } catch (err) {
+    console.error(err);
+  }
 
-            document.querySelectorAll('.channel-btn').forEach(btn => {
-                btn.classList.remove('bg-dark-800', 'text-bch-bright', 'border-l-2', 'border-bch-bright');
-                btn.classList.add('text-slate-300');
-            });
-            const activeBtn = document.getElementById(`chan-${chanId}`);
-            if (activeBtn) {
-                activeBtn.classList.add('bg-dark-800', 'text-bch-bright', 'border-l-2', 'border-bch-bright');
-            }
+  input.disabled = !STATE.user;
+};
 
-            listenToCurrentChannelMessages();
-        };
+// ─────────────────────────────────────────────────────────────
+//  RENDER MESSAGES (from chain)
+// ─────────────────────────────────────────────────────────────
+function renderChainMessages(chain) {
+  const feed = document.getElementById('messageFeed');
+  feed.innerHTML = '';
 
-        window.switchServer = (serverId, serverName) => {
-            document.getElementById('currentServerName').textContent = serverName;
-            document.querySelectorAll('.server-icon').forEach(el => el.classList.remove('active', 'bg-bch', 'text-black', 'shadow-bch-glow'));
-            const btn = document.getElementById(`server-${serverId}`);
-            if (btn) btn.classList.add('active', 'bg-bch', 'text-black', 'shadow-bch-glow');
-        };
+  if (!chain.length) {
+    feed.innerHTML = `<div class="text-center py-12 text-slate-500 font-mono-code text-xs">No messages yet. Be the first.</div>`;
+    return;
+  }
 
-        window.openAuthModal = (tab = 'login') => {
-            switchAuthTab(tab);
-            document.getElementById('authModal').classList.remove('hidden');
-        };
+  chain.forEach(block => {
+    const d = block.data;
+    if (!d || !d.content) return;
 
-        window.closeAuthModal = () => {
-            document.getElementById('authModal').classList.add('hidden');
-        };
+    // Verify PQ signature
+    let sigStatus = 'anon';
+    if (d.sig && d.pubKeyHex) {
+      try {
+        const ok = verifyMessage(d.content, d.sig, d.pubKeyHex);
+        sigStatus = ok ? 'verified' : 'invalid';
+      } catch { sigStatus = 'invalid'; }
+    }
 
-        window.switchAuthTab = (tab) => {
-            const loginForm = document.getElementById('loginForm');
-            const regForm = document.getElementById('registerForm');
-            const tabLogin = document.getElementById('tabLogin');
-            const tabReg = document.getElementById('tabRegister');
+    const div = document.createElement('div');
+    div.className = 'flex items-start gap-3 hover:bg-dark-800/40 p-2 rounded group';
+    div.innerHTML = `
+      <img src="${d.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x'}"
+        class="w-8 h-8 rounded-full bg-dark-950 border border-dark-600">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-bold text-xs text-slate-100">${esc(d.handle)}</span>
+          ${sigStatus==='verified'
+            ? `<span class="pq-badge px-1.5 py-0.5 rounded text-[9px] font-mono-code text-violet-300 flex items-center gap-1">
+                 <i class="fa-solid fa-atom text-[8px]"></i> ML-DSA ✓
+               </span>`
+            : sigStatus==='invalid'
+              ? `<span class="bg-red-900/30 border border-red-500/40 px-1.5 py-0.5 rounded text-[9px] font-mono-code text-red-400">⚠ sig invalid</span>`
+              : `<span class="text-[9px] text-slate-500 font-mono-code">anon</span>`}
+          <span class="text-[10px] text-slate-500 font-mono-code">${new Date(block.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+          <span class="text-[9px] text-dark-600 group-hover:text-slate-600 font-mono-code ml-auto">
+            #${block.index} · ${block.hash.slice(0,8)}…
+          </span>
+        </div>
+        <p class="text-xs text-slate-200 mt-0.5 break-words">${esc(d.content)}</p>
+      </div>`;
+    feed.appendChild(div);
+  });
 
-            if (tab === 'login') {
-                loginForm.classList.remove('hidden');
-                regForm.classList.add('hidden');
-                tabLogin.className = "flex-1 py-2 font-bold text-sm text-bch-bright border-b-2 border-bch-bright";
-                tabReg.className = "flex-1 py-2 font-bold text-sm text-slate-400 border-b-2 border-transparent hover:text-white";
-            } else {
-                loginForm.classList.add('hidden');
-                regForm.classList.remove('hidden');
-                tabReg.className = "flex-1 py-2 font-bold text-sm text-bch-bright border-b-2 border-bch-bright";
-                tabLogin.className = "flex-1 py-2 font-bold text-sm text-slate-400 border-b-2 border-transparent hover:text-white";
-            }
-        };
+  const c = document.getElementById('messagesContainer');
+  c.scrollTop = c.scrollHeight;
+}
 
-        window.toggleAdminPanel = () => {
-            document.getElementById('adminModal').classList.toggle('hidden');
-        };
+// ─────────────────────────────────────────────────────────────
+//  BLOCKCHAIN EXPLORER (panel)
+// ─────────────────────────────────────────────────────────────
+window.refreshExplorer = () => {
+  if (!STATE.currentRoom) return;
+  const chain = loadChain(STATE.currentRoom, STATE.currentChannel);
+  const ex = document.getElementById('chainExplorer');
+  ex.innerHTML = '';
+  [...chain].reverse().forEach(b => {
+    const d = document.createElement('div');
+    d.className = `block-card ${b.index===0?'genesis':''}`;
+    d.innerHTML = `
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-bold text-white">${b.index===0?'🌱 Genesis':` Block #${b.index}`}</span>
+        <span class="text-[10px] text-slate-500">${new Date(b.timestamp).toLocaleString()}</span>
+      </div>
+      <div class="space-y-1">
+        <div><span class="text-slate-500">Msg:  </span><span class="text-slate-200">${esc(b.data?.content||'—')}</span></div>
+        <div><span class="text-slate-500">Nonce:</span> ${b.nonce}</div>
+        <div><span class="text-slate-500">Hash: </span><span class="hash-text">${b.hash}</span></div>
+        <div><span class="text-slate-500">Prev: </span><span class="prev-text">${b.previousHash}</span></div>
+        ${b.data?.sig ? `<div><span class="text-slate-500">Sig:  </span><span class="sig-text">${b.data.sig.slice(0,40)}…</span></div>` : ''}
+      </div>`;
+    ex.appendChild(d);
+  });
+};
 
-        function showAuthError(msg) {
-            const el = document.getElementById('authErrorMsg');
-            el.textContent = msg;
-            el.classList.remove('hidden');
-        }
+// Open explorer = refresh
+const origShowPanel = window.showPanel;
+window.showPanel = (id) => {
+  document.getElementById(`panel-${id}`)?.classList.remove('hidden');
+  if (id === 'chain') window.refreshExplorer();
+};
 
-        function hideAuthError() {
-            document.getElementById('authErrorMsg').classList.add('hidden');
-        }
+// ─────────────────────────────────────────────────────────────
+//  UI UTILITIES
+// ─────────────────────────────────────────────────────────────
+window.hidePanel = (id) => document.getElementById(`panel-${id}`)?.classList.add('hidden');
 
-        function escapeHTML(str) {
-            return String(str).replace(/[&<>'"]/g, 
-                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-            );
-        }
-    </script>
+window.switchAuthTab = (tab) => {
+  const lf = document.getElementById('loginForm');
+  const rf = document.getElementById('registerForm');
+  const tl = document.getElementById('tabLogin');
+  const tr = document.getElementById('tabRegister');
+  if (tab==='login') {
+    lf.classList.remove('hidden'); rf.classList.add('hidden');
+    tl.className='flex-1 py-2 font-bold text-sm text-bch-bright border-b-2 border-bch-bright';
+    tr.className='flex-1 py-2 font-bold text-sm text-slate-400 border-b-2 border-transparent';
+  } else {
+    lf.classList.add('hidden'); rf.classList.remove('hidden');
+    tr.className='flex-1 py-2 font-bold text-sm text-bch-bright border-b-2 border-bch-bright';
+    tl.className='flex-1 py-2 font-bold text-sm text-slate-400 border-b-2 border-transparent';
+  }
+};
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  if (msg) { el.textContent = msg; el.classList.remove('hidden'); }
+  else el.classList.add('hidden');
+}
+
+function setMining(on) {
+  const el = document.getElementById('miningIndicator');
+  el.classList.toggle('hidden', !on);
+  el.classList.toggle('flex', on);
+  document.getElementById('chatInput').disabled = on || !STATE.user;
+  if (on) document.getElementById('messageForm').classList.add('mining-pulse');
+  else    document.getElementById('messageForm').classList.remove('mining-pulse');
+}
+
+function esc(str) {
+  return String(str||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+
+// ─────────────────────────────────────────────────────────────
+//  BOOT
+// ─────────────────────────────────────────────────────────────
+renderServerRail();
+updateUserUI();
+
+// ESC closes any open panel
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    ['auth','createServer','createChannel','chain'].forEach(id => hidePanel(id));
+  }
+});
+
+console.log('%c UNREDACTED TRUTH — P2P + Blockchain + ML-DSA ', 'background:#0AC18E;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px;');
+console.log('%c No Firebase. No server. Gun.js WebRTC + SHA-256 PoW + CRYSTALS-Dilithium (FIPS 204)', 'color:#00E5A3');
+
+</script>
 </body>
 </html>
