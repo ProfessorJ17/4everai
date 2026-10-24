@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#08090c] text-slate-100 antialiased selection:bg-[#00E5A3] selection:text-black">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNREDACTED TRUTH - Secured Terminal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bch: {
+                            DEFAULT: '#0AC18E',
+                            bright: '#00E5A3',
+                            glow: 'rgba(0, 229, 163, 0.35)',
+                            dark: '#05543d'
+                        },
+                        dark: {
+                            950: '#050608',
+                            900: '#090b0e',
+                            850: '#0f1218',
+                            800: '#151922',
+                            750: '#1c222e',
+                            700: '#242b3b',
+                            600: '#323c52'
+                        }
+                    },
+                    boxShadow: {
+                        'bch-glow': '0 0 15px rgba(0, 229, 163, 0.35)',
+                        'bch-card': '0 0 25px rgba(0, 229, 163, 0.15)'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #090b0e; }
+        ::-webkit-scrollbar-thumb { background: #242b3b; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0AC18E; }
+
+        .admin-badge-glow {
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col overflow-hidden text-sm bg-dark-950">
+
+    <!-- TOP SECURITY BAR -->
+    <header class="h-11 bg-dark-950 border-b border-dark-700/80 flex items-center justify-between px-4 z-30 shrink-0 select-none">
+        <div class="flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-bch/10 text-bch-bright border border-bch/30 font-mono-code tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-bch-bright animate-pulse"></span> P2P NODE ACTIVE
+            </span>
+            <h1 class="font-extrabold tracking-wider text-white text-xs uppercase flex items-center gap-2">
+                <i class="fa-solid fa-user-secret text-bch-bright"></i> UNREDACTED TRUTH
+            </h1>
+            <span class="hidden md:inline text-slate-400 text-xs italic border-l border-dark-700 pl-3">
+                "The only place for Unredacted Truths From Unreliable Sources."
+            </span>
+        </div>
+
+        <div class="flex items-center gap-3 text-xs">
+            <!-- Admin Panel Trigger (Only shown if admin) -->
+            <button id="adminPanelBtn" onclick="toggleAdminPanel()" class="hidden bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded text-xs font-bold items-center gap-1.5 transition">
+                <i class="fa-solid fa-shield-halved"></i> Admin Panel
+            </button>
+
+            <!-- User Auth Status -->
+            <div id="authStatusContainer" class="flex items-center gap-2">
+                <button onclick="openAuthModal('login')" id="loginHeaderBtn" class="bg-bch hover:bg-bch-bright text-black font-bold px-3 py-1 rounded transition text-xs">
+                    Login / Register
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APP CANVAS -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- 1. SERVER SIDEBAR -->
+        <nav class="w-16 bg-dark-950 border-r border-dark-700/80 flex flex-col items-center py-3 gap-2 z-20 shrink-0 select-none">
+            <!-- Home -->
+            <button onclick="switchServer('home', 'Direct Intel')" class="server-icon group relative w-11 h-11 rounded-[20px] hover:rounded-[12px] bg-dark-800 hover:bg-bch transition-all duration-200 flex items-center justify-center text-slate-300 hover:text-black">
+                <i class="fa-solid fa-folder-closed text-lg"></i>
+                <span class="absolute left-16 bg-dark-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded shadow-xl whitespace-nowrap hidden group-hover:block z-50 border border-dark-700">
+                    Direct Intelligence
+                </span>
+            </button>
+
+            <div class="w-8 h-[2px] bg-dark-700/80 rounded my-1"></div>
+
+            <!-- Main Server: Unredacted Truth -->
+            <button onclick="switchServer('unredacted', 'UNREDACTED TRUTH')" id="server-unredacted" class="server-icon active group relative w-11 h-11 rounded-[12px] bg-bch text-black shadow-bch-glow transition-all duration-200 flex items-center justify-center font-bold text-lg">
+                <i class="fa-solid fa-eye text-lg"></i>
+                <span class="absolute left-16 bg-dark-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded shadow-xl whitespace-nowrap hidden group-hover:block z-50 border border-dark-700">
+                    Unredacted Truth
+                </span>
+            </button>
+
+            <!-- Server: Crypto Vault -->
+            <button onclick="switchServer('crypto', 'BCH Vault')" id="server-crypto" class="server-icon group relative w-11 h-11 rounded-[20px] hover:rounded-[12px] bg-dark-800 hover:bg-bch hover:text-black transition-all duration-200 flex items-center justify-center text-slate-300">
+                <i class="fa-brands fa-bitcoin text-lg"></i>
+                <span class="absolute left-16 bg-dark-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded shadow-xl whitespace-nowrap hidden group-hover:block z-50 border border-dark-700">
+                    BCH & Crypto Leaks
+                </span>
+            </button>
+        </nav>
+
+        <!-- 2. CHANNELS SIDEBAR -->
+        <aside class="w-60 bg-dark-900 border-r border-dark-700/80 flex flex-col shrink-0 select-none">
+            <div class="h-12 border-b border-dark-700/80 px-4 flex items-center justify-between font-bold text-white shadow-sm">
+                <span id="currentServerName" class="truncate text-sm tracking-wide">UNREDACTED TRUTH</span>
+                <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
+            </div>
+
+            <!-- Channels List -->
+            <div class="flex-1 overflow-y-auto px-2 py-3 space-y-4">
+                <div>
+                    <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1.5 font-mono-code">
+                        <span>Text Channels</span>
+                    </div>
+
+                    <div class="space-y-0.5" id="channelsList">
+                        <button onclick="switchChannel('general', 'general')" id="chan-general" class="channel-btn active w-full flex items-center gap-2 px-2.5 py-1.5 rounded bg-dark-800 text-bch-bright font-medium transition border-l-2 border-bch-bright">
+                            <span class="text-bch-bright font-bold">#</span>
+                            <span class="truncate">general</span>
+                        </button>
+
+                        <button onclick="switchChannel('unreliable-sources', 'unreliable-sources')" id="chan-unreliable-sources" class="channel-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-slate-300 hover:bg-dark-800 hover:text-white transition">
+                            <span class="text-slate-500 font-bold">#</span>
+                            <span class="truncate">unreliable-sources</span>
+                        </button>
+
+                        <button onclick="switchChannel('leak-drops', 'leak-drops')" id="chan-leak-drops" class="channel-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-slate-300 hover:bg-dark-800 hover:text-white transition">
+                            <span class="text-slate-500 font-bold">#</span>
+                            <span class="truncate">leak-drops</span>
+                        </button>
+
+                        <button onclick="switchChannel('cikada-ai-logs', 'cikada-ai-logs')" id="chan-cikada-ai-logs" class="channel-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-slate-300 hover:bg-dark-800 hover:text-white transition">
+                            <span class="text-slate-500 font-bold">#</span>
+                            <span class="truncate">cikada-ai-logs</span>
+                        </button>
+
+                        <button onclick="switchChannel('lounge', 'lounge')" id="chan-lounge" class="channel-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-slate-300 hover:bg-dark-800 hover:text-white transition">
+                            <span class="text-slate-500 font-bold">#</span>
+                            <span class="truncate">lounge</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Logged In Operative Card -->
+            <div class="h-14 bg-dark-950 border-t border-dark-700/80 px-3 flex items-center justify-between">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="relative shrink-0">
+                        <img id="userCardAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600">
+                        <span id="userCardStatusDot" class="w-2.5 h-2.5 bg-slate-500 rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-950"></span>
+                    </div>
+                    <div class="min-w-0">
+                        <div id="userCardHandle" class="font-bold text-white text-xs truncate">Guest Operative</div>
+                        <div id="userCardRole" class="text-[10px] text-slate-400 font-mono-code truncate">Read Only</div>
+                    </div>
+                </div>
+                <button onclick="openAuthModal('login')" class="text-slate-400 hover:text-white p-1.5 rounded hover:bg-dark-800 transition" title="Account Settings">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- 3. MAIN CHAT STREAM -->
+        <main class="flex-1 flex flex-col bg-dark-850 relative min-w-0">
+            <!-- Channel Header -->
+            <div class="h-12 border-b border-dark-700/80 px-4 flex items-center justify-between bg-dark-900/90 backdrop-blur shrink-0 z-10">
+                <div class="flex items-center gap-2 min-w-0">
+                    <i class="fa-solid fa-hashtag text-slate-400"></i>
+                    <span id="activeChannelHeader" class="font-bold text-white text-sm truncate">general</span>
+                    <span class="text-slate-600 hidden sm:inline">|</span>
+                    <span id="channelTopic" class="text-xs text-slate-400 truncate hidden sm:inline">Unredacted Public Feeds & General Telemetry</span>
+                </div>
+                <div id="channelLockBadge" class="hidden bg-red-500/20 text-red-400 border border-red-500/40 text-[10px] font-mono-code px-2 py-0.5 rounded">
+                    <i class="fa-solid fa-lock"></i> CHANNEL LOCKED BY ADMIN
+                </div>
+            </div>
+
+            <!-- Messages Stream Container -->
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <div id="messageFeed" class="space-y-4"></div>
+            </div>
+
+            <!-- Message Input Area -->
+            <div class="p-3 bg-dark-900/80 border-t border-dark-700/80 shrink-0">
+                <form id="messageForm" onsubmit="handleSendMessage(event)" class="bg-dark-800 border border-dark-700 focus-within:border-bch rounded-lg p-2.5 transition flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="alert('Attachments restricted to encrypted channels.')" class="w-7 h-7 rounded-full bg-dark-700 hover:bg-dark-600 text-slate-400 hover:text-white flex items-center justify-center transition shrink-0">
+                            <i class="fa-solid fa-paperclip text-xs"></i>
+                        </button>
+                        <input type="text" id="chatInput" placeholder="Message #general... (Login to post)" autocomplete="off" class="flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-slate-500">
+                        <button type="submit" id="sendBtn" class="bg-bch hover:bg-bch-bright text-black font-bold px-3 py-1.5 rounded text-xs transition flex items-center gap-1.5 shrink-0">
+                            <span>Send</span>
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <!-- 4. ONLINE MEMBERS SIDEBAR -->
+        <aside class="w-56 bg-dark-900 border-l border-dark-700/80 p-3 overflow-y-auto shrink-0 select-none hidden lg:block">
+            <!-- Admin Member Section -->
+            <div class="mb-4">
+                <div class="text-[10px] font-bold text-amber-400/90 uppercase tracking-wider mb-2 font-mono-code flex items-center gap-1">
+                    <i class="fa-solid fa-crown text-[10px]"></i> System Administrator
+                </div>
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 p-1.5 rounded bg-amber-500/5 border border-amber-500/20">
+                        <div class="relative shrink-0">
+                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=moddarkrevolt" class="w-8 h-8 rounded-full bg-dark-950 border border-amber-400">
+                            <span class="w-2.5 h-2.5 bg-bch-bright rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-900"></span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-bold text-amber-300 text-xs truncate flex items-center gap-1">
+                                moddarkrevolt
+                            </div>
+                            <span class="bg-amber-500/20 text-amber-300 text-[9px] px-1 rounded font-mono-code font-bold uppercase border border-amber-500/40">ADMIN</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Automated Intelligence Systems -->
+            <div class="mb-4">
+                <div class="text-[10px] font-bold text-bch-bright uppercase tracking-wider mb-2 font-mono-code">
+                    AI Nodes — 2
+                </div>
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 p-1.5 rounded hover:bg-dark-800">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=CIKADA" class="w-8 h-8 rounded-full bg-dark-950 border border-bch/50 shrink-0">
+                        <div class="min-w-0">
+                            <div class="font-bold text-bch-bright text-xs truncate">CIKADA_AI <span class="bg-bch/20 text-[9px] px-1 rounded font-mono-code">BOT</span></div>
+                            <div class="text-[10px] text-slate-400 truncate">Telemetry Monitor</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 p-1.5 rounded hover:bg-dark-800">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=ProfessorJ" class="w-8 h-8 rounded-full bg-dark-950 border border-bch/50 shrink-0">
+                        <div class="min-w-0">
+                            <div class="font-bold text-slate-200 text-xs truncate">Professor_J <i class="fa-solid fa-check text-bch-bright text-[10px]"></i></div>
+                            <div class="text-[10px] text-slate-400 truncate">Core Operative</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Registered Users -->
+            <div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 font-mono-code">
+                    Active Operatives
+                </div>
+                <div id="activeUsersList" class="space-y-1">
+                    <!-- Populated via Firestore / State -->
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- AUTHENTICATION MODAL (LOGIN & REGISTRATION) -->
+    <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-dark-900 border border-bch/30 w-full max-w-md rounded-xl p-6 shadow-bch-card relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <!-- Tabs Header -->
+            <div class="flex border-b border-dark-700 mb-6">
+                <button id="tabLogin" onclick="switchAuthTab('login')" class="flex-1 py-2 font-bold text-sm text-bch-bright border-b-2 border-bch-bright">LOGIN</button>
+                <button id="tabRegister" onclick="switchAuthTab('register')" class="flex-1 py-2 font-bold text-sm text-slate-400 border-b-2 border-transparent hover:text-white">REGISTER</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleAuthLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Email Address</label>
+                    <input type="email" id="loginEmail" required placeholder="operativedark@gmail.com" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-bch hover:bg-bch-bright text-black font-bold rounded-lg text-sm transition shadow-bch-glow">
+                    AUTHENTICATE
+                </button>
+                <button type="button" onclick="handleAnonymousAuth()" class="w-full py-2 bg-dark-800 hover:bg-dark-700 text-slate-300 font-bold rounded-lg text-xs transition border border-dark-700">
+                    CONTINUE ANONYMOUSLY
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" onsubmit="handleAuthRegister(event)" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Operative Handle / Alias</label>
+                    <input type="text" id="regHandle" required placeholder="Agent_Shadow" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Email Address</label>
+                    <input type="email" id="regEmail" required placeholder="moddarkrevolt@gmail.com" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Password</label>
+                    <input type="password" id="regPassword" required minlength="6" placeholder="Min 6 characters" class="w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-bch">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-bch hover:bg-bch-bright text-black font-bold rounded-lg text-sm transition shadow-bch-glow">
+                    CREATE UNREDACTED ACCOUNT
+                </button>
+            </form>
+
+            <div id="authErrorMsg" class="mt-4 text-xs text-red-400 text-center font-mono-code hidden"></div>
+        </div>
+    </div>
+
+    <!-- ADMIN CONTROL PANEL MODAL (MODDARKREVOLT ONLY) -->
+    <div id="adminModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-dark-900 border border-amber-500/40 w-full max-w-lg rounded-xl p-6 shadow-2xl relative">
+            <button onclick="toggleAdminPanel()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-6 pb-3 border-b border-dark-700">
+                <i class="fa-solid fa-shield-halved text-amber-400 text-2xl"></i>
+                <div>
+                    <h2 class="text-base font-extrabold text-amber-300 uppercase tracking-wide">ADMINISTRATOR COMMAND TERMINAL</h2>
+                    <p class="text-xs text-slate-400">Targeted Node: moddarkrevolt@gmail.com</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="p-3 bg-dark-950 rounded border border-dark-700 space-y-2">
+                    <h3 class="text-xs font-bold text-slate-200 uppercase">Channel Controls</h3>
+                    <div class="flex gap-2">
+                        <button onclick="adminPurgeMessages()" class="flex-1 py-2 bg-red-900/40 hover:bg-red-900/60 text-red-300 border border-red-500/40 rounded text-xs font-bold transition">
+                            <i class="fa-solid fa-trash me-1"></i> Purge Current Channel
+                        </button>
+                        <button onclick="adminToggleChannelLock()" class="flex-1 py-2 bg-amber-900/40 hover:bg-amber-900/60 text-amber-300 border border-amber-500/40 rounded text-xs font-bold transition">
+                            <i class="fa-solid fa-lock me-1"></i> Toggle Lock
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-dark-950 rounded border border-dark-700 space-y-2">
+                    <h3 class="text-xs font-bold text-slate-200 uppercase">Broadcast System Announcement</h3>
+                    <textarea id="adminAnnouncementInput" rows="2" placeholder="Broadcast unredacted system warning..." class="w-full bg-dark-900 border border-dark-700 rounded p-2 text-xs text-white focus:outline-none focus:border-amber-400"></textarea>
+                    <button onclick="adminBroadcastAnnouncement()" class="w-full py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded text-xs transition">
+                        Broadcast System Message
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE MODULE & APPLICATION LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc, 
+            setDoc, 
+            collection, 
+            addDoc, 
+            onSnapshot, 
+            deleteDoc, 
+            getDocs 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global environment variables
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'unredacted-truth-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyDummyKeyForFallbackOnly",
+            authDomain: "unredacted-truth.firebaseapp.com",
+            projectId: "unredacted-truth",
+            storageBucket: "unredacted-truth.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abc123def456"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Application State
+        window.appState = {
+            currentUser: null,
+            userProfile: null,
+            currentChannel: 'general',
+            currentServer: 'unredacted',
+            isChannelLocked: false,
+            unsubscribeChat: null
+        };
+
+        const ADMIN_EMAIL = "moddarkrevolt@gmail.com";
+
+        // --- AUTHENTICATION INIT & WATCHER ---
+        window.onload = async () => {
+            // Attempt Custom Token auth if provided by iframe environment
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } catch (e) {
+                    console.log("Custom token login fallback:", e);
+                }
+            }
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    window.appState.currentUser = user;
+                    await fetchOrCreateUserProfile(user);
+                } else {
+                    window.appState.currentUser = null;
+                    window.appState.userProfile = null;
+                }
+                updateAuthUI();
+                listenToCurrentChannelMessages();
+            });
+        };
+
+        async function fetchOrCreateUserProfile(user) {
+            const userRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
+            try {
+                const snap = await getDoc(userRef);
+                const isAdmin = user.email === ADMIN_EMAIL;
+
+                if (snap.exists()) {
+                    window.appState.userProfile = snap.data();
+                    if (isAdmin) window.appState.userProfile.role = 'admin';
+                } else {
+                    const profileData = {
+                        uid: user.uid,
+                        email: user.email || 'anonymous@node.local',
+                        handle: user.email ? user.email.split('@')[0] : `Operative_${user.uid.slice(0, 5)}`,
+                        role: isAdmin ? 'admin' : 'user',
+                        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`,
+                        createdAt: new Date().toISOString()
+                    };
+                    await setDoc(userRef, profileData);
+                    window.appState.userProfile = profileData;
+                }
+            } catch (e) {
+                console.warn("Firestore user profile sync warning:", e);
+                window.appState.userProfile = {
+                    uid: user.uid,
+                    email: user.email || 'anonymous@node.local',
+                    handle: user.email ? user.email.split('@')[0] : 'Operative',
+                    role: user.email === ADMIN_EMAIL ? 'admin' : 'user',
+                    avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`
+                };
+            }
+        }
+
+        function updateAuthUI() {
+            const user = window.appState.currentUser;
+            const profile = window.appState.userProfile;
+            const statusContainer = document.getElementById('authStatusContainer');
+            const adminBtn = document.getElementById('adminPanelBtn');
+
+            if (user && profile) {
+                const isAdmin = profile.email === ADMIN_EMAIL || profile.role === 'admin';
+
+                statusContainer.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <img src="${profile.avatar}" class="w-6 h-6 rounded-full border border-bch/40">
+                        <span class="font-bold ${isAdmin ? 'text-amber-300' : 'text-slate-200'} font-mono-code">${profile.handle}</span>
+                        ${isAdmin ? '<span class="bg-amber-500/20 text-amber-300 text-[9px] px-1 rounded font-mono-code border border-amber-500/40">ADMIN</span>' : ''}
+                        <button onclick="handleSignOut()" class="hover:text-red-400 text-slate-400 ml-1" title="Sign Out"><i class="fa-solid fa-right-from-bracket"></i></button>
+                    </div>
+                `;
+
+                document.getElementById('userCardHandle').textContent = profile.handle;
+                document.getElementById('userCardRole').textContent = isAdmin ? 'SYSTEM ADMIN' : 'Active Operative';
+                document.getElementById('userCardAvatar').src = profile.avatar;
+                document.getElementById('userCardStatusDot').className = "w-2.5 h-2.5 bg-bch-bright rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-950";
+
+                if (isAdmin) {
+                    adminBtn.classList.remove('hidden');
+                    adminBtn.classList.add('flex');
+                } else {
+                    adminBtn.classList.add('hidden');
+                }
+            } else {
+                statusContainer.innerHTML = `
+                    <button onclick="openAuthModal('login')" class="bg-bch hover:bg-bch-bright text-black font-bold px-3 py-1 rounded transition text-xs">
+                        Login / Register
+                    </button>
+                `;
+                adminBtn.classList.add('hidden');
+                document.getElementById('userCardHandle').textContent = "Guest Operative";
+                document.getElementById('userCardRole').textContent = "Read Only";
+                document.getElementById('userCardStatusDot').className = "w-2.5 h-2.5 bg-slate-500 rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-950";
+            }
+        }
+
+        // --- FIRESTORE CHAT ENGINE ---
+        function listenToCurrentChannelMessages() {
+            if (window.appState.unsubscribeChat) {
+                window.appState.unsubscribeChat();
+            }
+
+            const channelName = window.appState.currentChannel;
+            const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', `messages_${channelName}`);
+
+            window.appState.unsubscribeChat = onSnapshot(messagesRef, (snapshot) => {
+                const messages = [];
+                snapshot.forEach(doc => {
+                    messages.push({ id: doc.id, ...doc.data() });
+                });
+
+                // In-memory sort by timestamp to adhere to rule against compound Firestore queries
+                messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                renderMessages(messages);
+            }, (error) => {
+                console.error("Firestore chat listener error:", error);
+            });
+        }
+
+        function renderMessages(messages) {
+            const feed = document.getElementById('messageFeed');
+            feed.innerHTML = '';
+
+            if (messages.length === 0) {
+                feed.innerHTML = `
+                    <div class="text-center py-12 text-slate-500 font-mono-code text-xs">
+                        <i class="fa-solid fa-comment-slash text-2xl mb-2 block text-slate-600"></i>
+                        No transmissions logged in #${window.appState.currentChannel}. Be the first to publish intel.
+                    </div>
+                `;
+                return;
+            }
+
+            messages.forEach(msg => {
+                const isAdmin = msg.email === ADMIN_EMAIL || msg.role === 'admin';
+                const dateStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
+
+                const div = document.createElement('div');
+                div.className = "flex items-start gap-3 group hover:bg-dark-800/40 p-2 rounded transition";
+                div.innerHTML = `
+                    <img src="${msg.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=Anon'}" class="w-8 h-8 rounded-full bg-dark-950 border ${isAdmin ? 'border-amber-400 admin-badge-glow' : 'border-dark-600'} shrink-0">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-xs ${isAdmin ? 'text-amber-300' : 'text-slate-100'}">${escapeHTML(msg.handle || 'Operative')}</span>
+                            ${isAdmin ? '<span class="bg-amber-500/20 text-amber-300 text-[9px] px-1.5 py-0.2 rounded font-mono-code font-bold uppercase border border-amber-500/40">ADMIN</span>' : ''}
+                            <span class="text-[10px] text-slate-500 font-mono-code">${dateStr}</span>
+                        </div>
+                        <p class="text-xs text-slate-200 mt-1 leading-relaxed break-words">${escapeHTML(msg.content)}</p>
+                    </div>
+                `;
+                feed.appendChild(div);
+            });
+
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        window.handleSendMessage = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chatInput');
+            const content = input.value.trim();
+            if (!content) return;
+
+            if (!window.appState.currentUser) {
+                openAuthModal('login');
+                showAuthError("Authentication required to broadcast message.");
+                return;
+            }
+
+            if (window.appState.isChannelLocked && window.appState.userProfile?.email !== ADMIN_EMAIL) {
+                alert("Channel is currently locked by the Administrator.");
+                return;
+            }
+
+            const profile = window.appState.userProfile || {};
+            const channelName = window.appState.currentChannel;
+            const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', `messages_${channelName}`);
+
+            try {
+                await addDoc(messagesRef, {
+                    uid: window.appState.currentUser.uid,
+                    handle: profile.handle || 'Operative',
+                    email: profile.email || 'anon@node',
+                    role: profile.role || 'user',
+                    avatar: profile.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${window.appState.currentUser.uid}`,
+                    content: content,
+                    timestamp: Date.now()
+                });
+                input.value = '';
+            } catch (err) {
+                console.error("Error sending message:", err);
+            }
+        };
+
+        // --- AUTHENTICATION HANDLERS ---
+        window.handleAuthLogin = async (e) => {
+            e.preventDefault();
+            hideAuthError();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                closeAuthModal();
+            } catch (err) {
+                showAuthError(err.message);
+            }
+        };
+
+        window.handleAuthRegister = async (e) => {
+            e.preventDefault();
+            hideAuthError();
+            const handle = document.getElementById('regHandle').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, email, password);
+                const isAdmin = email === ADMIN_EMAIL;
+                
+                const profileData = {
+                    uid: cred.user.uid,
+                    email: email,
+                    handle: handle,
+                    role: isAdmin ? 'admin' : 'user',
+                    avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${cred.user.uid}`,
+                    createdAt: new Date().toISOString()
+                };
+
+                const userRef = doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile', 'data');
+                await setDoc(userRef, profileData);
+                window.appState.userProfile = profileData;
+
+                closeAuthModal();
+            } catch (err) {
+                showAuthError(err.message);
+            }
+        };
+
+        window.handleAnonymousAuth = async () => {
+            hideAuthError();
+            try {
+                await signInAnonymously(auth);
+                closeAuthModal();
+            } catch (err) {
+                showAuthError(err.message);
+            }
+        };
+
+        window.handleSignOut = async () => {
+            await signOut(auth);
+        };
+
+        // --- ADMIN CONTROLS (MODDARKREVOLT) ---
+        window.adminPurgeMessages = async () => {
+            if (window.appState.userProfile?.email !== ADMIN_EMAIL) return;
+            if (!confirm("Are you sure you want to purge all messages in this channel?")) return;
+
+            const channelName = window.appState.currentChannel;
+            const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', `messages_${channelName}`);
+            
+            try {
+                const snapshot = await getDocs(messagesRef);
+                snapshot.forEach(async (document) => {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', `messages_${channelName}`, document.id));
+                });
+                toggleAdminPanel();
+            } catch (err) {
+                console.error("Purge error:", err);
+            }
+        };
+
+        window.adminToggleChannelLock = () => {
+            if (window.appState.userProfile?.email !== ADMIN_EMAIL) return;
+            window.appState.isChannelLocked = !window.appState.isChannelLocked;
+            const badge = document.getElementById('channelLockBadge');
+            if (window.appState.isChannelLocked) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+            toggleAdminPanel();
+        };
+
+        window.adminBroadcastAnnouncement = async () => {
+            if (window.appState.userProfile?.email !== ADMIN_EMAIL) return;
+            const text = document.getElementById('adminAnnouncementInput').value.trim();
+            if (!text) return;
+
+            const channelName = window.appState.currentChannel;
+            const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', `messages_${channelName}`);
+
+            await addDoc(messagesRef, {
+                uid: window.appState.currentUser.uid,
+                handle: 'SYSTEM_ANNOUNCEMENT',
+                email: ADMIN_EMAIL,
+                role: 'admin',
+                avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=admin_announcement`,
+                content: `⚠️ BROADCAST: ${text}`,
+                timestamp: Date.now()
+            });
+
+            document.getElementById('adminAnnouncementInput').value = '';
+            toggleAdminPanel();
+        };
+
+        // --- UI HELPERS ---
+        window.switchChannel = (chanId, chanName) => {
+            window.appState.currentChannel = chanId;
+            document.getElementById('activeChannelHeader').textContent = chanName;
+
+            document.querySelectorAll('.channel-btn').forEach(btn => {
+                btn.classList.remove('bg-dark-800', 'text-bch-bright', 'border-l-2', 'border-bch-bright');
+                btn.classList.add('text-slate-300');
+            });
+            const activeBtn = document.getElementById(`chan-${chanId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-dark-800', 'text-bch-bright', 'border-l-2', 'border-bch-bright');
+            }
+
+            listenToCurrentChannelMessages();
+        };
+
+        window.switchServer = (serverId, serverName) => {
+            document.getElementById('currentServerName').textContent = serverName;
+            document.querySelectorAll('.server-icon').forEach(el => el.classList.remove('active', 'bg-bch', 'text-black', 'shadow-bch-glow'));
+            const btn = document.getElementById(`server-${serverId}`);
+            if (btn) btn.classList.add('active', 'bg-bch', 'text-black', 'shadow-bch-glow');
+        };
+
+        window.openAuthModal = (tab = 'login') => {
+            switchAuthTab(tab);
+            document.getElementById('authModal').classList.remove('hidden');
+        };
+
+        window.closeAuthModal = () => {
+            document.getElementById('authModal').classList.add('hidden');
+        };
+
+        window.switchAuthTab = (tab) => {
+            const loginForm = document.getElementById('loginForm');
+            const regForm = document.getElementById('registerForm');
+            const tabLogin = document.getElementById('tabLogin');
+            const tabReg = document.getElementById('tabRegister');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                tabLogin.className = "flex-1 py-2 font-bold text-sm text-bch-bright border-b-2 border-bch-bright";
+                tabReg.className = "flex-1 py-2 font-bold text-sm text-slate-400 border-b-2 border-transparent hover:text-white";
+            } else {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+                tabReg.className = "flex-1 py-2 font-bold text-sm text-bch-bright border-b-2 border-bch-bright";
+                tabLogin.className = "flex-1 py-2 font-bold text-sm text-slate-400 border-b-2 border-transparent hover:text-white";
+            }
+        };
+
+        window.toggleAdminPanel = () => {
+            document.getElementById('adminModal').classList.toggle('hidden');
+        };
+
+        function showAuthError(msg) {
+            const el = document.getElementById('authErrorMsg');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+        }
+
+        function hideAuthError() {
+            document.getElementById('authErrorMsg').classList.add('hidden');
+        }
+
+        function escapeHTML(str) {
+            return String(str).replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
