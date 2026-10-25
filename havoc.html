@@ -58,7 +58,7 @@
 <!-- TOP BAR -->
 <header class="h-11 bg-dark-950 border-b border-dark-700 flex items-center justify-between px-4 shrink-0 z-30">
   <div class="flex items-center gap-3">
-    <img src="https://professorj17.github.io/4everai/HAVOC.ico" class="w-7 h-7 rounded-md shadow-bch-glow">
+    <img src="https://professorj17.github.io/4everai/HAVOC.ico" class="w-7 h-7 rounded-md">
     <span class="font-extrabold tracking-widest text-bch-bright text-sm uppercase mono glow-text">havoc</span>
     <span class="hidden md:inline text-slate-500 text-[11px] italic border-l border-dark-700 pl-3 mono">invite-only · private · professional</span>
   </div>
@@ -171,7 +171,7 @@
   </aside>
 </div>
 
-<!-- CONTEXT MENU (server right-click) -->
+<!-- CONTEXT MENU -->
 <div id="ctxMenu" class="ctx-menu hidden"></div>
 
 <!-- ===================== MODALS ===================== -->
@@ -194,7 +194,11 @@
     <form id="formLogin" onsubmit="doLogin(event)" class="space-y-3">
       <div><label class="field-label">Email</label><input type="email" id="lEmail" required class="field"></div>
       <div><label class="field-label">Password</label><input type="password" id="lPass" required class="field"></div>
-      <div class="text-right">
+      <div class="flex items-center justify-between">
+        <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+          <input type="checkbox" id="rememberMe" class="rounded border-dark-600 bg-dark-800 text-bch focus:ring-bch">
+          Remember me
+        </label>
         <button type="button" onclick="showForgot()" class="text-[11px] text-bch hover:text-bch-bright mono">Forgot password?</button>
       </div>
       <button type="submit" class="w-full py-2.5 btn-primary text-sm">SIGN IN</button>
@@ -217,18 +221,29 @@
   </div>
 </div>
 
-<!-- PROFILE -->
+<!-- PROFILE (now supports custom avatar upload) -->
 <div id="modal-profile" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-dark-700 w-full max-w-sm rounded-xl p-6 relative">
     <button onclick="closeModal('profile')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     <h2 class="font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-user-pen text-bch"></i> Edit Profile</h2>
+    
     <div class="flex items-center gap-4 mb-4">
-      <img id="profileAvatarPreview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-16 h-16 rounded-full border-2 border-bch/40">
-      <div class="flex-1">
-        <label class="field-label">Avatar Seed</label>
-        <input type="text" id="profileSeed" placeholder="any text" oninput="previewAvatar(this.value)" class="field text-xs">
+      <div class="relative">
+        <img id="profileAvatarPreview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-16 h-16 rounded-full border-2 border-bch/40 object-cover">
+        <label class="absolute -bottom-1 -right-1 w-6 h-6 bg-bch text-black rounded-full flex items-center justify-center cursor-pointer text-xs hover:bg-bch-bright" title="Upload custom avatar">
+          <i class="fa-solid fa-camera"></i>
+          <input type="file" id="avatarFileInput" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
+        </label>
+      </div>
+      <div class="flex-1 space-y-2">
+        <div>
+          <label class="field-label">Avatar Seed (or upload)</label>
+          <input type="text" id="profileSeed" placeholder="any text" oninput="previewAvatar(this.value)" class="field text-xs">
+        </div>
+        <button type="button" onclick="clearCustomAvatar()" class="text-[10px] text-slate-500 hover:text-bch mono">Reset to seed</button>
       </div>
     </div>
+
     <div class="space-y-3">
       <div><label class="field-label">Handle</label><input type="text" id="profileHandle" class="field"></div>
       <div><label class="field-label">Status (shown under name)</label><input type="text" id="profileStatus" maxlength="40" placeholder="Online, Busy, etc." class="field"></div>
@@ -288,7 +303,7 @@
   </div>
 </div>
 
-<!-- SERVER SETTINGS (now with Roles) -->
+<!-- SERVER SETTINGS -->
 <div id="modal-serverSettings" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-dark-700 w-full max-w-lg rounded-xl relative flex flex-col max-h-[90vh]">
     <div class="flex items-center justify-between p-5 border-b border-dark-700">
@@ -319,7 +334,6 @@
         <button onclick="saveServerSettings()" class="py-2 px-4 btn-primary text-xs">Save Changes</button>
       </div>
 
-      <!-- ROLES -->
       <div id="ssp-roles" class="space-y-4 hidden">
         <div class="flex gap-2">
           <input type="text" id="newRoleName" placeholder="Role name" class="field flex-1 text-xs">
@@ -443,7 +457,26 @@ function setMute(serverId, type, val){
   m[serverId][type] = val;
   localStorage.setItem('havoc_mutes', JSON.stringify(m));
 }
-function isMuted(serverId, type){ return !!(getMutes()[serverId]?.[type]); }
+function isServerMuted(serverId, type){ return !!(getMutes()[serverId]?.[type]); }
+
+// Remember-me (local only, never auto-login)
+function saveRemember(email, pass){
+  if($('rememberMe')?.checked){
+    localStorage.setItem('havoc_remember', JSON.stringify({ email, pass }));
+  } else {
+    localStorage.removeItem('havoc_remember');
+  }
+}
+function loadRemember(){
+  try{
+    const data = JSON.parse(localStorage.getItem('havoc_remember')||'null');
+    if(data?.email){
+      $('lEmail').value = data.email;
+      $('lPass').value = data.pass || '';
+      $('rememberMe').checked = true;
+    }
+  }catch{}
+}
 
 const S = {
   user:null, profile:null, isAdmin:false,
@@ -451,6 +484,7 @@ const S = {
   canManage:false, locked:false,
   unsubMsgs:null, unsubMembers:null,
   pendingImage:null, pendingServerIcon:null,
+  pendingAvatarFile:null,
   roles:[], membersCache:[]
 };
 
@@ -494,8 +528,11 @@ onAuthStateChanged(auth, async user => {
 
 window.doLogin = async e => {
   e.preventDefault(); clearAuthErr();
+  const email = $('lEmail').value.trim();
+  const pass = $('lPass').value;
   try{
-    await signInWithEmailAndPassword(auth, $('lEmail').value.trim(), $('lPass').value);
+    await signInWithEmailAndPassword(auth, email, pass);
+    saveRemember(email, pass);
     closeModal('auth');
   }catch(err){ showAuthErr(err.message); }
 };
@@ -566,10 +603,29 @@ window.doSignOut = async () => {
   updateUserUI();
 };
 
-// ========== PROFILE ==========
+// ========== PROFILE + CUSTOM AVATAR ==========
 window.previewAvatar = seed => {
+  if(S.pendingAvatarFile) return; // don't override custom upload preview
   $('profileAvatarPreview').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed||'Guest')}`;
 };
+
+window.handleAvatarUpload = e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 3*1024*1024) return alert('Avatar must be under 3 MB');
+  S.pendingAvatarFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => { $('profileAvatarPreview').src = ev.target.result; };
+  reader.readAsDataURL(file);
+};
+
+window.clearCustomAvatar = () => {
+  S.pendingAvatarFile = null;
+  $('avatarFileInput').value = '';
+  const seed = $('profileSeed').value.trim() || (S.user?.uid || 'Guest');
+  $('profileAvatarPreview').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed)}`;
+};
+
 window.saveProfile = async () => {
   if(!S.user) return showProfileMsg('Login required', true);
   const handle = $('profileHandle').value.trim();
@@ -577,14 +633,21 @@ window.saveProfile = async () => {
   const status = $('profileStatus').value.trim();
   const seed = $('profileSeed').value.trim() || S.user.uid;
   if(!handle) return showProfileMsg('Handle required', true);
-  const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed)}`;
+
+  let avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed)}`;
+
   try{
+    if(S.pendingAvatarFile){
+      avatar = await uploadImage(S.pendingAvatarFile, `avatars/${S.user.uid}_${Date.now()}`);
+      S.pendingAvatarFile = null;
+    }
     await updateDoc(doc(db,'users',S.user.uid), { handle, bio, status, avatar });
     S.profile = { ...S.profile, handle, bio, status, avatar };
     updateUserUI();
     showProfileMsg('✓ Saved', false);
   }catch(err){ showProfileMsg(err.message, true); }
 };
+
 function showProfileMsg(msg, isErr){
   const el=$('profileMsg');
   el.textContent=msg;
@@ -655,7 +718,7 @@ function renderServerRail(servers){
   const list = $('serverList');
   list.innerHTML = '';
   servers.forEach(s => {
-    const muted = isMuted(s.id, 'server');
+    const muted = isServerMuted(s.id, 'server');
     const btn = document.createElement('button');
     btn.title = safe(s.name,'Server') + (muted?' (muted)':'');
     btn.className = `w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch text-slate-400 hover:text-black transition-all flex items-center justify-center font-bold text-xs overflow-hidden ${S.server?.id===s.id?'server-active':''} ${muted?'muted-server':''}`;
@@ -672,8 +735,8 @@ function renderServerRail(servers){
 
 function showServerContext(e, server){
   const menu = $('ctxMenu');
-  const mutedServer = isMuted(server.id, 'server');
-  const mutedNotif = isMuted(server.id, 'notif');
+  const mutedServer = isServerMuted(server.id, 'server');
+  const mutedNotif = isServerMuted(server.id, 'notif');
   menu.innerHTML = `
     <div class="ctx-item" onclick="toggleMuteServer('${server.id}','server')"><i class="fa-solid fa-bell-slash w-4"></i> ${mutedServer?'Unmute Server':'Mute Server'}</div>
     <div class="ctx-item" onclick="toggleMuteServer('${server.id}','notif')"><i class="fa-solid fa-volume-xmark w-4"></i> ${mutedNotif?'Unmute Notifications':'Mute Notifications'}</div>
@@ -684,7 +747,7 @@ function showServerContext(e, server){
   menu.classList.remove('hidden');
 }
 window.toggleMuteServer = (id, type) => {
-  setMute(id, type, !isMuted(id, type));
+  setMute(id, type, !isServerMuted(id, type));
   hideCtx();
   loadMyServers();
 };
@@ -719,7 +782,6 @@ window.createServer = async () => {
     });
     await setDoc(doc(db,'servers',ref.id,'channels','general'), { name:'general', type:'text', createdAt:Date.now() });
     await setDoc(doc(db,'servers',ref.id,'channels','General'), { name:'General', type:'voice', createdAt:Date.now() });
-    // default roles
     await setDoc(doc(db,'servers',ref.id,'roles','everyone'), { name:'@everyone', color:'#99aab5', position:0 });
     const code = `HAVOC-${rand()}`;
     await setDoc(doc(db,'invites',code), {
@@ -941,10 +1003,8 @@ window.revokeInvite = async code => {
 
 // ========== MESSAGES + MENTIONS ==========
 function parseMentions(text){
-  // @everyone / @here
   text = text.replace(/@everyone/gi, '<span class="mention mention-everyone">@everyone</span>');
   text = text.replace(/@here/gi, '<span class="mention mention-everyone">@here</span>');
-  // @username
   text = text.replace(/@([a-zA-Z0-9_]+)/g, (m, name) => {
     return `<span class="mention">@${esc(name)}</span>`;
   });
@@ -984,11 +1044,10 @@ function renderMsgs(msgs){
     if(m.imageUrl){
       contentHtml += `<div class="mt-2"><img src="${esc(m.imageUrl)}" class="max-w-xs max-h-64 rounded-lg border border-dark-600 cursor-pointer" onclick="window.open('${esc(m.imageUrl)}')"></div>`;
     }
-    // highlight if mentions current user or everyone
     const mentionsMe = (m.content||'').toLowerCase().includes('@'+ (S.profile?.handle||'').toLowerCase()) ||
                        /@(everyone|here)/i.test(m.content||'');
     const div = document.createElement('div');
-    div.className = `flex items-start gap-3 hover:bg-dark-800/40 px-2 py-2 rounded-lg group ${mentionsMe && !isMuted(S.server?.id,'notif') ? 'bg-bch/5 border-l-2 border-bch' : ''}`;
+    div.className = `flex items-start gap-3 hover:bg-dark-800/40 px-2 py-2 rounded-lg group ${mentionsMe && !isServerMuted(S.server?.id,'notif') ? 'bg-bch/5 border-l-2 border-bch' : ''}`;
     div.innerHTML = `
       <img src="${esc(m.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-9 h-9 rounded-full border ${isOwner?'border-carrot/60':'border-dark-600'} shrink-0" title="${esc(m.handle)}">
       <div class="min-w-0 flex-1">
@@ -1069,7 +1128,9 @@ function listenMembers(serverId){
 }
 
 // ========== VOICE ==========
-let localStream=null, isMuted=false;
+let localStream = null;
+let voiceMuted = false;   // ← renamed to avoid conflict with isServerMuted
+
 async function joinVoice(c){
   if(!S.user||!S.server) return;
   leaveVoice();
@@ -1093,15 +1154,16 @@ async function joinVoice(c){
 }
 window.toggleMute = () => {
   if(!localStream) return;
-  isMuted=!isMuted;
-  localStream.getAudioTracks().forEach(t=>t.enabled=!isMuted);
-  const btn=$('muteBtn');
-  btn.innerHTML = isMuted ? '<i class="fa-solid fa-microphone-slash"></i> Unmute' : '<i class="fa-solid fa-microphone"></i> Mute';
-  btn.classList.toggle('bg-red-900/50', isMuted);
+  voiceMuted = !voiceMuted;
+  localStream.getAudioTracks().forEach(t => t.enabled = !voiceMuted);
+  const btn = $('muteBtn');
+  btn.innerHTML = voiceMuted ? '<i class="fa-solid fa-microphone-slash"></i> Unmute' : '<i class="fa-solid fa-microphone"></i> Mute';
+  btn.classList.toggle('bg-red-900/50', voiceMuted);
 };
 window.leaveVoice = () => {
   if(window._voiceKeep) clearInterval(window._voiceKeep);
   if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
+  voiceMuted = false;
   $('voiceArea').classList.add('hidden');
   $('textArea').classList.remove('hidden');
 };
@@ -1120,6 +1182,10 @@ window.openModal = id => {
     $('profileBio').value = safe(S.profile.bio,'');
     $('profileStatus').value = safe(S.profile.status,'');
     $('profileAvatarPreview').src = safe(S.profile.avatar,'https://api.dicebear.com/7.x/bottts/svg?seed=Guest');
+    S.pendingAvatarFile = null;
+  }
+  if(id==='auth'){
+    loadRemember(); // pre-fill email/password if remembered
   }
   if(id==='createServer' && !S.user){ openModal('auth'); return; }
   $(`modal-${id}`)?.classList.remove('hidden');
@@ -1349,6 +1415,9 @@ document.addEventListener('keydown', e=>{
     hideCtx();
   }
 });
+
+// Load remembered credentials when page loads (only fills the form)
+document.addEventListener('DOMContentLoaded', loadRemember);
 
 console.log('%c havoc ', 'background:#0AC18E;color:#000;font-weight:900;padding:4px 10px;border-radius:4px;');
 </script>
