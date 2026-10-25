@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-[#08090c] text-slate-100 antialiased">
+<html lang="en" class="h-full bg-[#050608] text-slate-100 antialiased">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>havoc</title>
+  <link rel="icon" href="https://professorj17.github.io/4everai/HAVOC.ico" type="image/x-icon"/>
+  <link rel="shortcut icon" href="https://professorj17.github.io/4everai/HAVOC.ico"/>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -11,135 +13,89 @@
         extend: {
           colors: {
             accent: { DEFAULT:'#e11d48', bright:'#fb7185', dark:'#881337' },
-            dark: {
-              950:'#050608', 900:'#090b0e', 850:'#0f1218',
-              800:'#151922', 750:'#1c222e', 700:'#242b3b', 600:'#323c52'
-            }
-          },
-          boxShadow: {
-            'glow':'0 0 15px rgba(225,29,72,0.35)',
-            'card':'0 0 25px rgba(225,29,72,0.12)'
+            dark: { 950:'#050608', 900:'#090b0e', 850:'#0f1218', 800:'#151922', 750:'#1c222e', 700:'#242b3b', 600:'#323c52' }
           }
         }
       }
     }
   </script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    body{font-family:'Plus Jakarta Sans',sans-serif;}
-    .mono{font-family:'JetBrains Mono',monospace;}
-    ::-webkit-scrollbar{width:5px;height:5px;}
-    ::-webkit-scrollbar-track{background:#090b0e;}
-    ::-webkit-scrollbar-thumb{background:#242b3b;border-radius:3px;}
-    ::-webkit-scrollbar-thumb:hover{background:#e11d48;}
-    .pq-badge{background:linear-gradient(135deg,#1a0a2e,#0a1a2e);border:1px solid #7c3aed44;}
-    @keyframes pg{0%,100%{box-shadow:0 0 4px #e11d4844;}50%{box-shadow:0 0 14px #e11d4888;}}
-    .mine-pulse{animation:pg 0.9s ease-in-out infinite;}
-    .block-card{background:#0f1218;border:1px solid #242b3b;border-radius:8px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:11px;}
-    .block-card.genesis{border-color:#f59e0b55;}
-    .ht{color:#38bdf8;word-break:break-all;}
-    .pt{color:#f472b6;word-break:break-all;}
-    .st{color:#a78bfa;word-break:break-all;}
-    .modal-overlay{transition:opacity .15s ease;}
-    .btn-danger{@apply bg-red-900/40 hover:bg-red-900/70 text-red-300 border border-red-500/40 rounded px-3 py-1.5 text-xs font-bold transition;}
-    .btn-primary{@apply bg-accent hover:bg-accent-bright text-white font-bold rounded px-3 py-1.5 text-xs transition;}
-    .badge-admin{background:linear-gradient(135deg,#7c3aed,#e11d48);color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-weight:700;}
-    .tab-active{color:#fb7185;border-bottom:2px solid #e11d48;}
-    .tab-inactive{color:#64748b;border-bottom:2px solid transparent;}
-    input,textarea{transition:border-color .15s;}
-    .field{@apply w-full bg-dark-950 border border-dark-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent;}
-    .server-icon-active{border-radius:12px!important;background:#e11d48!important;color:#fff!important;}
+    body{font-family:'Plus Jakarta Sans',sans-serif}
+    .mono{font-family:'JetBrains Mono',monospace}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#090b0e}::-webkit-scrollbar-thumb{background:#242b3b;border-radius:3px}
+    .badge-admin{background:linear-gradient(135deg,#7c3aed,#e11d48);color:#fff;font-size:9px;padding:1px 6px;border-radius:3px;font-family:monospace;font-weight:700}
+    .tab-active{color:#fb7185;border-bottom:2px solid #e11d48}
+    .tab-inactive{color:#64748b;border-bottom:2px solid transparent}
+    .field{width:100%;background:#050608;border:1px solid #242b3b;border-radius:8px;padding:8px 12px;font-size:13px;color:#fff;outline:none}
+    .field:focus{border-color:#e11d48}
+    .field-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:.05em;margin-bottom:4px}
+    .server-active{background:#e11d48!important;color:#fff!important;border-radius:12px!important}
+    .voice-active{background:#16a34a!important}
   </style>
 </head>
-<body class="h-full flex flex-col overflow-hidden text-sm bg-dark-950">
+<body class="h-full flex flex-col overflow-hidden text-sm">
 
-<!-- ══════════ TOP BAR ══════════ -->
-<header class="h-10 bg-dark-950 border-b border-dark-700/80 flex items-center justify-between px-4 z-30 shrink-0">
+<!-- TOP BAR -->
+<header class="h-10 bg-dark-950 border-b border-dark-700 flex items-center justify-between px-4 shrink-0 z-30">
   <div class="flex items-center gap-3">
     <span class="font-extrabold tracking-widest text-accent text-sm uppercase mono flex items-center gap-2">
       <i class="fa-solid fa-bolt"></i> havoc
     </span>
-    <span class="hidden md:inline text-slate-500 text-[11px] italic border-l border-dark-700 pl-3 mono">
-      invite-only · p2p · blockchain · ml-dsa-44
-    </span>
+    <span class="hidden md:inline text-slate-500 text-[11px] italic border-l border-dark-700 pl-3 mono">invite-only · voice · secure</span>
   </div>
   <div class="flex items-center gap-2">
-    <div id="pqBadge" class="pq-badge hidden items-center gap-1 px-2 py-0.5 rounded text-[10px] mono">
-      <i class="fa-solid fa-atom text-violet-400 text-[9px]"></i>
-      <span class="text-violet-300">ML-DSA</span>
-      <span id="pqStatus" class="text-slate-400">…</span>
-    </div>
-    <div class="bg-dark-800 border border-dark-700 flex items-center gap-1 px-2 py-0.5 rounded text-[10px] mono">
-      <i class="fa-solid fa-network-wired text-accent text-[9px]"></i>
-      <span id="peerCount" class="text-accent font-bold">0</span>
-      <span class="text-slate-500">peers</span>
-    </div>
     <div id="authBar">
-      <button onclick="openModal('auth')" class="bg-accent hover:bg-accent-bright text-white font-bold px-3 py-1 rounded text-xs transition">
-        Login / Register
-      </button>
+      <button onclick="openModal('auth')" class="bg-accent hover:bg-accent-bright text-white font-bold px-3 py-1 rounded text-xs">Login / Register</button>
     </div>
   </div>
 </header>
 
 <div class="flex-1 flex overflow-hidden">
 
-  <!-- ══ SERVER RAIL ══ -->
-  <nav class="w-14 bg-dark-950 border-r border-dark-700/80 flex flex-col items-center py-2 gap-1.5 z-20 shrink-0 overflow-y-auto">
-    <div id="serverList" class="flex flex-col items-center gap-1.5 w-full px-1.5"></div>
-    <div class="mt-auto flex flex-col items-center gap-1.5 pb-1 w-full px-1.5">
-      <!-- Join via Invite -->
-      <button onclick="openModal('joinInvite')" title="Join via Invite Code"
-        class="w-10 h-10 rounded-[18px] hover:rounded-[10px] bg-dark-800 hover:bg-accent text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center text-sm">
+  <!-- SERVER RAIL -->
+  <nav class="w-14 bg-dark-950 border-r border-dark-700 flex flex-col items-center py-2 gap-1.5 shrink-0 overflow-y-auto">
+    <div id="serverList" class="flex flex-col items-center gap-1.5 w-full px-1.5 flex-1"></div>
+    <div class="flex flex-col items-center gap-1.5 pb-2 w-full px-1.5">
+      <button onclick="openModal('joinInvite')" title="Join via Invite" class="w-10 h-10 rounded-[18px] hover:rounded-[10px] bg-dark-800 hover:bg-accent text-slate-400 hover:text-white transition-all flex items-center justify-center">
         <i class="fa-solid fa-ticket"></i>
       </button>
-      <!-- Create Server -->
-      <button onclick="openModal('createServer')" title="Create Server"
-        class="w-10 h-10 rounded-[18px] hover:rounded-[10px] bg-dark-800 hover:bg-accent text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center text-base font-bold">
+      <button onclick="openModal('createServer')" title="Create Server" class="w-10 h-10 rounded-[18px] hover:rounded-[10px] bg-dark-800 hover:bg-accent text-slate-400 hover:text-white transition-all flex items-center justify-center text-lg">
         <i class="fa-solid fa-plus"></i>
       </button>
-      <!-- Chain Explorer -->
-      <button onclick="openModal('chain')" title="Blockchain Explorer"
-        class="w-10 h-10 rounded-[18px] hover:rounded-[10px] bg-dark-800 hover:bg-violet-700 text-violet-500 hover:text-white transition-all duration-200 flex items-center justify-center text-sm">
-        <i class="fa-solid fa-link"></i>
-      </button>
-      <!-- Admin (email-gated) -->
-      <button id="adminBtn" onclick="openModal('admin')" title="Admin Panel" class="hidden w-10 h-10 rounded-[18px] hover:rounded-[10px] bg-red-950 hover:bg-red-700 text-red-400 hover:text-white transition-all duration-200 flex items-center justify-center text-sm">
+      <button id="adminBtn" onclick="openModal('admin')" title="Global Admin" class="hidden w-10 h-10 rounded-[18px] hover:rounded-[10px] bg-red-950 hover:bg-red-700 text-red-400 hover:text-white transition-all flex items-center justify-center">
         <i class="fa-solid fa-shield-halved"></i>
       </button>
     </div>
   </nav>
 
-  <!-- ══ CHANNELS SIDEBAR ══ -->
-  <aside class="w-56 bg-dark-900 border-r border-dark-700/80 flex flex-col shrink-0">
-    <div class="h-11 border-b border-dark-700/80 px-3 flex items-center justify-between bg-dark-900">
+  <!-- CHANNELS -->
+  <aside class="w-56 bg-dark-900 border-r border-dark-700 flex flex-col shrink-0">
+    <div class="h-11 border-b border-dark-700 px-3 flex items-center justify-between">
       <span id="currentServerName" class="font-bold text-white text-sm truncate">Select a Server</span>
-      <div class="flex items-center gap-1">
-        <button id="serverSettingsBtn" onclick="openModal('serverSettings')"
-          class="hidden text-slate-500 hover:text-white text-xs p-1 rounded hover:bg-dark-800">
-          <i class="fa-solid fa-gear"></i>
-        </button>
-      </div>
+      <button id="serverSettingsBtn" onclick="openModal('serverSettings')" class="hidden text-slate-500 hover:text-white text-xs p-1 rounded hover:bg-dark-800">
+        <i class="fa-solid fa-gear"></i>
+      </button>
     </div>
     <div class="flex-1 overflow-y-auto px-1.5 py-2">
       <div class="flex items-center justify-between px-2 mb-1">
-        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mono">Channels</span>
-        <button id="addChanBtn" onclick="openModal('createChan')"
-          class="hidden text-accent hover:text-accent-bright text-xs">
-          <i class="fa-solid fa-plus"></i>
-        </button>
+        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mono">Text Channels</span>
+        <button id="addChanBtn" onclick="openModal('createChan')" class="hidden text-accent hover:text-accent-bright text-xs"><i class="fa-solid fa-plus"></i></button>
       </div>
-      <div id="channelsList" class="space-y-0.5"></div>
+      <div id="channelsList" class="space-y-0.5 mb-4"></div>
+
+      <div class="flex items-center justify-between px-2 mb-1">
+        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mono">Voice Channels</span>
+        <button id="addVoiceBtn" onclick="createVoiceChannel()" class="hidden text-accent hover:text-accent-bright text-xs"><i class="fa-solid fa-plus"></i></button>
+      </div>
+      <div id="voiceList" class="space-y-0.5"></div>
     </div>
+
     <!-- User card -->
-    <div class="h-13 bg-dark-950 border-t border-dark-700/80 px-2.5 py-2 flex items-center justify-between">
+    <div class="h-14 bg-dark-950 border-t border-dark-700 px-2.5 flex items-center justify-between">
       <div class="flex items-center gap-2 min-w-0">
-        <div class="relative shrink-0">
-          <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest"
-            class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600">
-          <span id="ucDot" class="w-2 h-2 bg-slate-600 rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-950"></span>
-        </div>
+        <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600">
         <div class="min-w-0">
           <div id="ucHandle" class="font-bold text-white text-xs truncate">Guest</div>
           <div id="ucRole" class="text-[10px] text-slate-500 mono truncate">Not signed in</div>
@@ -151,1561 +107,1084 @@
     </div>
   </aside>
 
-  <!-- ══ MAIN CHAT ══ -->
+  <!-- MAIN AREA -->
   <main class="flex-1 flex flex-col bg-dark-850 min-w-0">
-    <div class="h-11 border-b border-dark-700/80 px-4 flex items-center justify-between bg-dark-900/90 shrink-0">
+    <div class="h-11 border-b border-dark-700 px-4 flex items-center justify-between bg-dark-900/90 shrink-0">
       <div class="flex items-center gap-2">
-        <i class="fa-solid fa-hashtag text-slate-500 text-xs"></i>
+        <i id="chanIcon" class="fa-solid fa-hashtag text-slate-500 text-xs"></i>
         <span id="chanHeader" class="font-bold text-white text-sm">—</span>
-        <span id="chanDesc" class="text-slate-500 text-xs hidden md:inline"></span>
       </div>
       <div class="flex items-center gap-2">
-        <div id="mineInd" class="hidden items-center gap-1 text-[10px] mono text-amber-400">
-          <i class="fa-solid fa-microchip fa-spin text-[9px]"></i> mining…
-        </div>
-        <div class="text-[10px] mono text-slate-600 flex items-center gap-1">
-          <i class="fa-solid fa-cube text-violet-700 text-[9px]"></i>
-          <span id="chainH" class="text-violet-500">0</span>
-          <span id="chainV" class="text-dark-600 ml-1">✓</span>
-        </div>
         <div id="lockBadge" class="hidden bg-red-900/30 text-red-400 border border-red-500/30 text-[10px] mono px-1.5 py-0.5 rounded">
           <i class="fa-solid fa-lock text-[9px]"></i> locked
         </div>
-        <!-- Channel admin quick actions (owner/admin) -->
-        <button id="chanAdminBtn" onclick="openModal('chanSettings')"
-          class="hidden text-slate-500 hover:text-white p-1 rounded hover:bg-dark-800 text-xs">
+        <button id="chanAdminBtn" onclick="openModal('chanSettings')" class="hidden text-slate-500 hover:text-white p-1 rounded hover:bg-dark-800 text-xs">
           <i class="fa-solid fa-ellipsis-vertical"></i>
         </button>
       </div>
     </div>
 
-    <div id="msgContainer" class="flex-1 overflow-y-auto p-3">
-      <div id="msgFeed" class="space-y-2">
-        <div id="msgEmpty" class="text-center py-16 text-slate-600 mono text-xs">
-          <i class="fa-solid fa-bolt text-2xl mb-3 block text-dark-700"></i>
-          Join or create a server with an invite code.
+    <!-- TEXT CHAT -->
+    <div id="textArea" class="flex-1 flex flex-col min-h-0">
+      <div id="msgContainer" class="flex-1 overflow-y-auto p-3">
+        <div id="msgFeed" class="space-y-2">
+          <div class="text-center py-16 text-slate-600 mono text-xs">Join or create a server with an invite code.</div>
         </div>
+      </div>
+      <div class="px-3 pb-3 pt-2 bg-dark-900/80 border-t border-dark-700 shrink-0">
+        <form id="msgForm" onsubmit="sendMsg(event)" class="bg-dark-800 border border-dark-700 focus-within:border-accent rounded-lg px-3 py-2 flex items-center gap-2">
+          <input type="text" id="chatInput" placeholder="Login and join a server to chat…" autocomplete="off"
+            class="flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-slate-600 min-w-0" disabled>
+          <button type="submit" class="bg-accent hover:bg-accent-bright text-white font-bold px-3 py-1.5 rounded text-xs shrink-0">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </form>
       </div>
     </div>
 
-    <div class="px-3 pb-3 pt-2 bg-dark-900/80 border-t border-dark-700/80 shrink-0">
-      <form id="msgForm" onsubmit="sendMsg(event)"
-        class="bg-dark-800 border border-dark-700 focus-within:border-accent rounded-lg px-3 py-2 flex items-center gap-2">
-        <input type="text" id="chatInput"
-          placeholder="Login and join a server to chat…"
-          autocomplete="off"
-          class="flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-slate-600 min-w-0" disabled>
-        <button type="submit"
-          class="bg-accent hover:bg-accent-bright text-white font-bold px-3 py-1.5 rounded text-xs transition shrink-0">
-          <i class="fa-solid fa-paper-plane"></i>
+    <!-- VOICE AREA (hidden by default) -->
+    <div id="voiceArea" class="hidden flex-1 flex flex-col items-center justify-center p-6 bg-dark-900/50">
+      <div class="text-center mb-6">
+        <div class="w-20 h-20 rounded-full bg-green-900/40 border-2 border-green-500/50 flex items-center justify-center mx-auto mb-3">
+          <i class="fa-solid fa-microphone text-3xl text-green-400"></i>
+        </div>
+        <h2 id="voiceChanName" class="text-xl font-bold text-white mb-1">Voice Channel</h2>
+        <p class="text-slate-400 text-sm mono" id="voiceStatus">Connecting…</p>
+      </div>
+      <div id="voicePeers" class="flex flex-wrap gap-4 justify-center mb-6 max-w-lg"></div>
+      <div class="flex gap-3">
+        <button id="muteBtn" onclick="toggleMute()" class="px-4 py-2 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-sm font-bold">
+          <i class="fa-solid fa-microphone"></i> Mute
         </button>
-      </form>
+        <button onclick="leaveVoice()" class="px-4 py-2 bg-red-900/60 hover:bg-red-800 border border-red-500/40 rounded-lg text-sm font-bold text-red-200">
+          <i class="fa-solid fa-phone-slash"></i> Disconnect
+        </button>
+      </div>
     </div>
   </main>
 
-  <!-- ══ MEMBERS SIDEBAR ══ -->
-  <aside class="w-52 bg-dark-900 border-l border-dark-700/80 p-2 overflow-y-auto shrink-0 hidden xl:block">
+  <!-- MEMBERS -->
+  <aside class="w-52 bg-dark-900 border-l border-dark-700 p-2 overflow-y-auto shrink-0 hidden xl:block">
     <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2 mono px-1">Members</div>
     <div id="membersList" class="space-y-0.5"></div>
   </aside>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     MODALS
-════════════════════════════════════════════════ -->
+<!-- ===================== MODALS ===================== -->
 
-<!-- ── AUTH ── -->
-<div id="modal-auth" class="modal-overlay fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-  <div class="bg-dark-900 border border-accent/30 w-full max-w-md rounded-xl p-6 shadow-card relative">
+<!-- AUTH -->
+<div id="modal-auth" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-accent/30 w-full max-w-md rounded-xl p-6 relative">
     <button onclick="closeModal('auth')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     <div class="flex items-center gap-2 mb-5">
       <span class="font-extrabold text-accent mono text-lg tracking-widest">havoc</span>
-      <span class="text-slate-500 text-xs">— invite-only platform</span>
+      <span class="text-slate-500 text-xs">— invite-only</span>
     </div>
     <div class="flex border-b border-dark-700 mb-5">
       <button id="tabL" onclick="authTab('login')" class="flex-1 py-2 font-bold text-xs mono tab-active">LOGIN</button>
       <button id="tabR" onclick="authTab('register')" class="flex-1 py-2 font-bold text-xs mono tab-inactive">REGISTER</button>
     </div>
-    <!-- Login -->
     <form id="formLogin" onsubmit="doLogin(event)" class="space-y-3">
-      <div><label class="field-label">Email</label>
-        <input type="email" id="lEmail" required class="field mt-1"></div>
-      <div><label class="field-label">Password</label>
-        <input type="password" id="lPass" required class="field mt-1"></div>
+      <div><label class="field-label">Email</label><input type="email" id="lEmail" required class="field"></div>
+      <div><label class="field-label">Password</label><input type="password" id="lPass" required class="field"></div>
       <button type="submit" class="w-full py-2.5 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-sm">SIGN IN</button>
-      <button type="button" onclick="doAnon()" class="w-full py-2 bg-dark-800 hover:bg-dark-700 text-slate-400 font-bold rounded-lg text-xs border border-dark-700">
-        CONTINUE ANONYMOUSLY (no PQ signing)
-      </button>
+      <button type="button" onclick="doAnon()" class="w-full py-2 bg-dark-800 hover:bg-dark-700 text-slate-400 font-bold rounded-lg text-xs border border-dark-700">CONTINUE ANONYMOUSLY</button>
     </form>
-    <!-- Register -->
     <form id="formReg" onsubmit="doRegister(event)" class="space-y-3 hidden">
-      <div><label class="field-label">Handle / Alias</label>
-        <input type="text" id="rHandle" required placeholder="Agent_Shadow" class="field mt-1"></div>
-      <div><label class="field-label">Email</label>
-        <input type="email" id="rEmail" required class="field mt-1"></div>
-      <div><label class="field-label">Password (≥ 8 chars)</label>
-        <input type="password" id="rPass" required minlength="8" class="field mt-1"></div>
-      <div class="pq-badge rounded-lg p-2.5 text-[10px] mono text-violet-300">
-        <i class="fa-solid fa-atom mr-1"></i>Generates <strong>ML-DSA-44</strong> keypair (NIST FIPS 204). Private key never leaves this browser.
-      </div>
-      <button type="submit" class="w-full py-2.5 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-sm">CREATE ACCOUNT + PQ KEYPAIR</button>
+      <div><label class="field-label">Handle / Alias</label><input type="text" id="rHandle" required placeholder="Agent_Shadow" class="field"></div>
+      <div><label class="field-label">Email</label><input type="email" id="rEmail" required class="field"></div>
+      <div><label class="field-label">Password (≥ 6 chars)</label><input type="password" id="rPass" required minlength="6" class="field"></div>
+      <button type="submit" class="w-full py-2.5 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-sm">CREATE ACCOUNT</button>
     </form>
     <div id="authErr" class="mt-3 text-xs text-red-400 text-center mono hidden"></div>
   </div>
 </div>
 
-<!-- ── PROFILE EDIT ── -->
-<div id="modal-profile" class="modal-overlay fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+<!-- PROFILE -->
+<div id="modal-profile" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-dark-700 w-full max-w-sm rounded-xl p-6 relative">
     <button onclick="closeModal('profile')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     <h2 class="font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-user-pen text-accent"></i> Edit Profile</h2>
     <div class="flex items-center gap-4 mb-4">
       <img id="profileAvatarPreview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-16 h-16 rounded-full border-2 border-accent/40">
       <div class="flex-1">
-        <label class="field-label">Avatar Seed (changes look)</label>
-        <input type="text" id="profileSeed" placeholder="any text = unique avatar"
-          oninput="previewAvatar(this.value)" class="field mt-1 text-xs">
+        <label class="field-label">Avatar Seed</label>
+        <input type="text" id="profileSeed" placeholder="any text" oninput="previewAvatar(this.value)" class="field text-xs">
       </div>
     </div>
     <div class="space-y-3">
-      <div><label class="field-label">Handle / Alias</label>
-        <input type="text" id="profileHandle" class="field mt-1"></div>
-      <div><label class="field-label">Bio (optional)</label>
-        <textarea id="profileBio" rows="2" maxlength="120" class="field mt-1 resize-none text-xs"></textarea></div>
+      <div><label class="field-label">Handle</label><input type="text" id="profileHandle" class="field"></div>
+      <div><label class="field-label">Bio</label><textarea id="profileBio" rows="2" maxlength="120" class="field resize-none text-xs"></textarea></div>
     </div>
     <div class="flex gap-2 mt-4">
       <button onclick="saveProfile()" class="flex-1 py-2 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-sm">Save</button>
       <button onclick="doSignOut()" class="px-4 py-2 bg-dark-800 hover:bg-red-900/40 text-red-400 font-bold rounded-lg text-sm border border-dark-700">Sign Out</button>
     </div>
-    <div id="profileErr" class="mt-2 text-xs text-red-400 mono hidden"></div>
-    <div id="profileOk" class="mt-2 text-xs text-green-400 mono hidden">✓ Profile updated!</div>
+    <div id="profileMsg" class="mt-2 text-xs mono hidden"></div>
   </div>
 </div>
 
-<!-- ── JOIN VIA INVITE ── -->
-<div id="modal-joinInvite" class="modal-overlay fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+<!-- JOIN INVITE -->
+<div id="modal-joinInvite" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-accent/30 w-full max-w-sm rounded-xl p-6 relative">
     <button onclick="closeModal('joinInvite')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-    <h2 class="font-bold text-white mb-1 flex items-center gap-2"><i class="fa-solid fa-ticket text-accent"></i> Join via Invite Code</h2>
+    <h2 class="font-bold text-white mb-1 flex items-center gap-2"><i class="fa-solid fa-ticket text-accent"></i> Join via Invite</h2>
     <p class="text-xs text-slate-500 mono mb-4">Enter the invite code shared with you.</p>
-    <div class="space-y-3">
-      <input type="text" id="inviteCodeInput" placeholder="e.g. HAVOC-XKCD92" maxlength="20"
-        class="field uppercase tracking-widest text-center font-bold mono">
-      <button onclick="joinViaInvite()" class="w-full py-2.5 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-sm">
-        <i class="fa-solid fa-satellite-dish mr-1"></i> Join Server
-      </button>
-    </div>
-    <div id="inviteErr" class="mt-3 text-xs text-red-400 mono text-center hidden"></div>
-    <div id="inviteOk"  class="mt-3 text-xs text-green-400 mono text-center hidden"></div>
+    <input type="text" id="inviteCodeInput" placeholder="HAVOC-XXXXXX" maxlength="20" class="field uppercase tracking-widest text-center font-bold mono mb-3">
+    <button onclick="joinViaInvite()" class="w-full py-2.5 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-sm">
+      <i class="fa-solid fa-satellite-dish mr-1"></i> Join Server
+    </button>
+    <div id="inviteMsg" class="mt-3 text-xs mono text-center hidden"></div>
   </div>
 </div>
 
-<!-- ── CREATE SERVER ── -->
-<div id="modal-createServer" class="modal-overlay fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+<!-- CREATE SERVER -->
+<div id="modal-createServer" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-accent/30 w-full max-w-sm rounded-xl p-6 relative">
     <button onclick="closeModal('createServer')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     <h2 class="font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-server text-accent"></i> Create Server</h2>
     <div class="space-y-3">
-      <div><label class="field-label">Server Name</label>
-        <input type="text" id="newServerName" required maxlength="40" placeholder="My Private Node" class="field mt-1"></div>
-      <div><label class="field-label">Description (optional)</label>
-        <input type="text" id="newServerDesc" maxlength="80" placeholder="What is this server about?" class="field mt-1"></div>
-      <button onclick="createServer()" class="w-full py-2.5 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-sm">
-        Create & Become Owner
-      </button>
+      <div><label class="field-label">Server Name</label><input type="text" id="newServerName" maxlength="40" placeholder="My Private Node" class="field"></div>
+      <div><label class="field-label">Description (optional)</label><input type="text" id="newServerDesc" maxlength="80" class="field"></div>
+      <button onclick="createServer()" class="w-full py-2.5 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-sm">Create & Become Owner</button>
     </div>
     <div id="createServerErr" class="mt-2 text-xs text-red-400 mono hidden"></div>
   </div>
 </div>
 
-<!-- ── SERVER SETTINGS (owner/admin) ── -->
-<div id="modal-serverSettings" class="modal-overlay fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+<!-- CREATE CHANNEL -->
+<div id="modal-createChan" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-dark-700 w-full max-w-sm rounded-xl p-6 relative">
+    <button onclick="closeModal('createChan')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    <h2 class="font-bold text-white mb-4"><i class="fa-solid fa-hashtag text-accent"></i> Add Text Channel</h2>
+    <input type="text" id="newChanName" placeholder="channel-name" class="field mb-3">
+    <button onclick="createChan()" class="w-full py-2.5 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-sm">Create</button>
+  </div>
+</div>
+
+<!-- SERVER SETTINGS -->
+<div id="modal-serverSettings" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-dark-700 w-full max-w-lg rounded-xl relative flex flex-col max-h-[90vh]">
     <div class="flex items-center justify-between p-5 border-b border-dark-700">
-      <h2 class="font-extrabold text-white flex items-center gap-2">
-        <i class="fa-solid fa-gear text-accent"></i> Server Settings
-      </h2>
+      <h2 class="font-extrabold text-white flex items-center gap-2"><i class="fa-solid fa-gear text-accent"></i> Server Settings</h2>
       <button onclick="closeModal('serverSettings')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <!-- Tabs inside settings -->
-    <div class="flex border-b border-dark-700 px-5">
-      <button onclick="sSettingsTab('overview')" id="sst-overview" class="py-2 px-3 text-xs mono tab-active">Overview</button>
-      <button onclick="sSettingsTab('invites')"  id="sst-invites"  class="py-2 px-3 text-xs mono tab-inactive">Invites</button>
-      <button onclick="sSettingsTab('members')"  id="sst-members"  class="py-2 px-3 text-xs mono tab-inactive">Members</button>
-      <button onclick="sSettingsTab('audit')"    id="sst-audit"    class="py-2 px-3 text-xs mono tab-inactive">Audit Log</button>
-      <button onclick="sSettingsTab('danger')"   id="sst-danger"   class="py-2 px-3 text-xs mono tab-inactive text-red-500">Danger</button>
+    <div class="flex border-b border-dark-700 px-5 overflow-x-auto">
+      <button onclick="sSettingsTab('overview')" id="sst-overview" class="py-2 px-3 text-xs mono tab-active whitespace-nowrap">Overview</button>
+      <button onclick="sSettingsTab('invites')"  id="sst-invites"  class="py-2 px-3 text-xs mono tab-inactive whitespace-nowrap">Invites</button>
+      <button onclick="sSettingsTab('members')"  id="sst-members"  class="py-2 px-3 text-xs mono tab-inactive whitespace-nowrap">Members</button>
+      <button onclick="sSettingsTab('danger')"   id="sst-danger"   class="py-2 px-3 text-xs mono tab-inactive text-red-500 whitespace-nowrap">Danger</button>
     </div>
     <div class="flex-1 overflow-y-auto p-5">
-      <!-- OVERVIEW -->
       <div id="ssp-overview" class="space-y-3">
-        <div><label class="field-label">Server Name</label>
-          <input type="text" id="ssName" class="field mt-1"></div>
-        <div><label class="field-label">Description</label>
-          <input type="text" id="ssDesc" class="field mt-1"></div>
+        <div><label class="field-label">Server Name</label><input type="text" id="ssName" class="field"></div>
+        <div><label class="field-label">Description</label><input type="text" id="ssDesc" class="field"></div>
         <button onclick="saveServerSettings()" class="py-2 px-4 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-xs">Save Changes</button>
-        <div id="ssOk" class="text-xs text-green-400 mono hidden">✓ Saved</div>
       </div>
-      <!-- INVITES -->
       <div id="ssp-invites" class="space-y-3 hidden">
         <div class="flex items-center gap-2">
-          <input type="number" id="ssInviteUses" min="1" max="100" value="10" class="field w-24 text-center" placeholder="Max uses">
-          <button onclick="createInvite()" class="py-2 px-4 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-xs">
-            <i class="fa-solid fa-plus mr-1"></i>Generate Code
-          </button>
+          <input type="number" id="ssInviteUses" min="1" max="100" value="10" class="field w-24 text-center">
+          <button onclick="createInvite()" class="py-2 px-4 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-xs"><i class="fa-solid fa-plus mr-1"></i>Generate</button>
         </div>
         <div id="inviteList" class="space-y-2 max-h-72 overflow-y-auto"></div>
       </div>
-      <!-- MEMBERS -->
-      <div id="ssp-members" class="space-y-2 hidden">
+      <div id="ssp-members" class="hidden">
         <div id="serverMemberList" class="space-y-1 max-h-80 overflow-y-auto"></div>
       </div>
-      <!-- AUDIT LOG -->
-      <div id="ssp-audit" class="hidden">
-        <div id="auditLogList" class="space-y-1 max-h-80 overflow-y-auto mono text-[10px]"></div>
-      </div>
-      <!-- DANGER ZONE -->
       <div id="ssp-danger" class="space-y-3 hidden">
         <div class="bg-red-950/30 border border-red-500/30 rounded-lg p-4 space-y-2">
-          <p class="text-xs text-red-300 font-bold mono">⚠ Danger Zone — Actions are irreversible</p>
-          <button onclick="adminToggleLock()" class="w-full py-2 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 border border-amber-500/30 rounded text-xs font-bold mono">
-            <i class="fa-solid fa-lock mr-1"></i>Toggle Channel Lock
-          </button>
-          <button onclick="adminPurgeChannel()" class="w-full py-2 bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">
-            <i class="fa-solid fa-trash mr-1"></i>Purge Current Channel Messages
-          </button>
-          <button onclick="deleteCurrentChannel()" class="w-full py-2 bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">
-            <i class="fa-solid fa-circle-minus mr-1"></i>Delete Current Channel
-          </button>
-          <button onclick="deleteServer()" class="w-full py-2 bg-red-950 hover:bg-red-900 text-red-200 border border-red-500/50 rounded text-xs font-bold mono">
-            <i class="fa-solid fa-skull mr-1"></i>DELETE ENTIRE SERVER
-          </button>
+          <p class="text-xs text-red-300 font-bold mono">⚠ Irreversible actions</p>
+          <button onclick="adminToggleLock()" class="w-full py-2 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 border border-amber-500/30 rounded text-xs font-bold mono">Toggle Channel Lock</button>
+          <button onclick="adminPurgeChannel()" class="w-full py-2 bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">Purge Current Channel</button>
+          <button onclick="deleteCurrentChannel()" class="w-full py-2 bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">Delete Current Channel</button>
+          <button onclick="deleteServer()" class="w-full py-2 bg-red-950 hover:bg-red-900 text-red-200 border border-red-500/50 rounded text-xs font-bold mono">DELETE ENTIRE SERVER</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ── CREATE CHANNEL ── -->
-<div id="modal-createChan" class="modal-overlay fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-  <div class="bg-dark-900 border border-dark-700 w-full max-w-sm rounded-xl p-6 relative">
-    <button onclick="closeModal('createChan')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-    <h2 class="font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-hashtag text-accent"></i> Add Channel</h2>
-    <div class="space-y-3">
-      <div><label class="field-label">Channel Name</label>
-        <input type="text" id="newChanName" placeholder="channel-name" class="field mt-1"></div>
-      <button onclick="createChan()" class="w-full py-2.5 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-sm">Create</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── CHANNEL SETTINGS ── -->
-<div id="modal-chanSettings" class="modal-overlay fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+<!-- CHANNEL SETTINGS -->
+<div id="modal-chanSettings" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-dark-700 w-full max-w-sm rounded-xl p-5 relative">
     <button onclick="closeModal('chanSettings')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-    <h2 class="font-bold text-white mb-4 flex items-center gap-2">
-      <i class="fa-solid fa-hashtag text-slate-400"></i> <span id="chanSettingsName"></span> settings
-    </h2>
+    <h2 class="font-bold text-white mb-4"># <span id="chanSettingsName"></span> settings</h2>
     <div class="space-y-2">
-      <button onclick="adminToggleLock()" class="w-full py-2 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 border border-amber-500/30 rounded text-xs font-bold mono">
-        <i class="fa-solid fa-lock mr-1"></i> Toggle Lock
-      </button>
-      <button onclick="adminPurgeChannel()" class="w-full py-2 bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">
-        <i class="fa-solid fa-trash mr-1"></i> Purge All Messages
-      </button>
-      <button onclick="deleteCurrentChannel()" class="w-full py-2 bg-red-950 hover:bg-red-900 text-red-200 border border-red-500/40 rounded text-xs font-bold mono">
-        <i class="fa-solid fa-circle-minus mr-1"></i> Delete This Channel
-      </button>
+      <button onclick="adminToggleLock()" class="w-full py-2 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 border border-amber-500/30 rounded text-xs font-bold mono">Toggle Lock</button>
+      <button onclick="adminPurgeChannel()" class="w-full py-2 bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">Purge Messages</button>
+      <button onclick="deleteCurrentChannel()" class="w-full py-2 bg-red-950 hover:bg-red-900 text-red-200 border border-red-500/40 rounded text-xs font-bold mono">Delete Channel</button>
     </div>
   </div>
 </div>
 
-<!-- ── BLOCKCHAIN EXPLORER ── -->
-<div id="modal-chain" class="modal-overlay fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-  <div class="bg-dark-900 border border-violet-500/30 w-full max-w-2xl rounded-xl p-5 relative max-h-[90vh] flex flex-col">
-    <button onclick="closeModal('chain')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-    <div class="flex items-center gap-3 mb-4">
-      <i class="fa-solid fa-link text-violet-400"></i>
-      <div>
-        <h2 class="text-sm font-extrabold text-white">Blockchain Explorer</h2>
-        <p class="text-[10px] text-slate-500 mono">SHA-256 PoW · ML-DSA-44 · localStorage + P2P Gun sync</p>
-      </div>
-      <div class="ml-auto flex items-center gap-2">
-        <span id="expH" class="pq-badge px-2 py-0.5 rounded text-[10px] mono text-violet-300">height: 0</span>
-        <span id="expV" class="bg-dark-800 border border-dark-700 px-2 py-0.5 rounded text-[10px] mono text-green-400">✓ valid</span>
-      </div>
-    </div>
-    <div id="chainExplorer" class="overflow-y-auto flex-1 space-y-2"></div>
-  </div>
-</div>
-
-<!-- ══ GLOBAL ADMIN PANEL ══ -->
-<div id="modal-admin" class="modal-overlay fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-  <div class="bg-dark-900 border border-red-500/30 w-full max-w-4xl rounded-xl relative flex flex-col max-h-[92vh]">
+<!-- GLOBAL ADMIN -->
+<div id="modal-admin" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-red-500/30 w-full max-w-3xl rounded-xl relative flex flex-col max-h-[90vh]">
     <div class="flex items-center justify-between p-5 border-b border-dark-700">
-      <h2 class="font-extrabold text-red-300 flex items-center gap-2 mono">
-        <i class="fa-solid fa-shield-halved"></i> HAVOC — GLOBAL ADMIN
-        <span class="badge-admin">GOD MODE</span>
-      </h2>
+      <h2 class="font-extrabold text-red-300 flex items-center gap-2 mono"><i class="fa-solid fa-shield-halved"></i> GLOBAL ADMIN <span class="badge-admin">GOD</span></h2>
       <button onclick="closeModal('admin')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="flex border-b border-dark-700 px-5">
-      <button onclick="adminTab('servers')"  id="at-servers"  class="py-2 px-3 text-xs mono tab-active">Servers</button>
-      <button onclick="adminTab('users')"    id="at-users"    class="py-2 px-3 text-xs mono tab-inactive">Users</button>
-      <button onclick="adminTab('bans')"     id="at-bans"     class="py-2 px-3 text-xs mono tab-inactive">Bans</button>
-      <button onclick="adminTab('invites')"  id="at-invites"  class="py-2 px-3 text-xs mono tab-inactive">All Invites</button>
-      <button onclick="adminTab('audit')"    id="at-audit"    class="py-2 px-3 text-xs mono tab-inactive">Audit Log</button>
+      <button onclick="adminTab('servers')" id="at-servers" class="py-2 px-3 text-xs mono tab-active">Servers</button>
+      <button onclick="adminTab('users')" id="at-users" class="py-2 px-3 text-xs mono tab-inactive">Users</button>
     </div>
     <div class="flex-1 overflow-y-auto p-5">
-      <!-- SERVERS -->
-      <div id="ap-servers">
-        <div class="flex items-center justify-between mb-3">
-          <p class="text-xs text-slate-400 mono">All servers on the platform</p>
-          <button onclick="loadAdminServers()" class="text-xs text-accent hover:text-accent-bright mono"><i class="fa-solid fa-rotate-right mr-1"></i>Refresh</button>
-        </div>
-        <div id="adminServerList" class="space-y-2 max-h-[60vh] overflow-y-auto"></div>
-      </div>
-      <!-- USERS -->
-      <div id="ap-users" class="hidden">
-        <div class="flex items-center justify-between mb-3">
-          <p class="text-xs text-slate-400 mono">All registered users</p>
-          <button onclick="loadAdminUsers()" class="text-xs text-accent hover:text-accent-bright mono"><i class="fa-solid fa-rotate-right mr-1"></i>Refresh</button>
-        </div>
-        <div id="adminUserList" class="space-y-2 max-h-[60vh] overflow-y-auto"></div>
-      </div>
-      <!-- BANS -->
-      <div id="ap-bans" class="hidden space-y-4">
-        <div>
-          <p class="text-xs text-slate-400 mono mb-2">Active Global User Bans</p>
-          <div id="adminBanList" class="space-y-1 max-h-48 overflow-y-auto"></div>
-        </div>
-        <div>
-          <p class="text-xs text-slate-400 mono mb-2">Active IP Bans</p>
-          <div class="flex gap-2 mb-2">
-            <input type="text" id="manualIpBan" placeholder="IP address to ban" class="field flex-1 text-xs">
-            <button onclick="banIP(document.getElementById('manualIpBan').value)" class="btn-danger shrink-0">Ban IP</button>
-          </div>
-          <div id="adminIpBanList" class="space-y-1 max-h-36 overflow-y-auto"></div>
-        </div>
-      </div>
-      <!-- ALL INVITES -->
-      <div id="ap-invites" class="hidden">
-        <p class="text-xs text-slate-400 mono mb-3">All invite codes across all servers</p>
-        <div id="adminInviteList" class="space-y-2 max-h-[60vh] overflow-y-auto"></div>
-      </div>
-      <!-- GLOBAL AUDIT -->
-      <div id="ap-audit" class="hidden">
-        <p class="text-xs text-slate-400 mono mb-3">Global audit log (latest first)</p>
-        <div id="adminAuditList" class="space-y-1 max-h-[60vh] overflow-y-auto mono text-[10px]"></div>
-      </div>
+      <div id="ap-servers"><div id="adminServerList" class="space-y-2"></div></div>
+      <div id="ap-users" class="hidden"><div id="adminUserList" class="space-y-2"></div></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════ STYLES for field labels ══════════════════ -->
-<style>
-  .field-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:.05em;}
-  .field{width:100%;background:#050608;border:1px solid #242b3b;border-radius:8px;padding:8px 12px;font-size:13px;color:#fff;outline:none;}
-  .field:focus{border-color:#e11d48;}
-</style>
-
-<!-- ══════════════════ SCRIPTS ══════════════════ -->
+<!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
-
 <script type="module">
-// ─────────────────────────────────────────────────────────────────────────────
-// IMPORTS
-// ─────────────────────────────────────────────────────────────────────────────
-import { initializeApp }
-  from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
 import {
-  getAuth,
-  signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   signInAnonymously, onAuthStateChanged, signOut
 } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
 import {
-  getFirestore,
-  doc, getDoc, setDoc, updateDoc, deleteDoc,
-  collection, addDoc, getDocs, query,
-  where, orderBy, limit, serverTimestamp, writeBatch
+  getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
+  collection, addDoc, getDocs, query, where, orderBy, limit, writeBatch
 } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
-import { ml_dsa44 }
-  from 'https://esm.run/@noble/post-quantum@0.2.1/ml-dsa.js';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────────────────────────────────────────
-const ADMIN_EMAIL  = 'moddarkrevolt@gmail.com';
-const MINE_DIFF    = 2;  // SHA-256 leading zeros required
+const ADMIN_EMAIL = 'moddarkrevolt@gmail.com';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FIREBASE
-// ─────────────────────────────────────────────────────────────────────────────
-const app  = initializeApp({
-  apiKey:            'AIzaSyDYXyAmDC_HF4scI21VeLlS4aM2k2RJ1Wc',
-  authDomain:        'mainframe-e3b13.firebaseapp.com',
-  projectId:         'mainframe-e3b13',
-  storageBucket:     'mainframe-e3b13.firebasestorage.app',
-  messagingSenderId: '85561924382',
-  appId:             '1:85561924382:web:5d5eddda04a466ec56870f'
+const app = initializeApp({
+  apiKey: "AIzaSyDYXyAmDC_HF4scI21VeLlS4aM2k2RJ1Wc",
+  authDomain: "mainframe-e3b13.firebaseapp.com",
+  projectId: "mainframe-e3b13",
+  storageBucket: "mainframe-e3b13.firebasestorage.app",
+  messagingSenderId: "85561924382",
+  appId: "1:85561924382:web:5d5eddda04a466ec56870f"
 });
 const auth = getAuth(app);
-const db   = getFirestore(app);
+const db = getFirestore(app);
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GUN P2P
-// ─────────────────────────────────────────────────────────────────────────────
-const gun = Gun({
-  peers: ['https://gun-manhattan.herokuapp.com/gun','https://peer.wallie.io/gun'],
-  localStorage: true
-});
-let peerCount = 0;
-gun.on('hi',  () => { peerCount++;                        $('#peerCount').textContent = peerCount; });
-gun.on('bye', () => { peerCount = Math.max(0,peerCount-1); $('#peerCount').textContent = peerCount; });
+// Gun for presence + voice signaling
+const gun = Gun({ peers: ['https://gun-manhattan.herokuapp.com/gun'], localStorage: false });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-const $  = s => document.getElementById(s) || document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
-function esc(s){ return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
-function rand(n=10){ return Math.random().toString(36).slice(2,2+n).toUpperCase(); }
-function tsFormat(ts){ if(!ts) return ''; const d=new Date(ts); return d.toLocaleString(); }
-function shortTime(ts){ if(!ts) return ''; const d=new Date(ts); return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
-async function sha256(str){
-  const buf = await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-function b2h(arr){ return Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join(''); }
-function h2b(hex){ const a=new Uint8Array(hex.length/2); for(let i=0;i<a.length;i++) a[i]=parseInt(hex.slice(i*2,i*2+2),16); return a; }
-function friendlyErr(code){
-  return {
-    'auth/user-not-found':'No account with that email.',
-    'auth/wrong-password':'Wrong password.',
-    'auth/invalid-credential':'Invalid email or password.',
-    'auth/email-already-in-use':'Email already registered.',
-    'auth/weak-password':'Password must be ≥ 6 characters.',
-    'auth/invalid-email':'Invalid email address.',
-    'auth/too-many-requests':'Too many attempts. Try later.',
-  }[code] || code;
-}
+const $ = s => document.getElementById(s);
+const esc = s => String(s||'').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const rand = (n=6) => Math.random().toString(36).slice(2,2+n).toUpperCase();
+const shortTime = ts => ts ? new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
 
-// Audit log writer
-async function writeAudit(action, data={}){
-  try {
-    await addDoc(collection(db,'auditLog'), {
-      action, data,
-      uid: S.fbUser?.uid || 'anon',
-      handle: S.profile?.handle || 'anon',
-      ts: Date.now()
-    });
-  } catch(e){ console.warn('Audit write failed',e); }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// IP FETCH + BAN CHECK
-// ─────────────────────────────────────────────────────────────────────────────
-let clientIP = null;
-async function fetchClientIP(){
-  try {
-    const r = await fetch('https://api64.ipify.org?format=json');
-    const d = await r.json();
-    clientIP = d.ip;
-  } catch { clientIP = 'unknown'; }
-}
-async function checkIPBan(){
-  if(!clientIP || clientIP==='unknown') return;
-  const ipHash = await sha256(clientIP);
-  const snap = await getDoc(doc(db,'ipBans',ipHash));
-  if(snap.exists()){
-    document.body.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#050608;flex-direction:column;gap:16px;font-family:monospace;color:#ef4444;">
-        <span style="font-size:48px">🚫</span>
-        <h1 style="font-size:24px;font-weight:900;letter-spacing:.2em">ACCESS DENIED</h1>
-        <p style="color:#64748b;">Your IP address has been banned from havoc.</p>
-      </div>`;
-    throw new Error('IP banned');
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// BLOCKCHAIN
-// ─────────────────────────────────────────────────────────────────────────────
-class Block {
-  constructor(index, data, prevHash){
-    this.index=index; this.timestamp=Date.now(); this.data=data;
-    this.previousHash=prevHash; this.nonce=0; this.hash='';
-  }
-  _c(){ return JSON.stringify({index:this.index,timestamp:this.timestamp,data:this.data,previousHash:this.previousHash,nonce:this.nonce}); }
-  async mine(diff=MINE_DIFF){
-    const target='0'.repeat(diff);
-    do{ this.nonce++; this.hash=await sha256(this._c()); } while(!this.hash.startsWith(target));
-  }
-}
-function chainKey(){ return `hv_chain_${S.server?.id}_${S.channel}`; }
-function loadChain(){ try{ return JSON.parse(localStorage.getItem(chainKey())||'[]'); }catch{ return []; } }
-function saveChain(chain){ localStorage.setItem(chainKey(),JSON.stringify(chain)); updateChainBadge(chain); }
-async function validateChain(chain){
-  for(let i=1;i<chain.length;i++){
-    const c=chain[i], p=chain[i-1];
-    if(c.previousHash!==p.hash) return false;
-    const r=await sha256(JSON.stringify({index:c.index,timestamp:c.timestamp,data:c.data,previousHash:c.previousHash,nonce:c.nonce}));
-    if(r!==c.hash) return false;
-  }
-  return true;
-}
-function updateChainBadge(chain){
-  const h=chain.length;
-  $('chainH').textContent=h; $('expH').textContent=`height: ${h}`;
-  validateChain(chain).then(v=>{
-    $('chainV').textContent=v?'✓':'✗!';
-    $('chainV').className=v?'text-green-500 mono text-[10px]':'text-red-500 mono text-[10px] font-bold';
-    $('expV').textContent=v?'✓ valid':'✗ INVALID!';
-    $('expV').className=v
-      ?'bg-dark-800 border border-dark-700 px-2 py-0.5 rounded text-[10px] mono text-green-400'
-      :'bg-red-900/30 border border-red-500/40 px-2 py-0.5 rounded text-[10px] mono text-red-400';
-  });
-}
-async function mineBlock(msgData){
-  const chain=loadChain();
-  const prevHash=chain.length?chain[chain.length-1].hash:'0'.repeat(64);
-  const block=new Block(chain.length,msgData,prevHash);
-  setMining(true);
-  await block.mine(MINE_DIFF);
-  setMining(false);
-  chain.push(block);
-  saveChain(chain);
-  gun.get(`hv/${S.server.id}/${S.channel}/blocks`).get(block.hash).put(JSON.stringify(block));
-  return block;
-}
-function startChainSync(){
-  if(!S.server) return;
-  gun.get(`hv/${S.server.id}/${S.channel}/blocks`).map().on(data=>{
-    if(!data) return;
-    try {
-      const block=JSON.parse(data);
-      const chain=loadChain();
-      if(chain.find(b=>b.hash===block.hash)) return;
-      const exp=chain.length?chain[chain.length-1].hash:'0'.repeat(64);
-      if(block.previousHash===exp||chain.length===0){
-        chain.push(block); chain.sort((a,b)=>a.index-b.index);
-        saveChain(chain); renderMsgs(chain);
-      }
-    } catch{}
-  });
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// POST-QUANTUM
-// ─────────────────────────────────────────────────────────────────────────────
-async function derivePQKeys(uid,pass){
-  const seed=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(uid+':'+pass)));
-  return ml_dsa44.keygen(seed);
-}
-async function pqSign(content){
-  if(!S.pqKeys) return null;
-  return b2h(ml_dsa44.sign(S.pqKeys.secretKey,new TextEncoder().encode(content)));
-}
-function pqVerify(content,sigHex,pubHex){
-  try{ return ml_dsa44.verify(h2b(pubHex),new TextEncoder().encode(content),h2b(sigHex)); }
-  catch{ return false; }
-}
-function savePQLocal(uid,kp){ localStorage.setItem(`hv_pq_${uid}`,JSON.stringify({pub:b2h(kp.publicKey),sec:b2h(kp.secretKey)})); }
-function loadPQLocal(uid){
-  const r=localStorage.getItem(`hv_pq_${uid}`);
-  if(!r) return null;
-  const {pub,sec}=JSON.parse(r);
-  return {publicKey:h2b(pub),secretKey:h2b(sec)};
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// APP STATE
-// ─────────────────────────────────────────────────────────────────────────────
 const S = {
-  fbUser:    null,
-  profile:   null,   // { uid, handle, avatar, bio, pubKeyHex, email }
-  pqKeys:    null,
-  isAdmin:   false,
-  anon:      false,
-  server:    null,   // { id, name, desc, ownerUid }
-  channel:   'general',
-  channels:  new Set(['general']),
-  locked:    false,
-  canManage: false,  // owner OR admin
+  user: null,
+  profile: null,
+  isAdmin: false,
+  server: null,
+  channel: null,
+  channelType: 'text', // text | voice
+  canManage: false,
+  locked: false,
+  unsubMsgs: null,
+  unsubMembers: null
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FIREBASE AUTH STATE
-// ─────────────────────────────────────────────────────────────────────────────
-onAuthStateChanged(auth, async fbUser => {
-  S.fbUser  = fbUser;
-  if(fbUser && !fbUser.isAnonymous){
-    const snap = await getDoc(doc(db,'users',fbUser.uid));
-    if(snap.exists()){
+// ========== AUTH ==========
+onAuthStateChanged(auth, async user => {
+  S.user = user;
+  if (user) {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    if (snap.exists()) {
       S.profile = snap.data();
     } else {
       S.profile = {
-        uid: fbUser.uid, email: fbUser.email,
-        handle: fbUser.email.split('@')[0],
-        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${fbUser.uid}`,
-        bio:'', pubKeyHex:null, createdAt: Date.now()
+        uid: user.uid,
+        email: user.email || null,
+        handle: user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0] || 'User'),
+        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`,
+        bio: '',
+        createdAt: Date.now()
       };
-      await setDoc(doc(db,'users',fbUser.uid), S.profile);
+      await setDoc(doc(db, 'users', user.uid), S.profile);
     }
-    // Check global ban
-    const banSnap = await getDoc(doc(db,'bans',fbUser.uid));
-    if(banSnap.exists()){
-      await signOut(auth);
-      showAuthError('Your account has been banned from havoc.');
-      return;
-    }
-    S.isAdmin = (fbUser.email === ADMIN_EMAIL);
-    // Restore PQ keys
-    const kp = loadPQLocal(fbUser.uid);
-    if(kp){ S.pqKeys=kp; showPQBadge('✓ active'); }
-    else   { showPQBadge('no key — re-register on this device'); }
-    S.anon = false;
-    if(S.isAdmin) $('adminBtn').classList.remove('hidden');
-    // Store IP for admin reference
-    if(clientIP) {
-      const ipHash = await sha256(clientIP);
-      await setDoc(doc(db,'users',fbUser.uid), { ipHash, lastIp: clientIP, lastSeen: Date.now() }, {merge:true});
-    }
-  } else if(fbUser && fbUser.isAnonymous){
-    S.profile = { uid:fbUser.uid, handle:`Anon_${fbUser.uid.slice(0,5)}`,
-      avatar:`https://api.dicebear.com/7.x/bottts/svg?seed=${fbUser.uid}`,
-      bio:'', pubKeyHex:null };
-    S.pqKeys=null; S.anon=true; S.isAdmin=false;
-    hidePQBadge();
+    S.isAdmin = (user.email === ADMIN_EMAIL);
+    if (S.isAdmin) $('adminBtn').classList.remove('hidden');
+    else $('adminBtn').classList.add('hidden');
   } else {
-    S.profile=null; S.pqKeys=null; S.anon=false; S.isAdmin=false;
-    hidePQBadge();
+    S.profile = null;
+    S.isAdmin = false;
     $('adminBtn').classList.add('hidden');
   }
   updateUserUI();
-  if(S.server && S.channel) $('chatInput').disabled = !S.fbUser;
-  await loadMyServers();
+  loadMyServers();
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// AUTH HANDLERS
-// ─────────────────────────────────────────────────────────────────────────────
 window.doLogin = async e => {
-  e.preventDefault(); clearAuthErr();
+  e.preventDefault();
+  clearAuthErr();
   try {
     await signInWithEmailAndPassword(auth, $('lEmail').value.trim(), $('lPass').value);
     closeModal('auth');
-  } catch(err){ showAuthError(friendlyErr(err.code)); }
+  } catch (err) { showAuthErr(err.message); }
 };
 
 window.doRegister = async e => {
-  e.preventDefault(); clearAuthErr();
+  e.preventDefault();
+  clearAuthErr();
   const handle = $('rHandle').value.trim();
-  const email  = $('rEmail').value.trim();
-  const pass   = $('rPass').value;
-  if(!handle){ showAuthError('Handle required.'); return; }
-  showPQBadge('generating keypair…');
+  const email = $('rEmail').value.trim();
+  const pass = $('rPass').value;
+  if (!handle) return showAuthErr('Handle required');
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    const uid  = cred.user.uid;
-    const kp   = await derivePQKeys(uid, pass);
-    S.pqKeys   = kp;
-    savePQLocal(uid, kp);
     const profile = {
-      uid, email, handle, bio:'',
-      avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${uid}`,
-      pubKeyHex: b2h(kp.publicKey),
+      uid: cred.user.uid, email, handle, bio: '',
+      avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${cred.user.uid}`,
       createdAt: Date.now()
     };
-    await setDoc(doc(db,'users',uid), profile);
+    await setDoc(doc(db, 'users', cred.user.uid), profile);
     S.profile = profile;
-    showPQBadge('✓ active');
-    await writeAudit('USER_REGISTER',{uid,handle,email});
     closeModal('auth');
-  } catch(err){ showAuthError(friendlyErr(err.code)); hidePQBadge(); }
+  } catch (err) { showAuthErr(err.message); }
 };
 
 window.doAnon = async () => {
   clearAuthErr();
   try { await signInAnonymously(auth); closeModal('auth'); }
-  catch(err){ showAuthError(friendlyErr(err.code)); }
+  catch (err) { showAuthErr(err.message); }
 };
 
 window.doSignOut = async () => {
+  leaveVoice();
   await signOut(auth);
-  S.server=null; S.channel='general'; S.channels=new Set(['general']); S.canManage=false;
-  $('currentServerName').textContent='Select a Server';
-  $('channelsList').innerHTML='';
-  $('msgFeed').innerHTML='<div id="msgEmpty" class="text-center py-16 text-slate-600 mono text-xs">Join or create a server.</div>';
-  $('membersList').innerHTML='';
-  $('serverSettingsBtn').classList.add('hidden');
-  $('addChanBtn').classList.add('hidden');
-  $('chanAdminBtn').classList.add('hidden');
+  S.server = null; S.channel = null;
+  $('currentServerName').textContent = 'Select a Server';
+  $('channelsList').innerHTML = '';
+  $('voiceList').innerHTML = '';
+  $('msgFeed').innerHTML = '<div class="text-center py-16 text-slate-600 mono text-xs">Join or create a server.</div>';
+  $('membersList').innerHTML = '';
   closeModal('profile');
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PROFILE
-// ─────────────────────────────────────────────────────────────────────────────
+// ========== PROFILE ==========
 window.previewAvatar = seed => {
-  $('profileAvatarPreview').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed)}`;
+  $('profileAvatarPreview').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed||'Guest')}`;
 };
 
 window.saveProfile = async () => {
-  if(!S.fbUser || S.anon){ $('profileErr').textContent='Not signed in.'; $('profileErr').classList.remove('hidden'); return; }
+  if (!S.user || S.user.isAnonymous) return showProfileMsg('Login required', true);
   const handle = $('profileHandle').value.trim();
-  const bio    = $('profileBio').value.trim();
-  const seed   = $('profileSeed').value.trim() || S.fbUser.uid;
-  if(!handle){ $('profileErr').textContent='Handle required.'; $('profileErr').classList.remove('hidden'); return; }
-  $('profileErr').classList.add('hidden');
+  const bio = $('profileBio').value.trim();
+  const seed = $('profileSeed').value.trim() || S.user.uid;
+  if (!handle) return showProfileMsg('Handle required', true);
   const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed)}`;
   try {
-    await updateDoc(doc(db,'users',S.fbUser.uid), { handle, bio, avatar });
+    await updateDoc(doc(db, 'users', S.user.uid), { handle, bio, avatar });
     S.profile = { ...S.profile, handle, bio, avatar };
-    $('profileOk').classList.remove('hidden');
-    setTimeout(()=>$('profileOk').classList.add('hidden'), 2500);
     updateUserUI();
-    await writeAudit('PROFILE_EDIT',{uid:S.fbUser.uid,handle});
-  } catch(err){ $('profileErr').textContent=err.message; $('profileErr').classList.remove('hidden'); }
+    showProfileMsg('✓ Saved', false);
+  } catch (err) { showProfileMsg(err.message, true); }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SERVER MANAGEMENT
-// ─────────────────────────────────────────────────────────────────────────────
-async function loadMyServers(){
-  if(!S.fbUser){ $('serverList').innerHTML=''; return; }
-  const snap = await getDocs(collection(db,'servers'));
+function showProfileMsg(msg, isErr) {
+  const el = $('profileMsg');
+  el.textContent = msg;
+  el.className = `mt-2 text-xs mono ${isErr ? 'text-red-400' : 'text-green-400'}`;
+  el.classList.remove('hidden');
+}
+
+// ========== SERVERS ==========
+async function loadMyServers() {
+  if (!S.user) { $('serverList').innerHTML = ''; return; }
+  const snap = await getDocs(collection(db, 'servers'));
   const mine = [];
-  for(const d of snap.docs){
-    const mSnap = await getDoc(doc(db,'servers',d.id,'members',S.fbUser.uid));
-    if(mSnap.exists() || S.isAdmin) mine.push({ id:d.id, ...d.data() });
+  for (const d of snap.docs) {
+    const m = await getDoc(doc(db, 'servers', d.id, 'members', S.user.uid));
+    if (m.exists() || S.isAdmin) mine.push({ id: d.id, ...d.data() });
   }
   renderServerRail(mine);
 }
 
-function renderServerRail(servers){
+function renderServerRail(servers) {
   const list = $('serverList');
-  list.innerHTML='';
-  servers.forEach(s=>{
-    const btn=document.createElement('button');
-    btn.title=s.name;
-    btn.className=`w-10 h-10 rounded-[18px] hover:rounded-[10px] bg-dark-800 hover:bg-accent text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center font-bold text-sm ${S.server?.id===s.id?'server-icon-active':''}`;
-    btn.innerHTML=`<span class="text-xs font-extrabold">${esc(s.name).slice(0,2).toUpperCase()}</span>`;
-    btn.onclick=()=>switchServer(s);
+  list.innerHTML = '';
+  servers.forEach(s => {
+    const btn = document.createElement('button');
+    btn.title = s.name;
+    btn.className = `w-10 h-10 rounded-[18px] hover:rounded-[10px] bg-dark-800 hover:bg-accent text-slate-400 hover:text-white transition-all flex items-center justify-center font-bold text-xs ${S.server?.id===s.id?'server-active':''}`;
+    btn.textContent = (s.name||'??').slice(0,2).toUpperCase();
+    btn.onclick = () => switchServer(s);
     list.appendChild(btn);
   });
 }
 
 window.createServer = async () => {
-  if(!S.fbUser){ closeModal('createServer'); openModal('auth'); return; }
+  if (!S.user) { closeModal('createServer'); openModal('auth'); return; }
   const name = $('newServerName').value.trim();
   const desc = $('newServerDesc').value.trim();
-  if(!name){ $('createServerErr').textContent='Name required.'; $('createServerErr').classList.remove('hidden'); return; }
-  $('createServerErr').classList.add('hidden');
+  if (!name) return $('createServerErr').textContent = 'Name required', $('createServerErr').classList.remove('hidden');
   try {
-    const serverRef = doc(collection(db,'servers'));
-    await setDoc(serverRef, {
-      name, desc, ownerUid: S.fbUser.uid,
-      ownerHandle: S.profile.handle, createdAt: Date.now()
+    const ref = doc(collection(db, 'servers'));
+    await setDoc(ref, { name, desc, ownerUid: S.user.uid, ownerHandle: S.profile.handle, createdAt: Date.now() });
+    await setDoc(doc(db, 'servers', ref.id, 'members', S.user.uid), {
+      role: 'owner', handle: S.profile.handle, avatar: S.profile.avatar, uid: S.user.uid, joinedAt: Date.now()
     });
-    await setDoc(doc(db,'servers',serverRef.id,'members',S.fbUser.uid), {
-      role:'owner', handle:S.profile.handle, avatar:S.profile.avatar,
-      uid:S.fbUser.uid, joinedAt:Date.now()
+    await setDoc(doc(db, 'servers', ref.id, 'channels', 'general'), { name: 'general', type: 'text', createdAt: Date.now() });
+    await setDoc(doc(db, 'servers', ref.id, 'channels', 'General'), { name: 'General', type: 'voice', createdAt: Date.now() });
+    // first invite
+    const code = `HAVOC-${rand()}`;
+    await setDoc(doc(db, 'invites', code), {
+      code, serverId: ref.id, serverName: name, createdBy: S.user.uid,
+      createdByHandle: S.profile.handle, maxUses: 10, uses: 0, active: true, createdAt: Date.now()
     });
-    await setDoc(doc(db,'servers',serverRef.id,'channels','general'), {
-      name:'general', createdAt:Date.now()
-    });
-    // Auto-create first invite code
-    const code = `HAVOC-${rand(6)}`;
-    await setDoc(doc(db,'invites',code), {
-      code, serverId:serverRef.id, serverName:name,
-      createdBy:S.fbUser.uid, createdByHandle:S.profile.handle,
-      maxUses:10, uses:0, active:true, createdAt:Date.now()
-    });
-    await writeAudit('CREATE_SERVER',{serverId:serverRef.id,name,uid:S.fbUser.uid});
     closeModal('createServer');
-    $('newServerName').value=''; $('newServerDesc').value='';
+    $('newServerName').value = ''; $('newServerDesc').value = '';
     await loadMyServers();
-    await switchServer({ id:serverRef.id, name, desc, ownerUid:S.fbUser.uid });
-  } catch(err){ $('createServerErr').textContent=err.message; $('createServerErr').classList.remove('hidden'); }
+    await switchServer({ id: ref.id, name, desc, ownerUid: S.user.uid });
+  } catch (err) {
+    $('createServerErr').textContent = err.message;
+    $('createServerErr').classList.remove('hidden');
+  }
 };
 
-async function switchServer(serverData){
-  S.server   = serverData;
-  S.channel  = 'general';
-  S.channels = new Set(['general']);
-  S.canManage = (serverData.ownerUid === S.fbUser?.uid) || S.isAdmin;
-  $('currentServerName').textContent = serverData.name;
+async function switchServer(s) {
+  leaveVoice();
+  S.server = s;
+  S.canManage = (s.ownerUid === S.user?.uid) || S.isAdmin;
+  $('currentServerName').textContent = s.name;
   $('serverSettingsBtn').classList.toggle('hidden', !S.canManage);
   $('addChanBtn').classList.toggle('hidden', !S.canManage);
-  // Refresh rail highlight
+  $('addVoiceBtn').classList.toggle('hidden', !S.canManage);
   await loadMyServers();
-  await loadChannels(serverData.id);
-  switchChannel('general');
-  listenPresence();
+  await loadChannels(s.id);
+  listenMembers(s.id);
+  // default to general text
+  const firstText = [...S.channels].find(c => c.type === 'text') || { id: 'general', name: 'general', type: 'text' };
+  switchChannel(firstText);
 }
 
-async function loadChannels(serverId){
-  const snap = await getDocs(collection(db,'servers',serverId,'channels'));
-  S.channels = new Set();
-  snap.forEach(d=>S.channels.add(d.id));
-  if(!S.channels.has('general')) S.channels.add('general');
+let S_channels = [];
+async function loadChannels(serverId) {
+  const snap = await getDocs(collection(db, 'servers', serverId, 'channels'));
+  S_channels = [];
+  snap.forEach(d => S_channels.push({ id: d.id, ...d.data() }));
+  if (!S_channels.find(c => c.id === 'general')) S_channels.push({ id: 'general', name: 'general', type: 'text' });
   renderChannels();
 }
 
-function renderChannels(){
-  const list=$('channelsList');
-  list.innerHTML='';
-  [...S.channels].sort().forEach(c=>{
-    const btn=document.createElement('button');
-    btn.id=`ch-${c}`;
-    btn.className=`channel-btn w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs text-slate-400 hover:bg-dark-800 hover:text-white transition ${S.channel===c?'bg-dark-800 text-accent-bright border-l-2 border-accent':''}`;
-    btn.innerHTML=`<span class="text-slate-600">#</span><span class="truncate">${esc(c)}</span>`;
-    btn.onclick=()=>switchChannel(c);
-    list.appendChild(btn);
+function renderChannels() {
+  const textList = $('channelsList');
+  const voiceList = $('voiceList');
+  textList.innerHTML = '';
+  voiceList.innerHTML = '';
+  S_channels.filter(c => c.type !== 'voice').forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = `w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs text-slate-400 hover:bg-dark-800 hover:text-white transition ${S.channel===c.id && S.channelType==='text' ? 'bg-dark-800 text-accent-bright border-l-2 border-accent' : ''}`;
+    btn.innerHTML = `<span class="text-slate-600">#</span><span class="truncate">${esc(c.name||c.id)}</span>`;
+    btn.onclick = () => switchChannel(c);
+    textList.appendChild(btn);
+  });
+  S_channels.filter(c => c.type === 'voice').forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = `w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs text-slate-400 hover:bg-dark-800 hover:text-white transition ${S.channel===c.id && S.channelType==='voice' ? 'bg-dark-800 text-green-400 border-l-2 border-green-500' : ''}`;
+    btn.innerHTML = `<i class="fa-solid fa-volume-high text-[10px] text-slate-600"></i><span class="truncate">${esc(c.name||c.id)}</span>`;
+    btn.onclick = () => joinVoice(c);
+    voiceList.appendChild(btn);
   });
 }
 
-function switchChannel(chan){
-  S.channel=chan;
-  $('chanHeader').textContent=chan;
-  $('chanSettingsName').textContent=chan;
-  $('chatInput').disabled=!S.fbUser;
-  $('chatInput').placeholder=S.fbUser?`Message #${chan}`:'Login to post…';
+function switchChannel(c) {
+  leaveVoice();
+  S.channel = c.id;
+  S.channelType = 'text';
+  $('chanIcon').className = 'fa-solid fa-hashtag text-slate-500 text-xs';
+  $('chanHeader').textContent = c.name || c.id;
+  $('chanSettingsName').textContent = c.name || c.id;
+  $('textArea').classList.remove('hidden');
+  $('voiceArea').classList.add('hidden');
+  $('chatInput').disabled = !S.user;
+  $('chatInput').placeholder = S.user ? `Message #${c.name||c.id}` : 'Login to post…';
   $('chanAdminBtn').classList.toggle('hidden', !S.canManage);
   renderChannels();
-  const chain=loadChain();
-  renderMsgs(chain);
-  updateChainBadge(chain);
-  startChainSync();
+  listenMessages(S.server.id, c.id);
 }
 
 window.createChan = async () => {
-  if(!S.canManage || !S.server) return;
+  if (!S.canManage || !S.server) return;
   const name = $('newChanName').value.trim().toLowerCase().replace(/[^a-z0-9\-]/g,'-').slice(0,30);
-  if(!name) return;
-  await setDoc(doc(db,'servers',S.server.id,'channels',name), {name, createdAt:Date.now()});
-  S.channels.add(name);
-  await writeAudit('CREATE_CHANNEL',{serverId:S.server.id,channel:name,uid:S.fbUser.uid});
-  renderChannels();
-  switchChannel(name);
+  if (!name) return;
+  await setDoc(doc(db, 'servers', S.server.id, 'channels', name), { name, type: 'text', createdAt: Date.now() });
   closeModal('createChan');
-  $('newChanName').value='';
+  $('newChanName').value = '';
+  await loadChannels(S.server.id);
+  switchChannel({ id: name, name, type: 'text' });
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// INVITE CODES
-// ─────────────────────────────────────────────────────────────────────────────
-window.joinViaInvite = async () => {
-  if(!S.fbUser){ closeModal('joinInvite'); openModal('auth'); return; }
-  const code = $('inviteCodeInput').value.trim().toUpperCase();
-  $('inviteErr').classList.add('hidden');
-  $('inviteOk').classList.add('hidden');
-  if(!code){ $('inviteErr').textContent='Enter a code.'; $('inviteErr').classList.remove('hidden'); return; }
-  try {
-    const snap = await getDoc(doc(db,'invites',code));
-    if(!snap.exists() || !snap.data().active){
-      $('inviteErr').textContent='Invalid or expired invite code.';
-      $('inviteErr').classList.remove('hidden'); return;
-    }
-    const inv = snap.data();
-    if(inv.uses >= inv.maxUses){
-      $('inviteErr').textContent='This invite code has reached its maximum uses.';
-      $('inviteErr').classList.remove('hidden'); return;
-    }
-    // Check if already member
-    const mSnap = await getDoc(doc(db,'servers',inv.serverId,'members',S.fbUser.uid));
-    if(mSnap.exists()){
-      $('inviteOk').textContent='You are already a member! Switching to server…';
-      $('inviteOk').classList.remove('hidden');
-    } else {
-      // Add as member
-      await setDoc(doc(db,'servers',inv.serverId,'members',S.fbUser.uid), {
-        role:'member', handle:S.profile.handle, avatar:S.profile.avatar,
-        uid:S.fbUser.uid, joinedAt:Date.now()
-      });
-      // Increment uses
-      await updateDoc(doc(db,'invites',code), { uses: inv.uses+1 });
-      $('inviteOk').textContent=`Joined "${inv.serverName}"!`;
-      $('inviteOk').classList.remove('hidden');
-      await writeAudit('JOIN_VIA_INVITE',{code,serverId:inv.serverId,uid:S.fbUser.uid,handle:S.profile.handle});
-    }
-    const sSnap = await getDoc(doc(db,'servers',inv.serverId));
-    if(sSnap.exists()){
-      await loadMyServers();
-      setTimeout(async()=>{ closeModal('joinInvite'); await switchServer({id:inv.serverId,...sSnap.data()}); },1200);
-    }
-  } catch(err){ $('inviteErr').textContent=err.message; $('inviteErr').classList.remove('hidden'); }
+window.createVoiceChannel = async () => {
+  if (!S.canManage || !S.server) return;
+  const name = prompt('Voice channel name:')?.trim();
+  if (!name) return;
+  const id = name.toLowerCase().replace(/[^a-z0-9\-]/g,'-').slice(0,30) || 'voice';
+  await setDoc(doc(db, 'servers', S.server.id, 'channels', id), { name, type: 'voice', createdAt: Date.now() });
+  await loadChannels(S.server.id);
 };
+
+// ========== INVITES ==========
+window.joinViaInvite = async () => {
+  if (!S.user) { closeModal('joinInvite'); openModal('auth'); return; }
+  const code = $('inviteCodeInput').value.trim().toUpperCase();
+  const msg = $('inviteMsg');
+  msg.classList.add('hidden');
+  if (!code) return showInviteMsg('Enter a code', true);
+  try {
+    const snap = await getDoc(doc(db, 'invites', code));
+    if (!snap.exists() || !snap.data().active) return showInviteMsg('Invalid or expired code', true);
+    const inv = snap.data();
+    if (inv.uses >= inv.maxUses) return showInviteMsg('Invite has reached max uses', true);
+
+    const mSnap = await getDoc(doc(db, 'servers', inv.serverId, 'members', S.user.uid));
+    if (!mSnap.exists()) {
+      await setDoc(doc(db, 'servers', inv.serverId, 'members', S.user.uid), {
+        role: 'member', handle: S.profile.handle, avatar: S.profile.avatar,
+        uid: S.user.uid, joinedAt: Date.now()
+      });
+      await updateDoc(doc(db, 'invites', code), { uses: inv.uses + 1 });
+    }
+    showInviteMsg(`Joined "${inv.serverName}"!`, false);
+    const sSnap = await getDoc(doc(db, 'servers', inv.serverId));
+    if (sSnap.exists()) {
+      setTimeout(async () => {
+        closeModal('joinInvite');
+        await loadMyServers();
+        await switchServer({ id: inv.serverId, ...sSnap.data() });
+      }, 800);
+    }
+  } catch (err) { showInviteMsg(err.message, true); }
+};
+
+function showInviteMsg(t, err) {
+  const el = $('inviteMsg');
+  el.textContent = t;
+  el.className = `mt-3 text-xs mono text-center ${err?'text-red-400':'text-green-400'}`;
+  el.classList.remove('hidden');
+}
 
 window.createInvite = async () => {
-  if(!S.canManage || !S.server) return;
-  const maxUses = parseInt($('ssInviteUses').value)||10;
-  const code = `HAVOC-${rand(6)}`;
-  await setDoc(doc(db,'invites',code), {
-    code, serverId:S.server.id, serverName:S.server.name,
-    createdBy:S.fbUser.uid, createdByHandle:S.profile.handle,
-    maxUses, uses:0, active:true, createdAt:Date.now()
+  if (!S.canManage || !S.server) return;
+  const maxUses = parseInt($('ssInviteUses').value) || 10;
+  const code = `HAVOC-${rand()}`;
+  await setDoc(doc(db, 'invites', code), {
+    code, serverId: S.server.id, serverName: S.server.name,
+    createdBy: S.user.uid, createdByHandle: S.profile.handle,
+    maxUses, uses: 0, active: true, createdAt: Date.now()
   });
-  await writeAudit('CREATE_INVITE',{code,serverId:S.server.id,uid:S.fbUser.uid,maxUses});
   renderInviteList();
 };
 
-async function renderInviteList(){
-  if(!S.server) return;
-  const snap = await getDocs(query(collection(db,'invites'),where('serverId','==',S.server.id)));
-  const el=$('inviteList');
-  el.innerHTML='';
-  if(snap.empty){ el.innerHTML='<p class="text-xs text-slate-500 mono">No invite codes yet.</p>'; return; }
-  snap.forEach(d=>{
-    const inv=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2';
-    row.innerHTML=`
+async function renderInviteList() {
+  if (!S.server) return;
+  const snap = await getDocs(query(collection(db, 'invites'), where('serverId', '==', S.server.id)));
+  const el = $('inviteList');
+  el.innerHTML = '';
+  if (snap.empty) { el.innerHTML = '<p class="text-xs text-slate-500 mono">No invites yet.</p>'; return; }
+  snap.forEach(d => {
+    const inv = d.data();
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2';
+    row.innerHTML = `
       <span class="mono text-accent font-bold text-xs flex-1">${esc(inv.code)}</span>
-      <span class="text-[10px] text-slate-500 mono">${inv.uses}/${inv.maxUses} uses</span>
-      <span class="text-[10px] px-1.5 rounded mono ${inv.active?'text-green-400 bg-green-900/20':'text-slate-500 bg-dark-800'}">${inv.active?'active':'expired'}</span>
-      <button onclick="copyToClipboard('${esc(inv.code)}')" class="text-slate-500 hover:text-white text-xs" title="Copy"><i class="fa-solid fa-copy"></i></button>
-      ${inv.active?`<button onclick="revokeInvite('${esc(inv.code)}')" class="text-red-500 hover:text-red-300 text-xs" title="Revoke"><i class="fa-solid fa-ban"></i></button>`:''}`;
+      <span class="text-[10px] text-slate-500 mono">${inv.uses}/${inv.maxUses}</span>
+      <span class="text-[10px] mono ${inv.active?'text-green-400':'text-slate-500'}">${inv.active?'active':'expired'}</span>
+      <button onclick="navigator.clipboard.writeText('${esc(inv.code)}')" class="text-slate-500 hover:text-white text-xs"><i class="fa-solid fa-copy"></i></button>
+      ${inv.active ? `<button onclick="revokeInvite('${esc(inv.code)}')" class="text-red-500 hover:text-red-300 text-xs"><i class="fa-solid fa-ban"></i></button>` : ''}`;
     el.appendChild(row);
   });
 }
 
 window.revokeInvite = async code => {
-  if(!confirm(`Revoke invite code ${code}?`)) return;
-  await updateDoc(doc(db,'invites',code), { active:false });
-  await writeAudit('REVOKE_INVITE',{code,uid:S.fbUser.uid});
+  if (!confirm(`Revoke ${code}?`)) return;
+  await updateDoc(doc(db, 'invites', code), { active: false });
   renderInviteList();
 };
 
-window.copyToClipboard = async text => {
-  try{ await navigator.clipboard.writeText(text); showToast(`Copied: ${text}`); }
-  catch{ showToast('Copy failed — paste manually: '+text); }
+// ========== MESSAGES ==========
+function listenMessages(serverId, channelId) {
+  if (S.unsubMsgs) S.unsubMsgs();
+  const ref = collection(db, 'servers', serverId, 'channels', channelId, 'messages');
+  // simple polling style with getDocs + interval for reliability on free tier
+  const load = async () => {
+    try {
+      const snap = await getDocs(ref);
+      const msgs = [];
+      snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
+      msgs.sort((a,b) => (a.ts||0) - (b.ts||0));
+      renderMsgs(msgs);
+    } catch(e){ console.warn(e); }
+  };
+  load();
+  const iv = setInterval(load, 2500);
+  S.unsubMsgs = () => clearInterval(iv);
+}
+
+function renderMsgs(msgs) {
+  const feed = $('msgFeed');
+  feed.innerHTML = '';
+  if (!msgs.length) {
+    feed.innerHTML = '<div class="text-center py-12 text-slate-600 mono text-xs">No messages yet.</div>';
+    return;
+  }
+  msgs.forEach(m => {
+    const isOwner = m.uid === S.server?.ownerUid;
+    const div = document.createElement('div');
+    div.className = 'flex items-start gap-3 hover:bg-dark-800/30 px-2 py-1.5 rounded group';
+    div.innerHTML = `
+      <img src="${esc(m.avatar)}" class="w-8 h-8 rounded-full border ${isOwner?'border-accent/50':'border-dark-700'} shrink-0">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5">
+          <span class="font-bold text-xs ${isOwner?'text-accent-bright':'text-slate-100'}">${esc(m.handle)}</span>
+          ${isOwner?'<span class="badge-admin">OWNER</span>':''}
+          <span class="text-[10px] text-slate-600 mono">${shortTime(m.ts)}</span>
+          ${S.canManage ? `<button onclick="deleteMsg('${esc(m.id)}')" class="hidden group-hover:inline text-red-600 hover:text-red-400 text-[10px] ml-auto"><i class="fa-solid fa-trash"></i></button>` : ''}
+        </div>
+        <p class="text-xs text-slate-200 mt-0.5 break-words">${esc(m.content)}</p>
+      </div>`;
+    feed.appendChild(div);
+  });
+  const c = $('msgContainer');
+  c.scrollTop = c.scrollHeight;
+}
+
+window.sendMsg = async e => {
+  e.preventDefault();
+  const input = $('chatInput');
+  const content = input.value.trim();
+  if (!content || !S.user || !S.server || S.channelType !== 'text') return;
+  if (S.locked && !S.canManage) return alert('Channel is locked');
+  input.value = '';
+  try {
+    await addDoc(collection(db, 'servers', S.server.id, 'channels', S.channel, 'messages'), {
+      uid: S.user.uid,
+      handle: S.profile.handle,
+      avatar: S.profile.avatar,
+      content,
+      ts: Date.now()
+    });
+  } catch (err) { alert('Send failed: ' + err.message); }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SERVER SETTINGS PANEL
-// ─────────────────────────────────────────────────────────────────────────────
-window.openServerSettingsModal = async () => {
-  if(!S.canManage) return;
-  $('ssName').value = S.server.name;
-  $('ssDesc').value = S.server.desc || '';
-  $('ssOk').classList.add('hidden');
-  openModal('serverSettings');
-  sSettingsTab('overview');
+window.deleteMsg = async id => {
+  if (!S.canManage) return;
+  if (!confirm('Delete message?')) return;
+  await deleteDoc(doc(db, 'servers', S.server.id, 'channels', S.channel, 'messages', id));
 };
+
+// ========== MEMBERS ==========
+function listenMembers(serverId) {
+  if (S.unsubMembers) S.unsubMembers();
+  const load = async () => {
+    const snap = await getDocs(collection(db, 'servers', serverId, 'members'));
+    const list = $('membersList');
+    list.innerHTML = '';
+    snap.forEach(d => {
+      const m = d.data();
+      const isOwner = m.role === 'owner';
+      const div = document.createElement('div');
+      div.className = 'flex items-center gap-2 px-1.5 py-1 rounded hover:bg-dark-800';
+      div.innerHTML = `
+        <img src="${esc(m.avatar)}" class="w-6 h-6 rounded-full border border-dark-700">
+        <div class="min-w-0">
+          <div class="font-bold text-xs ${isOwner?'text-accent-bright':'text-slate-300'} truncate">${esc(m.handle)}</div>
+          <div class="text-[9px] text-slate-500">${isOwner?'Owner':'Member'}</div>
+        </div>`;
+      list.appendChild(div);
+    });
+  };
+  load();
+  const iv = setInterval(load, 8000);
+  S.unsubMembers = () => clearInterval(iv);
+}
+
+// ========== VOICE (WebRTC + Gun signaling) ==========
+let localStream = null;
+let peers = {}; // uid -> RTCPeerConnection
+let isMuted = false;
+
+async function joinVoice(c) {
+  if (!S.user || !S.server) return;
+  leaveVoice();
+  S.channel = c.id;
+  S.channelType = 'voice';
+  $('chanIcon').className = 'fa-solid fa-volume-high text-green-500 text-xs';
+  $('chanHeader').textContent = c.name || c.id;
+  $('voiceChanName').textContent = c.name || c.id;
+  $('textArea').classList.add('hidden');
+  $('voiceArea').classList.remove('hidden');
+  $('voiceStatus').textContent = 'Requesting microphone…';
+  renderChannels();
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    $('voiceStatus').textContent = 'Connected — waiting for others';
+    // announce presence
+    const room = gun.get(`havoc/voice/${S.server.id}/${c.id}`);
+    room.get(S.user.uid).put({
+      handle: S.profile.handle,
+      avatar: S.profile.avatar,
+      ts: Date.now()
+    });
+    // listen for others
+    room.map().on(async (data, uid) => {
+      if (!data || uid === S.user.uid || !data.handle) return;
+      if (Date.now() - (data.ts||0) > 30000) return;
+      if (peers[uid]) return;
+      await createPeer(uid, data, true);
+    });
+    // keep alive
+    const keep = setInterval(() => {
+      room.get(S.user.uid).put({ handle: S.profile.handle, avatar: S.profile.avatar, ts: Date.now() });
+    }, 10000);
+    window._voiceKeep = keep;
+  } catch (err) {
+    $('voiceStatus').textContent = 'Microphone access denied';
+    console.error(err);
+  }
+}
+
+async function createPeer(uid, meta, initiator) {
+  const pc = new RTCPeerConnection({
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+  });
+  peers[uid] = pc;
+  if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+  pc.ontrack = e => {
+    let audio = document.getElementById(`audio-${uid}`);
+    if (!audio) {
+      audio = document.createElement('audio');
+      audio.id = `audio-${uid}`;
+      audio.autoplay = true;
+      document.body.appendChild(audio);
+    }
+    audio.srcObject = e.streams[0];
+    renderVoicePeers();
+  };
+
+  pc.onicecandidate = e => {
+    if (e.candidate) {
+      gun.get(`havoc/voice/${S.server.id}/${S.channel}/sig/${S.user.uid}-${uid}`).set({
+        type: 'ice', candidate: JSON.stringify(e.candidate), from: S.user.uid
+      });
+    }
+  };
+
+  // signaling via Gun
+  gun.get(`havoc/voice/${S.server.id}/${S.channel}/sig/${uid}-${S.user.uid}`).map().on(async data => {
+    if (!data || data.from === S.user.uid) return;
+    try {
+      if (data.type === 'offer') {
+        await pc.setRemoteDescription(JSON.parse(data.sdp));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        gun.get(`havoc/voice/${S.server.id}/${S.channel}/sig/${S.user.uid}-${uid}`).set({
+          type: 'answer', sdp: JSON.stringify(pc.localDescription), from: S.user.uid
+        });
+      } else if (data.type === 'answer') {
+        await pc.setRemoteDescription(JSON.parse(data.sdp));
+      } else if (data.type === 'ice') {
+        await pc.addIceCandidate(JSON.parse(data.candidate));
+      }
+    } catch (e) { console.warn('sig error', e); }
+  });
+
+  if (initiator) {
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    gun.get(`havoc/voice/${S.server.id}/${S.channel}/sig/${S.user.uid}-${uid}`).set({
+      type: 'offer', sdp: JSON.stringify(pc.localDescription), from: S.user.uid
+    });
+  }
+  renderVoicePeers();
+}
+
+function renderVoicePeers() {
+  const el = $('voicePeers');
+  el.innerHTML = '';
+  // self
+  const self = document.createElement('div');
+  self.className = 'flex flex-col items-center gap-1';
+  self.innerHTML = `
+    <img src="${esc(S.profile.avatar)}" class="w-14 h-14 rounded-full border-2 border-green-500">
+    <span class="text-xs text-green-400 font-bold">${esc(S.profile.handle)} (you)</span>`;
+  el.appendChild(self);
+  Object.keys(peers).forEach(uid => {
+    // we don't have full meta easily, just show placeholder
+    const d = document.createElement('div');
+    d.className = 'flex flex-col items-center gap-1';
+    d.innerHTML = `
+      <div class="w-14 h-14 rounded-full bg-dark-700 border-2 border-green-600 flex items-center justify-center">
+        <i class="fa-solid fa-user text-xl text-slate-400"></i>
+      </div>
+      <span class="text-xs text-slate-300">Peer</span>`;
+    el.appendChild(d);
+  });
+}
+
+window.toggleMute = () => {
+  if (!localStream) return;
+  isMuted = !isMuted;
+  localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+  const btn = $('muteBtn');
+  btn.innerHTML = isMuted
+    ? '<i class="fa-solid fa-microphone-slash"></i> Unmute'
+    : '<i class="fa-solid fa-microphone"></i> Mute';
+  btn.classList.toggle('bg-red-900/50', isMuted);
+};
+
+window.leaveVoice = () => {
+  if (window._voiceKeep) clearInterval(window._voiceKeep);
+  Object.values(peers).forEach(pc => pc.close());
+  peers = {};
+  if (localStream) {
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+  }
+  document.querySelectorAll('[id^="audio-"]').forEach(a => a.remove());
+  $('voiceArea').classList.add('hidden');
+  $('textArea').classList.remove('hidden');
+};
+
+// ========== SERVER SETTINGS / MODERATION ==========
+window.openModal = id => {
+  if (id === 'serverSettings' && S.canManage) {
+    $('ssName').value = S.server?.name || '';
+    $('ssDesc').value = S.server?.desc || '';
+    sSettingsTab('overview');
+  }
+  if (id === 'admin' && S.isAdmin) adminTab('servers');
+  if (id === 'profile' && S.profile) {
+    $('profileHandle').value = S.profile.handle || '';
+    $('profileBio').value = S.profile.bio || '';
+    $('profileAvatarPreview').src = S.profile.avatar;
+  }
+  $(`modal-${id}`)?.classList.remove('hidden');
+};
+window.closeModal = id => $(`modal-${id}`)?.classList.add('hidden');
 
 window.sSettingsTab = tab => {
-  ['overview','invites','members','audit','danger'].forEach(t=>{
-    $(`ssp-${t}`).classList.add('hidden');
-    $(`sst-${t}`).className='py-2 px-3 text-xs mono tab-inactive';
+  ['overview','invites','members','danger'].forEach(t => {
+    $(`ssp-${t}`)?.classList.add('hidden');
+    $(`sst-${t}`)?.classList.remove('tab-active');
+    $(`sst-${t}`)?.classList.add('tab-inactive');
   });
-  $(`ssp-${tab}`).classList.remove('hidden');
-  $(`sst-${tab}`).className='py-2 px-3 text-xs mono tab-active';
-  if(tab==='invites') renderInviteList();
-  if(tab==='members') renderServerMembers();
-  if(tab==='audit')   renderServerAudit();
+  $(`ssp-${tab}`)?.classList.remove('hidden');
+  $(`sst-${tab}`)?.classList.add('tab-active');
+  $(`sst-${tab}`)?.classList.remove('tab-inactive');
+  if (tab === 'invites') renderInviteList();
+  if (tab === 'members') renderServerMembers();
 };
 
 window.saveServerSettings = async () => {
-  if(!S.canManage||!S.server) return;
-  const name=$('ssName').value.trim(), desc=$('ssDesc').value.trim();
-  if(!name) return;
-  await updateDoc(doc(db,'servers',S.server.id),{name,desc});
-  S.server={...S.server,name,desc};
-  $('currentServerName').textContent=name;
-  $('ssOk').classList.remove('hidden');
-  setTimeout(()=>$('ssOk').classList.add('hidden'),2000);
-  await writeAudit('EDIT_SERVER',{serverId:S.server.id,name,uid:S.fbUser.uid});
+  if (!S.canManage) return;
+  const name = $('ssName').value.trim();
+  const desc = $('ssDesc').value.trim();
+  if (!name) return;
+  await updateDoc(doc(db, 'servers', S.server.id), { name, desc });
+  S.server = { ...S.server, name, desc };
+  $('currentServerName').textContent = name;
   await loadMyServers();
 };
 
-async function renderServerMembers(){
-  const snap = await getDocs(collection(db,'servers',S.server.id,'members'));
-  const el=$('serverMemberList');
-  el.innerHTML='';
-  snap.forEach(d=>{
-    const m=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
-    row.innerHTML=`
-      <img src="${esc(m.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-7 h-7 rounded-full border border-dark-600">
+async function renderServerMembers() {
+  const snap = await getDocs(collection(db, 'servers', S.server.id, 'members'));
+  const el = $('serverMemberList');
+  el.innerHTML = '';
+  snap.forEach(d => {
+    const m = d.data();
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
+    row.innerHTML = `
+      <img src="${esc(m.avatar)}" class="w-7 h-7 rounded-full border border-dark-600">
       <div class="flex-1 min-w-0">
         <div class="font-bold text-xs text-slate-200 truncate">${esc(m.handle)}</div>
         <div class="text-[10px] text-slate-500 mono">${esc(m.role)}</div>
       </div>
-      ${m.role!=='owner'?`
+      ${m.role !== 'owner' ? `
         <button onclick="kickMember('${esc(m.uid)}','${esc(m.handle)}')" class="text-amber-500 hover:text-amber-300 text-xs" title="Kick"><i class="fa-solid fa-right-from-bracket"></i></button>
-        <button onclick="banMember('${esc(m.uid)}','${esc(m.handle)}')" class="text-red-500 hover:text-red-300 text-xs" title="Ban"><i class="fa-solid fa-ban"></i></button>
-      `:'<span class="badge-admin">OWNER</span>'}`;
+      ` : '<span class="badge-admin">OWNER</span>'}`;
     el.appendChild(row);
   });
 }
 
-async function renderServerAudit(){
-  const snap = await getDocs(query(collection(db,'auditLog'),orderBy('ts','desc'),limit(50)));
-  const el=$('auditLogList');
-  el.innerHTML='';
-  snap.forEach(d=>{
-    const a=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-2 py-1 border-b border-dark-800';
-    row.innerHTML=`<span class="text-slate-600">${tsFormat(a.ts)}</span><span class="text-accent">${esc(a.action)}</span><span class="text-slate-400">${esc(a.handle)}</span>`;
-    el.appendChild(row);
-  });
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MODERATION
-// ─────────────────────────────────────────────────────────────────────────────
-window.kickMember = async (uid,handle) => {
-  if(!S.canManage||!S.server) return;
-  if(!confirm(`Kick ${handle} from this server?`)) return;
-  await deleteDoc(doc(db,'servers',S.server.id,'members',uid));
-  await writeAudit('KICK_MEMBER',{serverId:S.server.id,kickedUid:uid,kickedHandle:handle,by:S.fbUser.uid});
-  showToast(`Kicked ${handle}`);
+window.kickMember = async (uid, handle) => {
+  if (!S.canManage) return;
+  if (!confirm(`Kick ${handle}?`)) return;
+  await deleteDoc(doc(db, 'servers', S.server.id, 'members', uid));
   renderServerMembers();
-};
-
-window.banMember = async (uid,handle) => {
-  if(!S.canManage) return;
-  const reason = prompt(`Reason for banning ${handle} (global ban)?`) || 'No reason given';
-  if(!confirm(`Globally ban ${handle}? They won't be able to log in.`)) return;
-  await setDoc(doc(db,'bans',uid), {
-    uid, handle, reason, bannedBy:S.fbUser.uid,
-    bannedByHandle:S.profile.handle, ts:Date.now()
-  });
-  // Also kick from this server
-  await deleteDoc(doc(db,'servers',S.server.id,'members',uid));
-  await writeAudit('GLOBAL_BAN',{uid,handle,reason,by:S.fbUser.uid});
-  showToast(`Banned ${handle} globally`);
-  renderServerMembers();
-};
-
-window.banIP = async ip => {
-  if(!S.isAdmin) return;
-  if(!ip.trim()){ showToast('Enter an IP.'); return; }
-  const reason = prompt(`Reason for IP ban on ${ip}?`) || 'No reason';
-  const ipHash = await sha256(ip.trim());
-  await setDoc(doc(db,'ipBans',ipHash), {
-    ipHash, ip:ip.trim(), reason, bannedBy:S.fbUser.uid,
-    bannedByHandle:S.profile.handle, ts:Date.now()
-  });
-  await writeAudit('IP_BAN',{ip,reason,by:S.fbUser.uid});
-  showToast(`IP banned: ${ip}`);
-  loadAdminBans();
 };
 
 window.adminToggleLock = () => {
-  S.locked=!S.locked;
-  $('lockBadge').classList.toggle('hidden',!S.locked);
+  S.locked = !S.locked;
+  $('lockBadge').classList.toggle('hidden', !S.locked);
   closeModal('chanSettings');
-  showToast(S.locked?'Channel locked':'Channel unlocked');
+  closeModal('serverSettings');
 };
 
 window.adminPurgeChannel = async () => {
-  if(!S.canManage||!S.server) return;
-  if(!confirm('Delete ALL messages in this channel? This is irreversible.')) return;
-  // Clear Firestore messages
-  const snap = await getDocs(collection(db,'servers',S.server.id,'channels',S.channel,'messages'));
+  if (!S.canManage || !S.server || S.channelType !== 'text') return;
+  if (!confirm('Delete ALL messages in this channel?')) return;
+  const snap = await getDocs(collection(db, 'servers', S.server.id, 'channels', S.channel, 'messages'));
   const batch = writeBatch(db);
-  snap.forEach(d=>batch.delete(d.ref));
+  snap.forEach(d => batch.delete(d.ref));
   await batch.commit();
-  // Clear local chain
-  localStorage.removeItem(chainKey());
-  await writeAudit('PURGE_CHANNEL',{serverId:S.server.id,channel:S.channel,uid:S.fbUser.uid});
-  renderMsgs([]);
-  closeModal('chanSettings'); closeModal('serverSettings');
-  showToast('Channel purged');
+  closeModal('chanSettings');
+  closeModal('serverSettings');
 };
 
 window.deleteCurrentChannel = async () => {
-  if(!S.canManage||!S.server) return;
-  if(S.channel==='general'){ showToast('Cannot delete #general'); return; }
-  if(!confirm(`Delete channel #${S.channel}? All messages will be lost.`)) return;
+  if (!S.canManage || !S.server) return;
+  if (S.channel === 'general') return alert('Cannot delete #general');
+  if (!confirm(`Delete #${S.channel}?`)) return;
   await adminPurgeChannel();
-  await deleteDoc(doc(db,'servers',S.server.id,'channels',S.channel));
-  S.channels.delete(S.channel);
-  await writeAudit('DELETE_CHANNEL',{serverId:S.server.id,channel:S.channel,uid:S.fbUser.uid});
-  renderChannels();
-  switchChannel('general');
-  closeModal('chanSettings'); closeModal('serverSettings');
-  showToast(`#${S.channel} deleted`);
+  await deleteDoc(doc(db, 'servers', S.server.id, 'channels', S.channel));
+  await loadChannels(S.server.id);
+  switchChannel({ id: 'general', name: 'general', type: 'text' });
+  closeModal('chanSettings');
+  closeModal('serverSettings');
 };
 
 window.deleteServer = async () => {
-  if(!S.canManage||!S.server) return;
-  if(!confirm(`PERMANENTLY delete server "${S.server.name}"? This cannot be undone.`)) return;
-  if(!confirm('Are you absolutely sure?')) return;
+  if (!S.canManage || !S.server) return;
+  if (!confirm(`PERMANENTLY delete "${S.server.name}"?`)) return;
+  if (!confirm('Are you absolutely sure?')) return;
   const sid = S.server.id;
-  // Delete all channels + messages
-  const chans = await getDocs(collection(db,'servers',sid,'channels'));
-  for(const ch of chans.docs){
-    const msgs = await getDocs(collection(db,'servers',sid,'channels',ch.id,'messages'));
-    const b=writeBatch(db);
-    msgs.forEach(m=>b.delete(m.ref));
+  // best-effort cleanup
+  const chans = await getDocs(collection(db, 'servers', sid, 'channels'));
+  for (const ch of chans.docs) {
+    const msgs = await getDocs(collection(db, 'servers', sid, 'channels', ch.id, 'messages'));
+    const b = writeBatch(db);
+    msgs.forEach(m => b.delete(m.ref));
     await b.commit();
     await deleteDoc(ch.ref);
   }
-  // Delete members
-  const members = await getDocs(collection(db,'servers',sid,'members'));
-  const mb=writeBatch(db);
-  members.forEach(m=>mb.delete(m.ref));
+  const members = await getDocs(collection(db, 'servers', sid, 'members'));
+  const mb = writeBatch(db);
+  members.forEach(m => mb.delete(m.ref));
   await mb.commit();
-  // Delete invites
-  const invites = await getDocs(query(collection(db,'invites'),where('serverId','==',sid)));
-  const ib=writeBatch(db);
-  invites.forEach(i=>ib.delete(i.ref));
-  await ib.commit();
-  // Delete server doc
-  await deleteDoc(doc(db,'servers',sid));
-  await writeAudit('DELETE_SERVER',{serverId:sid,serverName:S.server.name,uid:S.fbUser.uid});
-  S.server=null; S.channel='general'; S.channels=new Set(['general']);
-  $('currentServerName').textContent='Select a Server';
-  $('channelsList').innerHTML='';
-  $('msgFeed').innerHTML='';
+  await deleteDoc(doc(db, 'servers', sid));
+  S.server = null;
+  $('currentServerName').textContent = 'Select a Server';
+  $('channelsList').innerHTML = '';
+  $('voiceList').innerHTML = '';
   closeModal('serverSettings');
   await loadMyServers();
-  showToast('Server deleted');
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MESSAGES
-// ─────────────────────────────────────────────────────────────────────────────
-window.sendMsg = async e => {
-  e.preventDefault();
-  const input=$('chatInput'), content=input.value.trim();
-  if(!content||!S.fbUser||!S.server) return;
-  if(S.locked && !S.canManage){ showToast('Channel is locked.'); return; }
-  input.value=''; input.disabled=true;
-  const sig = await pqSign(content);
-  const msgData = {
-    handle:S.profile.handle, avatar:S.profile.avatar,
-    content, sig, pubKeyHex:S.profile.pubKeyHex||null,
-    uid:S.fbUser.uid, room:S.server.id, channel:S.channel
-  };
-  try {
-    const block = await mineBlock(msgData);
-    // Also persist to Firestore for admin access + message deletion
-    await addDoc(collection(db,'servers',S.server.id,'channels',S.channel,'messages'), {
-      ...msgData, blockHash:block.hash, blockIndex:block.index, ts:block.timestamp
-    });
-    // Gun fast sync
-    gun.get(`hv/${S.server.id}/${S.channel}/msgs`).get(block.hash).put(JSON.stringify({
-      ...msgData, blockHash:block.hash, blockIndex:block.index, ts:block.timestamp
-    }));
-    renderMsgs(loadChain());
-  } catch(err){ console.error(err); showToast('Failed to send message.'); }
-  input.disabled=!S.fbUser; input.focus();
-};
-
-window.deleteMessage = async (blockHash, firestoreId) => {
-  if(!S.canManage) return;
-  if(!confirm('Delete this message?')) return;
-  // Remove from Firestore
-  if(firestoreId) await deleteDoc(doc(db,'servers',S.server.id,'channels',S.channel,'messages',firestoreId));
-  // Mark in chain as deleted (can't truly remove without breaking chain, so we redact content)
-  const chain=loadChain();
-  const block=chain.find(b=>b.hash===blockHash);
-  if(block){ block.data.content='[message deleted]'; block.data.sig=null; saveChain(chain); }
-  await writeAudit('DELETE_MESSAGE',{serverId:S.server.id,channel:S.channel,blockHash,by:S.fbUser.uid});
-  renderMsgs(loadChain());
-};
-
-// Listen to real-time Gun messages
-function listenGunMsgs(){
-  if(!S.server) return;
-  gun.get(`hv/${S.server.id}/${S.channel}/msgs`).map().on(data=>{
-    if(!data) return;
-    try {
-      const m=JSON.parse(data);
-      const chain=loadChain();
-      // Already in chain via mineBlock broadcast, just re-render if needed
-      if(!chain.find(b=>b.hash===m.blockHash)) renderMsgs(loadChain());
-    } catch{}
-  });
-}
-
-function renderMsgs(chain){
-  const feed=$('msgFeed');
-  feed.innerHTML='';
-  if(!chain.length){
-    feed.innerHTML='<div class="text-center py-12 text-slate-600 mono text-xs">No messages yet. Be first.</div>';
-    return;
-  }
-  chain.forEach(block=>{
-    const d=block.data;
-    if(!d||!d.content) return;
-    const isDeleted=d.content==='[message deleted]';
-    let sigStatus='anon';
-    if(d.sig&&d.pubKeyHex&&!isDeleted){
-      try{ sigStatus=pqVerify(d.content,d.sig,d.pubKeyHex)?'ok':'bad'; }catch{ sigStatus='bad'; }
-    }
-    const isOwner=d.uid===S.server?.ownerUid;
-    const div=document.createElement('div');
-    div.className=`flex items-start gap-3 hover:bg-dark-800/30 px-2 py-1.5 rounded group ${isDeleted?'opacity-40':''}`;
-    div.innerHTML=`
-      <img src="${esc(d.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}"
-        class="w-8 h-8 rounded-full bg-dark-950 border ${isOwner?'border-accent/60':'border-dark-700'} shrink-0 mt-0.5">
-      <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-1.5 flex-wrap">
-          <span class="font-bold text-xs ${isOwner?'text-accent-bright':'text-slate-100'}">${esc(d.handle)}</span>
-          ${isOwner?'<span class="badge-admin">OWNER</span>':''}
-          ${sigStatus==='ok'?'<span class="pq-badge px-1 py-0.5 rounded text-[9px] mono text-violet-300 flex items-center gap-0.5"><i class="fa-solid fa-atom text-[8px]"></i>ML-DSA</span>':sigStatus==='bad'?'<span class="text-[9px] text-red-400 mono">⚠ sig!</span>':'<span class="text-[9px] text-slate-600 mono">anon</span>'}
-          <span class="text-[10px] text-slate-600 mono">${shortTime(block.timestamp)}</span>
-          <span class="text-[9px] text-dark-700 group-hover:text-slate-700 mono ml-auto">#${block.index}·${block.hash.slice(0,6)}</span>
-          ${S.canManage&&!isDeleted?`<button onclick="deleteMessage('${esc(block.hash)}','')" class="hidden group-hover:inline text-red-600 hover:text-red-400 text-[10px] ml-1" title="Delete"><i class="fa-solid fa-trash"></i></button>`:''}
-        </div>
-        <p class="text-xs ${isDeleted?'text-slate-600 italic':'text-slate-200'} mt-0.5 break-words">${esc(d.content)}</p>
-      </div>`;
-    feed.appendChild(div);
-  });
-  const c=$('msgContainer'); c.scrollTop=c.scrollHeight;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PRESENCE
-// ─────────────────────────────────────────────────────────────────────────────
-let presInt=null;
-function listenPresence(){
-  if(!S.fbUser||!S.server||!S.profile) return;
-  clearInterval(presInt);
-  const ref=gun.get(`hv/${S.server.id}/presence/${S.profile.handle}`);
-  const beat=()=>ref.put({handle:S.profile.handle,avatar:S.profile.avatar,pq:!!S.pqKeys,ts:Date.now(),isOwner:S.server.ownerUid===S.fbUser.uid});
-  beat(); presInt=setInterval(beat,15000);
-  const _m=new Map();
-  gun.get(`hv/${S.server.id}/presence`).map().on(data=>{
-    if(!data||!data.handle) return;
-    if(Date.now()-(data.ts||0)>60000) return;
-    _m.set(data.handle,data);
-    const list=$('membersList'); list.innerHTML='';
-    [..._m.values()].forEach(mem=>{
-      if(Date.now()-(mem.ts||0)>60000){ _m.delete(mem.handle); return; }
-      const dv=document.createElement('div');
-      dv.className='flex items-center gap-2 px-1.5 py-1 rounded hover:bg-dark-800';
-      dv.innerHTML=`
-        <img src="${esc(mem.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-6 h-6 rounded-full border border-dark-700">
-        <div class="min-w-0">
-          <div class="font-bold text-xs ${mem.isOwner?'text-accent-bright':'text-slate-300'} truncate">${esc(mem.handle)}</div>
-          <div class="text-[9px] ${mem.pq?'text-violet-400':'text-slate-600'} mono">${mem.pq?'PQ':'anon'}</div>
-        </div>`;
-      list.appendChild(dv);
-    });
-  });
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// BLOCKCHAIN EXPLORER
-// ─────────────────────────────────────────────────────────────────────────────
-function renderExplorer(){
-  if(!S.server){ $('chainExplorer').innerHTML='<p class="text-xs text-slate-500 mono">Select a server/channel first.</p>'; return; }
-  const chain=loadChain();
-  const ex=$('chainExplorer'); ex.innerHTML='';
-  if(!chain.length){ ex.innerHTML='<p class="text-xs text-slate-500 mono py-8 text-center">No blocks mined yet.</p>'; return; }
-  [...chain].reverse().forEach(b=>{
-    const dv=document.createElement('div');
-    dv.className=`block-card ${b.index===0?'genesis':''}`;
-    dv.innerHTML=`
-      <div class="flex justify-between items-center mb-2">
-        <span class="font-bold text-white text-xs">${b.index===0?'🌱 Genesis':`📦 Block #${b.index}`}</span>
-        <span class="text-[10px] text-slate-500">${tsFormat(b.timestamp)}</span>
-      </div>
-      <div class="space-y-0.5">
-        <div><span class="text-slate-600">Handle: </span><span class="text-slate-200">${esc(b.data?.handle||'—')}</span></div>
-        <div><span class="text-slate-600">Msg:    </span><span class="text-slate-200">${esc(b.data?.content||'—')}</span></div>
-        <div><span class="text-slate-600">Nonce:  </span>${b.nonce}</div>
-        <div><span class="text-slate-600">Hash:   </span><span class="ht">${b.hash}</span></div>
-        <div><span class="text-slate-600">Prev:   </span><span class="pt">${b.previousHash}</span></div>
-        ${b.data?.sig?`<div><span class="text-slate-600">Sig:    </span><span class="st">${b.data.sig.slice(0,48)}…</span></div>`:''}
-      </div>`;
-    ex.appendChild(dv);
-  });
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ADMIN PANEL
-// ─────────────────────────────────────────────────────────────────────────────
+// ========== GLOBAL ADMIN ==========
 window.adminTab = tab => {
-  ['servers','users','bans','invites','audit'].forEach(t=>{
-    $(`ap-${t}`).classList.add('hidden');
-    $(`at-${t}`).className='py-2 px-3 text-xs mono tab-inactive';
+  ['servers','users'].forEach(t => {
+    $(`ap-${t}`)?.classList.add('hidden');
+    $(`at-${t}`)?.classList.remove('tab-active');
+    $(`at-${t}`)?.classList.add('tab-inactive');
   });
-  $(`ap-${tab}`).classList.remove('hidden');
-  $(`at-${tab}`).className='py-2 px-3 text-xs mono tab-active';
-  if(tab==='servers') loadAdminServers();
-  if(tab==='users')   loadAdminUsers();
-  if(tab==='bans')    loadAdminBans();
-  if(tab==='invites') loadAdminInvites();
-  if(tab==='audit')   loadAdminAudit();
+  $(`ap-${tab}`)?.classList.remove('hidden');
+  $(`at-${tab}`)?.classList.add('tab-active');
+  if (tab === 'servers') loadAdminServers();
+  if (tab === 'users') loadAdminUsers();
 };
 
 window.loadAdminServers = async () => {
-  const snap=await getDocs(collection(db,'servers'));
-  const el=$('adminServerList'); el.innerHTML='';
-  snap.forEach(d=>{
-    const s=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-4 py-3';
-    row.innerHTML=`
+  const snap = await getDocs(collection(db, 'servers'));
+  const el = $('adminServerList');
+  el.innerHTML = '';
+  snap.forEach(d => {
+    const s = d.data();
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-4 py-3';
+    row.innerHTML = `
       <div class="flex-1 min-w-0">
         <div class="font-bold text-sm text-white">${esc(s.name)}</div>
-        <div class="text-[10px] text-slate-500 mono">owner: ${esc(s.ownerHandle)} · created: ${tsFormat(s.createdAt)}</div>
-        ${s.desc?`<div class="text-xs text-slate-400 mt-0.5">${esc(s.desc)}</div>`:''}
+        <div class="text-[10px] text-slate-500 mono">owner: ${esc(s.ownerHandle)}</div>
       </div>
-      <button onclick="adminJoinServer('${esc(d.id)}',${JSON.stringify(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;')})" class="text-xs text-accent hover:text-accent-bright mono px-2 py-1 border border-accent/30 rounded"><i class="fa-solid fa-right-to-bracket mr-1"></i>Enter</button>
-      <button onclick="adminDeleteServer('${esc(d.id)}','${esc(s.name)}')" class="text-xs text-red-500 hover:text-red-300 mono px-2 py-1 border border-red-500/30 rounded"><i class="fa-solid fa-trash mr-1"></i>Delete</button>`;
+      <button onclick="adminEnterServer('${esc(d.id)}')" class="text-xs text-accent border border-accent/30 rounded px-2 py-1">Enter</button>
+      <button onclick="adminDeleteServer('${esc(d.id)}','${esc(s.name)}')" class="text-xs text-red-500 border border-red-500/30 rounded px-2 py-1">Delete</button>`;
     el.appendChild(row);
   });
-  if(snap.empty) el.innerHTML='<p class="text-xs text-slate-500 mono">No servers.</p>';
 };
 
-window.adminJoinServer = async (id,data) => {
-  closeModal('admin');
-  await switchServer({id,...(typeof data==='string'?JSON.parse(data):data)});
-};
-
-window.adminDeleteServer = async (id,name) => {
-  if(!confirm(`Admin: Delete server "${name}"?`)) return;
-  // Delete all subcollections
-  const chans=await getDocs(collection(db,'servers',id,'channels'));
-  for(const ch of chans.docs){
-    const msgs=await getDocs(collection(db,'servers',id,'channels',ch.id,'messages'));
-    const b=writeBatch(db); msgs.forEach(m=>b.delete(m.ref)); await b.commit();
-    await deleteDoc(ch.ref);
+window.adminEnterServer = async id => {
+  const snap = await getDoc(doc(db, 'servers', id));
+  if (snap.exists()) {
+    closeModal('admin');
+    await switchServer({ id, ...snap.data() });
   }
-  const members=await getDocs(collection(db,'servers',id,'members'));
-  const mb=writeBatch(db); members.forEach(m=>mb.delete(m.ref)); await mb.commit();
-  const invites=await getDocs(query(collection(db,'invites'),where('serverId','==',id)));
-  const ib=writeBatch(db); invites.forEach(i=>ib.delete(i.ref)); await ib.commit();
-  await deleteDoc(doc(db,'servers',id));
-  await writeAudit('ADMIN_DELETE_SERVER',{serverId:id,serverName:name,by:S.fbUser.uid});
-  showToast(`Server "${name}" deleted`);
+};
+
+window.adminDeleteServer = async (id, name) => {
+  if (!confirm(`Admin delete "${name}"?`)) return;
+  // reuse delete logic
+  S.server = { id, name, ownerUid: 'admin' };
+  S.canManage = true;
+  await deleteServer();
   loadAdminServers();
 };
 
 window.loadAdminUsers = async () => {
-  const snap=await getDocs(collection(db,'users'));
-  const el=$('adminUserList'); el.innerHTML='';
-  snap.forEach(d=>{
-    const u=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-3 py-2';
-    row.innerHTML=`
-      <img src="${esc(u.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-8 h-8 rounded-full border border-dark-700">
+  const snap = await getDocs(collection(db, 'users'));
+  const el = $('adminUserList');
+  el.innerHTML = '';
+  snap.forEach(d => {
+    const u = d.data();
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-3 py-2';
+    row.innerHTML = `
+      <img src="${esc(u.avatar)}" class="w-8 h-8 rounded-full border border-dark-700">
       <div class="flex-1 min-w-0">
-        <div class="font-bold text-xs text-white">${esc(u.handle)} <span class="text-slate-500 font-normal">${esc(u.email||'anon')}</span></div>
-        <div class="text-[10px] text-slate-500 mono">uid: ${esc(u.uid)} · ip: ${esc(u.lastIp||'?')}</div>
+        <div class="font-bold text-xs text-white">${esc(u.handle)} <span class="text-slate-500 font-normal">${esc(u.email||'')}</span></div>
       </div>
-      ${u.email!==ADMIN_EMAIL?`
-        <button onclick="banMemberAdmin('${esc(u.uid)}','${esc(u.handle)}')" class="text-xs text-red-500 hover:text-red-300 mono px-2 py-1 border border-red-500/30 rounded"><i class="fa-solid fa-ban mr-1"></i>Ban</button>
-        ${u.lastIp?`<button onclick="banIP('${esc(u.lastIp)}')" class="text-xs text-orange-500 hover:text-orange-300 mono px-2 py-1 border border-orange-500/30 rounded"><i class="fa-solid fa-globe mr-1"></i>Ban IP</button>`:''}
-      `:'<span class="badge-admin">ADMIN</span>'}`;
+      ${u.email === ADMIN_EMAIL ? '<span class="badge-admin">ADMIN</span>' : ''}`;
     el.appendChild(row);
   });
-  if(snap.empty) el.innerHTML='<p class="text-xs text-slate-500 mono">No users.</p>';
 };
 
-window.banMemberAdmin = async (uid,handle) => {
-  const reason=prompt(`Ban reason for ${handle}?`)||'Admin action';
-  if(!confirm(`Globally ban ${handle}?`)) return;
-  await setDoc(doc(db,'bans',uid),{uid,handle,reason,bannedBy:S.fbUser.uid,bannedByHandle:S.profile.handle,ts:Date.now()});
-  await writeAudit('ADMIN_BAN_USER',{uid,handle,reason,by:S.fbUser.uid});
-  showToast(`Banned ${handle}`); loadAdminUsers();
-};
-
-window.loadAdminBans = async () => {
-  // User bans
-  const snap=await getDocs(collection(db,'bans'));
-  const el=$('adminBanList'); el.innerHTML='';
-  snap.forEach(d=>{
-    const b=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-2 bg-dark-950 border border-red-900/30 rounded px-3 py-1.5 text-xs';
-    row.innerHTML=`
-      <span class="text-red-300 font-bold mono flex-1">${esc(b.handle)}</span>
-      <span class="text-slate-500 mono">${esc(b.reason)}</span>
-      <button onclick="unbanUser('${esc(b.uid)}','${esc(b.handle)}')" class="text-green-500 hover:text-green-300 mono text-[10px]"><i class="fa-solid fa-circle-check mr-1"></i>Unban</button>`;
-    el.appendChild(row);
-  });
-  if(snap.empty) el.innerHTML='<p class="text-xs text-slate-500 mono">No bans.</p>';
-  // IP bans
-  const ipSnap=await getDocs(collection(db,'ipBans'));
-  const ipEl=$('adminIpBanList'); ipEl.innerHTML='';
-  ipSnap.forEach(d=>{
-    const b=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-2 bg-dark-950 border border-orange-900/30 rounded px-3 py-1.5 text-xs';
-    row.innerHTML=`
-      <span class="text-orange-300 font-bold mono flex-1">${esc(b.ip)}</span>
-      <span class="text-slate-500 mono text-[10px]">${esc(b.reason)}</span>
-      <button onclick="unbanIP('${esc(d.id)}')" class="text-green-500 hover:text-green-300 mono text-[10px]"><i class="fa-solid fa-circle-check mr-1"></i>Remove</button>`;
-    ipEl.appendChild(row);
-  });
-  if(ipSnap.empty) ipEl.innerHTML='<p class="text-xs text-slate-500 mono">No IP bans.</p>';
-};
-
-window.unbanUser = async (uid,handle) => {
-  if(!confirm(`Unban ${handle}?`)) return;
-  await deleteDoc(doc(db,'bans',uid));
-  await writeAudit('UNBAN_USER',{uid,handle,by:S.fbUser.uid});
-  showToast(`Unbanned ${handle}`); loadAdminBans();
-};
-
-window.unbanIP = async ipHash => {
-  if(!confirm('Remove this IP ban?')) return;
-  await deleteDoc(doc(db,'ipBans',ipHash));
-  await writeAudit('UNBAN_IP',{ipHash,by:S.fbUser.uid});
-  showToast('IP ban removed'); loadAdminBans();
-};
-
-window.loadAdminInvites = async () => {
-  const snap=await getDocs(collection(db,'invites'));
-  const el=$('adminInviteList'); el.innerHTML='';
-  snap.forEach(d=>{
-    const inv=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-2 bg-dark-950 border border-dark-800 rounded-lg px-3 py-2 text-xs';
-    row.innerHTML=`
-      <span class="text-accent mono font-bold flex-1">${esc(inv.code)}</span>
-      <span class="text-slate-400 truncate max-w-[120px]">${esc(inv.serverName)}</span>
-      <span class="text-slate-500 mono">${inv.uses}/${inv.maxUses}</span>
-      <span class="${inv.active?'text-green-400':'text-slate-600'} mono text-[10px]">${inv.active?'active':'expired'}</span>
-      <button onclick="copyToClipboard('${esc(inv.code)}')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-copy"></i></button>
-      ${inv.active?`<button onclick="adminRevokeInvite('${esc(inv.code)}')" class="text-red-500 hover:text-red-300"><i class="fa-solid fa-ban"></i></button>`:''}`;
-    el.appendChild(row);
-  });
-  if(snap.empty) el.innerHTML='<p class="text-xs text-slate-500 mono">No invites.</p>';
-};
-
-window.adminRevokeInvite = async code => {
-  await updateDoc(doc(db,'invites',code),{active:false});
-  await writeAudit('ADMIN_REVOKE_INVITE',{code,by:S.fbUser.uid});
-  showToast(`Revoked ${code}`); loadAdminInvites();
-};
-
-window.loadAdminAudit = async () => {
-  const snap=await getDocs(query(collection(db,'auditLog'),orderBy('ts','desc'),limit(100)));
-  const el=$('adminAuditList'); el.innerHTML='';
-  snap.forEach(d=>{
-    const a=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-start gap-2 py-1 border-b border-dark-800 text-[10px]';
-    row.innerHTML=`
-      <span class="text-slate-600 shrink-0">${tsFormat(a.ts)}</span>
-      <span class="text-accent font-bold shrink-0">${esc(a.action)}</span>
-      <span class="text-slate-400">${esc(a.handle)}</span>
-      <span class="text-slate-600 truncate">${JSON.stringify(a.data||{})}</span>`;
-    el.appendChild(row);
-  });
-  if(snap.empty) el.innerHTML='<p class="text-slate-500">No audit entries.</p>';
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// UI HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-function updateUserUI(){
-  const bar=$('authBar');
-  if(S.fbUser&&S.profile){
-    $('ucHandle').textContent=S.profile.handle;
-    $('ucRole').textContent=S.isAdmin?'⚡ ADMIN':(S.anon?'Anonymous':(S.pqKeys?'PQ Signed':'Signed in'));
-    $('ucAvatar').src=S.profile.avatar;
-    $('ucDot').className='w-2 h-2 bg-accent rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-950';
-    bar.innerHTML=`<div class="flex items-center gap-2">
-      <img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border ${S.isAdmin?'border-red-500':'border-accent/40'}">
-      <span class="font-bold text-slate-200 mono text-xs">${esc(S.profile.handle)}</span>
-      ${S.isAdmin?'<span class="badge-admin">ADMIN</span>':''}
-    </div>`;
-    // Prefill profile modal
-    $('profileHandle').value=S.profile.handle||'';
-    $('profileBio').value=S.profile.bio||'';
-    $('profileAvatarPreview').src=S.profile.avatar;
+// ========== UI HELPERS ==========
+function updateUserUI() {
+  const bar = $('authBar');
+  if (S.user && S.profile) {
+    $('ucHandle').textContent = S.profile.handle;
+    $('ucRole').textContent = S.isAdmin ? '⚡ ADMIN' : (S.user.isAnonymous ? 'Anonymous' : 'Signed in');
+    $('ucAvatar').src = S.profile.avatar;
+    bar.innerHTML = `
+      <div class="flex items-center gap-2">
+        <img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-accent/40">
+        <span class="font-bold text-slate-200 mono text-xs">${esc(S.profile.handle)}</span>
+        ${S.isAdmin ? '<span class="badge-admin">ADMIN</span>' : ''}
+      </div>`;
   } else {
-    $('ucHandle').textContent='Guest';
-    $('ucRole').textContent='Not signed in';
-    $('ucAvatar').src='https://api.dicebear.com/7.x/bottts/svg?seed=Guest';
-    $('ucDot').className='w-2 h-2 bg-slate-600 rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-dark-950';
-    bar.innerHTML=`<button onclick="openModal('auth')" class="bg-accent hover:bg-accent-bright text-white font-bold px-3 py-1 rounded text-xs transition">Login / Register</button>`;
+    $('ucHandle').textContent = 'Guest';
+    $('ucRole').textContent = 'Not signed in';
+    $('ucAvatar').src = 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest';
+    bar.innerHTML = `<button onclick="openModal('auth')" class="bg-accent hover:bg-accent-bright text-white font-bold px-3 py-1 rounded text-xs">Login / Register</button>`;
   }
 }
 
-function setMining(on){
-  const ind=$('mineInd');
-  ind.classList.toggle('hidden',!on); ind.classList.toggle('flex',!on?false:true);
-  if(on) $('msgForm').classList.add('mine-pulse'); else $('msgForm').classList.remove('mine-pulse');
-  $('chatInput').disabled=on||!S.fbUser;
+function showAuthErr(msg) {
+  const el = $('authErr');
+  el.textContent = msg;
+  el.classList.remove('hidden');
 }
-
-function showPQBadge(status){
-  $('pqBadge').classList.remove('hidden'); $('pqBadge').classList.add('flex');
-  $('pqStatus').textContent=status;
-}
-function hidePQBadge(){
-  $('pqBadge').classList.add('hidden'); $('pqBadge').classList.remove('flex');
-}
-
-function showAuthError(msg){
-  $('authErr').textContent=msg; $('authErr').classList.remove('hidden');
-}
-function clearAuthErr(){ $('authErr').classList.add('hidden'); }
-
-let _toastT=null;
-function showToast(msg){
-  let el=document.getElementById('toast');
-  if(!el){
-    el=document.createElement('div');
-    el.id='toast';
-    el.className='fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] bg-dark-800 border border-dark-600 text-white text-xs mono px-4 py-2 rounded-full shadow-lg transition-all duration-300';
-    document.body.appendChild(el);
-  }
-  el.textContent=msg; el.style.opacity='1';
-  clearTimeout(_toastT);
-  _toastT=setTimeout(()=>{ el.style.opacity='0'; },2500);
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MODAL SYSTEM
-// ─────────────────────────────────────────────────────────────────────────────
-window.openModal = id => {
-  const el=document.getElementById(`modal-${id}`);
-  if(el) el.classList.remove('hidden');
-  if(id==='chain') renderExplorer();
-  if(id==='admin' && S.isAdmin){ adminTab('servers'); }
-  if(id==='serverSettings' && S.canManage) window.openServerSettingsModal();
-};
-window.closeModal = id => {
-  const el=document.getElementById(`modal-${id}`);
-  if(el) el.classList.add('hidden');
-};
+function clearAuthErr() { $('authErr').classList.add('hidden'); }
 
 window.authTab = tab => {
   clearAuthErr();
-  const isLogin=tab==='login';
-  $('formLogin').classList.toggle('hidden',!isLogin);
-  $('formReg').classList.toggle('hidden',isLogin);
-  $('tabL').className=`flex-1 py-2 font-bold text-xs mono ${isLogin?'tab-active':'tab-inactive'}`;
-  $('tabR').className=`flex-1 py-2 font-bold text-xs mono ${isLogin?'tab-inactive':'tab-active'}`;
+  const isLogin = tab === 'login';
+  $('formLogin').classList.toggle('hidden', !isLogin);
+  $('formReg').classList.toggle('hidden', isLogin);
+  $('tabL').className = `flex-1 py-2 font-bold text-xs mono ${isLogin?'tab-active':'tab-inactive'}`;
+  $('tabR').className = `flex-1 py-2 font-bold text-xs mono ${isLogin?'tab-inactive':'tab-active'}`;
 };
 
-// Close on backdrop click
-document.querySelectorAll('[id^="modal-"]').forEach(m=>{
-  m.addEventListener('click',e=>{ if(e.target===m) m.classList.add('hidden'); });
+// close modals on backdrop / Escape
+document.querySelectorAll('[id^="modal-"]').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('[id^="modal-"]').forEach(m => m.classList.add('hidden'));
 });
 
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')
-    document.querySelectorAll('[id^="modal-"]').forEach(m=>m.classList.add('hidden'));
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// BOOT
-// ─────────────────────────────────────────────────────────────────────────────
-(async()=>{
-  await fetchClientIP();
-  await checkIPBan();
-  updateUserUI();
-  console.log('%c havoc ', 'background:#e11d48;color:#fff;font-weight:900;padding:4px 10px;border-radius:4px;font-family:monospace;letter-spacing:.15em;');
-  console.log('%c Firebase Auth · Firestore · Gun.js P2P · SHA-256 PoW Blockchain · ML-DSA-44 (FIPS 204) · IP Banning · Invite-Only ', 'color:#fb7185;font-family:monospace;');
-})();
+console.log('%c havoc ready ', 'background:#e11d48;color:#fff;font-weight:900;padding:4px 10px;');
 </script>
 </body>
 </html>
