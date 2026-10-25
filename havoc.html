@@ -512,7 +512,11 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-const gun = Gun({ peers: ['https://gun-manhattan.herokuapp.com/gun'], localStorage: false });
+const gun = Gun({ peers: [
+  'https://gun-rs.iris.to/gun',
+  'https://gun-manhattan.herokuapp.com/gun',
+  'https://gun-us.herokuapp.com/gun'
+], localStorage: false });
 
 const $ = s => document.getElementById(s);
 const esc = s => String(s||'').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
