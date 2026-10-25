@@ -841,8 +841,10 @@ window.saveProfile = async () => {
       }
     } catch(propErr){ console.warn('propagate', propErr); }
 
+    S.profileCache = {}; // refresh names on messages
     updateUserUI();
     if(S.server) listenMembers(S.server.id);
+    if(S.server && S.channel) listenMessages(S.server.id, S.channel);
     showProfileMsg('✓ Profile saved', false);
   } catch(err) {
     console.error(err);
@@ -1446,17 +1448,40 @@ function listenMessages(serverId, channelId){
       const msgs = [];
       snap.forEach(d => msgs.push({id:d.id, ...d.data()}));
       msgs.sort((a,b) => (a.ts||0) - (b.ts||0));
-      renderMsgs(msgs);
+      await renderMsgs(msgs);
     }catch(e){}
   };
   load();
   const iv = setInterval(load, 2500);
   S.unsubMsgs = () => clearInterval(iv);
 }
-function renderMsgs(msgs){
+// Live profile cache for message authors (handle/avatar always current)
+S.profileCache = S.profileCache || {};
+async function resolveProfiles(uids){
+  const missing = [...new Set(uids.filter(u => u && !S.profileCache[u]))];
+  await Promise.all(missing.map(async uid => {
+    try{
+      const snap = await getDoc(doc(db,'users', uid));
+      if(snap.exists()){
+        const u = snap.data();
+        S.profileCache[uid] = { handle: u.handle || 'User', avatar: u.avatar || userAvatar(uid) };
+      } else {
+        S.profileCache[uid] = { handle: 'User', avatar: userAvatar(uid) };
+      }
+    }catch(e){
+      S.profileCache[uid] = { handle: 'User', avatar: userAvatar(uid) };
+    }
+  }));
+}
+async function renderMsgs(msgs){
   const feed = $('msgFeed'); feed.innerHTML = '';
   if(!msgs.length){ feed.innerHTML = '<div class="text-center py-12 text-slate-600 mono text-xs">No messages yet.</div>'; return; }
+  // Resolve current usernames/avatars for all authors
+  await resolveProfiles(msgs.map(m => m.uid));
   msgs.forEach(m => {
+    const live = S.profileCache[m.uid] || {};
+    const displayHandle = live.handle || m.handle || 'User';
+    const displayAvatar = live.avatar || m.avatar || userAvatar(m.uid||'x');
     const isOwner = m.uid === S.server?.ownerUid;
     const member = S.membersCache.find(x => x.uid === m.uid);
     const color = getMemberColor(member) || (isOwner ? '#F7931A' : null);
@@ -1479,12 +1504,13 @@ function renderMsgs(msgs){
     const div = document.createElement('div');
     div.className = `flex items-start gap-3 hover:bg-dark-800/40 px-2 py-2 rounded-lg group relative ${mentionsMe&&!isServerMuted(S.server?.id,'notif')?'bg-bch/5 border-l-2 border-bch':''}`;
     div.innerHTML = `
-      <img src="${esc(m.avatar||userAvatar('x'))}" class="w-9 h-9 rounded-full border ${isOwner?'border-carrot/60':'border-dark-600'} shrink-0 cursor-pointer" data-profile-uid="${esc(m.uid)}"
-           onclick="showUserProfile(event,'${esc(m.uid)}','${esc(m.handle)}','${esc(m.avatar||'')}')"
-           oncontextmenu="showUserContext(event,'${esc(m.uid)}','${esc(m.handle)}','${esc(m.avatar||'')}')">
+      <img src="${esc(displayAvatar)}" class="w-9 h-9 rounded-full border ${isOwner?'border-carrot/60':'border-dark-600'} shrink-0 cursor-pointer" data-profile-uid="${esc(m.uid)}"
+           onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')"
+           oncontextmenu="showUserContext(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')">
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5">
-          <span class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-100'}" ${nameStyle}>${esc(m.handle||'User')}</span>
+          <span class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-100'} cursor-pointer" ${nameStyle}
+            onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')">${esc(displayHandle)}</span>
           ${isOwner?'<span class="badge-owner">OWNER</span>':''}
           <span class="text-[10px] text-slate-600 mono">${shortTime(m.ts)}</span>
           <button onclick="showReactionPicker(event,'${esc(m.id)}')" class="hidden group-hover:inline text-slate-500 hover:text-bch text-[11px] ml-1" title="Add reaction"><i class="fa-regular fa-face-smile"></i></button>
