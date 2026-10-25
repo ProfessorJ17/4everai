@@ -62,11 +62,10 @@
 </head>
 <body class="h-full flex flex-col overflow-hidden text-sm">
 
-<!-- TOP BAR -->
 <header class="h-11 bg-dark-950 border-b border-dark-700 flex items-center justify-between px-4 shrink-0 z-30">
   <div class="flex items-center gap-3">
     <span class="font-extrabold tracking-widest text-bch-bright text-sm uppercase mono glow-text">havoc</span>
-    <span class="hidden md:inline text-slate-500 text-[11px] italic border-l border-dark-700 pl-3 mono">invite-only · private</span>
+    <span class="hidden md:inline text-slate-500 text-[11px] italic border-l border-dark-700 pl-3 mono">Post-Quantum P2P Community</span>
   </div>
   <div class="flex items-center gap-2" id="authBar">
     <button onclick="openModal('auth')" class="btn-primary px-3 py-1.5 text-xs">Login / Register</button>
@@ -77,7 +76,6 @@
 
   <!-- SERVER RAIL -->
   <nav class="w-16 bg-dark-950 border-r border-dark-700 flex flex-col items-center py-3 gap-2 shrink-0 overflow-y-auto">
-    <!-- HAVOC = Direct Messages -->
     <button id="dmHomeBtn" onclick="openDMs()" title="Direct Messages"
       class="relative w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch transition-all flex items-center justify-center overflow-hidden">
       <img src="https://professorj17.github.io/4everai/HAVOC.ico" class="w-7 h-7 rounded-md">
@@ -104,7 +102,6 @@
       </div>
     </div>
 
-    <!-- CHANNELS VIEW -->
     <div id="channelsView" class="flex-1 overflow-y-auto px-2 py-3">
       <div class="flex items-center justify-between px-2 mb-1.5">
         <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mono">Text Channels</span>
@@ -118,9 +115,7 @@
       <div id="voiceList" class="space-y-0.5"></div>
     </div>
 
-    <!-- DM VIEW (Discord style) -->
     <div id="dmView" class="hidden flex-1 overflow-y-auto flex flex-col">
-      <!-- Find or start conversation -->
       <div class="p-2 border-b border-dark-700">
         <input type="text" id="dmSearch" placeholder="Find or start a conversation" 
                class="w-full bg-dark-950 border border-dark-700 rounded-md px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-bch"
@@ -137,7 +132,6 @@
       </div>
     </div>
 
-    <!-- USER PANEL -->
     <div class="bg-dark-950 border-t border-dark-700 px-2 py-2">
       <div class="flex items-center gap-2">
         <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600 cursor-pointer" onclick="openModal('profile')">
@@ -170,7 +164,6 @@
       </div>
     </div>
 
-    <!-- TEXT / DM AREA -->
     <div id="textArea" class="flex-1 flex flex-col min-h-0">
       <div id="msgContainer" class="flex-1 overflow-y-auto p-4">
         <div id="msgFeed" class="space-y-3">
@@ -179,7 +172,8 @@
       </div>
       <div class="px-4 pb-4 pt-2 bg-dark-900/80 border-t border-dark-700 shrink-0">
         <form id="msgForm" onsubmit="sendMsg(event)" class="bg-dark-800 border border-dark-700 focus-within:border-bch rounded-xl px-3 py-2.5 flex items-center gap-2">
-          <button type="button" id="imgUploadBtn" onclick="triggerImageUpload()" class="hidden text-slate-500 hover:text-bch-bright p-1.5 rounded" title="Upload image"><i class="fa-solid fa-image"></i></button>
+          <button type="button" id="imgUploadBtn" onclick="triggerImageUpload()" class="hidden text-slate-500 hover:text-bch-bright p-1.5 rounded" title="Image URL"><i class="fa-solid fa-image"></i></button>
+          <button type="button" id="gifBtn" onclick="openGifPicker()" class="hidden text-slate-500 hover:text-bch-bright p-1.5 rounded" title="GIF"><span class="text-[10px] font-bold">GIF</span></button>
           <button type="button" id="audioClipBtn" onclick="toggleAudioRecord()" class="hidden text-slate-500 hover:text-bch-bright p-1.5 rounded" title="Record audio clip"><i class="fa-solid fa-microphone"></i></button>
           <input type="file" id="imgFileInput" accept="image/*" class="hidden" onchange="handleImageSelect(event)">
           <input type="text" id="chatInput" placeholder="Select a channel to chat…" autocomplete="off" class="flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-slate-600 min-w-0" disabled>
@@ -197,7 +191,6 @@
       </div>
     </div>
 
-    <!-- VOICE / VIDEO -->
     <div id="voiceArea" class="hidden flex-1 flex flex-col items-center justify-center p-6 bg-dark-900/40 overflow-y-auto">
       <div class="text-center mb-4">
         <h2 id="voiceChanName" class="text-xl font-bold text-white mb-1">Voice Channel</h2>
@@ -213,7 +206,6 @@
     </div>
   </main>
 
-  <!-- MEMBERS / DM PROFILE -->
   <aside id="membersPanel" class="w-56 bg-dark-900 border-l border-dark-700 p-3 overflow-y-auto shrink-0 hidden xl:block">
     <div id="membersContent">
       <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2 mono px-1">Members — <span id="memberCount">0</span></div>
@@ -245,8 +237,7 @@
   <button onclick="addReaction('💚')" class="hover:scale-125 transition">💚</button>
 </div>
 
-<!-- ===================== MODALS ===================== -->
-
+<!-- AUTH -->
 <div id="modal-auth" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-bch/30 w-full max-w-md rounded-xl p-6 relative">
     <button onclick="closeModal('auth')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -285,7 +276,7 @@
   </div>
 </div>
 
-<!-- PROFILE – Seed / URL / Upload -->
+<!-- PROFILE – Seed + URL only -->
 <div id="modal-profile" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-dark-700 w-full max-w-sm rounded-xl p-6 relative">
     <button onclick="closeModal('profile')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -296,20 +287,16 @@
     <div class="flex gap-1 mb-3 text-[10px] mono">
       <button onclick="avatarMethod('seed')" id="am-seed" class="px-2 py-1 rounded bg-bch/20 text-bch">Seed</button>
       <button onclick="avatarMethod('url')" id="am-url" class="px-2 py-1 rounded bg-dark-800 text-slate-400">URL</button>
-      <button onclick="avatarMethod('upload')" id="am-upload" class="px-2 py-1 rounded bg-dark-800 text-slate-400">Upload</button>
     </div>
     <div id="avatarSeedBox">
       <label class="field-label">Avatar Seed</label>
       <input type="text" id="profileSeed" placeholder="any text" oninput="previewAvatar(this.value)" class="field text-xs mb-3">
+      <p class="text-[10px] text-slate-500 mb-2">Uses DiceBear Bottts style</p>
     </div>
     <div id="avatarUrlBox" class="hidden">
-      <label class="field-label">Image URL (recommended)</label>
+      <label class="field-label">Image URL</label>
       <input type="url" id="profileAvatarUrl" placeholder="https://i.imgur.com/..." oninput="previewFromUrl(this.value)" class="field text-xs mb-3">
-      <p class="text-[10px] text-slate-500 mb-2">Paste any direct image link (imgur, discord CDN, etc.)</p>
-    </div>
-    <div id="avatarUploadBox" class="hidden">
-      <label class="field-label">Upload (requires Firebase Storage rules)</label>
-      <input type="file" id="avatarFileInput" accept="image/*" onchange="handleAvatarUpload(event)" class="field text-xs mb-3">
+      <p class="text-[10px] text-slate-500 mb-2">Paste any direct image link</p>
     </div>
     <div class="space-y-3">
       <div><label class="field-label">Handle</label><input type="text" id="profileHandle" class="field"></div>
@@ -324,6 +311,7 @@
   </div>
 </div>
 
+<!-- JOIN -->
 <div id="modal-joinInvite" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-bch/30 w-full max-w-sm rounded-xl p-6 relative">
     <button onclick="closeModal('joinInvite')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -334,13 +322,28 @@
   </div>
 </div>
 
+<!-- CREATE SERVER – Seed + URL only -->
 <div id="modal-createServer" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-bch/30 w-full max-w-sm rounded-xl p-6 relative">
     <button onclick="closeModal('createServer')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     <h2 class="font-bold text-white mb-4"><i class="fa-solid fa-server text-bch"></i> Create Server</h2>
     <div class="space-y-3">
-      <div><label class="field-label">Icon URL (optional)</label><input type="url" id="newServerIconUrl" class="field text-xs" oninput="previewServerUrl(this.value)"></div>
-      <img id="newServerIconPreview" src="https://api.dicebear.com/7.x/shapes/svg?seed=server" class="w-14 h-14 rounded-2xl object-cover border border-dark-600">
+      <div class="flex items-center gap-3">
+        <img id="newServerIconPreview" src="https://api.dicebear.com/7.x/shapes/svg?seed=server" class="w-14 h-14 rounded-2xl object-cover border border-dark-600">
+        <div class="flex-1">
+          <div class="flex gap-1 mb-2 text-[10px] mono">
+            <button onclick="serverIconMethod('seed')" id="sim-seed" class="px-2 py-0.5 rounded bg-bch/20 text-bch">Seed</button>
+            <button onclick="serverIconMethod('url')" id="sim-url" class="px-2 py-0.5 rounded bg-dark-800 text-slate-400">URL</button>
+          </div>
+          <div id="serverIconSeedBox">
+            <input type="text" id="newServerSeed" placeholder="server seed" oninput="previewServerSeed(this.value)" class="field text-xs">
+          </div>
+          <div id="serverIconUrlBox" class="hidden">
+            <input type="url" id="newServerIconUrl" placeholder="https://..." oninput="previewServerUrl(this.value)" class="field text-xs">
+          </div>
+        </div>
+      </div>
+      <p class="text-[10px] text-slate-500">Server icons use DiceBear <strong>Shapes</strong> style (different from user avatars)</p>
       <div><label class="field-label">Server Name</label><input type="text" id="newServerName" maxlength="40" class="field"></div>
       <div><label class="field-label">Description</label><input type="text" id="newServerDesc" maxlength="80" class="field"></div>
       <button onclick="createServer()" class="w-full py-2.5 btn-primary text-sm">Create & Become Owner</button>
@@ -371,6 +374,7 @@
   </div>
 </div>
 
+<!-- SERVER SETTINGS – Seed + URL only -->
 <div id="modal-serverSettings" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-dark-700 w-full max-w-lg rounded-xl relative flex flex-col max-h-[90vh]">
     <div class="flex items-center justify-between p-5 border-b border-dark-700">
@@ -386,7 +390,25 @@
     </div>
     <div class="flex-1 overflow-y-auto p-5">
       <div id="ssp-overview" class="space-y-4">
-        <div><label class="field-label">Icon URL</label><input type="url" id="ssIconUrl" class="field text-xs mb-2" oninput="previewSsIcon(this.value)"><img id="ssIconPreview" src="https://api.dicebear.com/7.x/shapes/svg?seed=server" class="w-16 h-16 rounded-2xl object-cover border border-dark-600"></div>
+        <div>
+          <label class="field-label">Server Icon</label>
+          <div class="flex items-center gap-3 mb-2">
+            <img id="ssIconPreview" src="https://api.dicebear.com/7.x/shapes/svg?seed=server" class="w-16 h-16 rounded-2xl object-cover border border-dark-600">
+            <div class="flex-1">
+              <div class="flex gap-1 mb-2 text-[10px] mono">
+                <button onclick="ssIconMethod('seed')" id="ssim-seed" class="px-2 py-0.5 rounded bg-bch/20 text-bch">Seed</button>
+                <button onclick="ssIconMethod('url')" id="ssim-url" class="px-2 py-0.5 rounded bg-dark-800 text-slate-400">URL</button>
+              </div>
+              <div id="ssIconSeedBox">
+                <input type="text" id="ssSeed" placeholder="server seed" oninput="previewSsSeed(this.value)" class="field text-xs">
+              </div>
+              <div id="ssIconUrlBox" class="hidden">
+                <input type="url" id="ssIconUrl" placeholder="https://..." oninput="previewSsIcon(this.value)" class="field text-xs">
+              </div>
+            </div>
+          </div>
+          <p class="text-[10px] text-slate-500">Shapes style – looks different from user avatars</p>
+        </div>
         <div><label class="field-label">Name</label><input type="text" id="ssName" class="field"></div>
         <div><label class="field-label">Description</label><input type="text" id="ssDesc" class="field"></div>
         <button onclick="saveServerSettings()" class="py-2 px-4 btn-primary text-xs">Save</button>
@@ -434,6 +456,8 @@
       <button onclick="adminTab('servers')" id="at-servers" class="py-2 px-3 text-xs mono tab-active">Servers</button>
       <button onclick="adminTab('users')" id="at-users" class="py-2 px-3 text-xs mono tab-inactive">Users</button>
       <button onclick="adminTab('blacklist')" id="at-blacklist" class="py-2 px-3 text-xs mono tab-inactive">Blacklist</button>
+      <button onclick="adminTab('gifs')" id="at-gifs" class="py-2 px-3 text-xs mono tab-inactive">GIFs</button>
+      <button onclick="adminTab('bans')" id="at-bans" class="py-2 px-3 text-xs mono tab-inactive">Bans</button>
     </div>
     <div class="flex-1 overflow-y-auto p-5">
       <div id="ap-servers"><div id="adminServerList" class="space-y-2"></div></div>
@@ -441,6 +465,16 @@
       <div id="ap-blacklist" class="hidden space-y-4">
         <div class="flex gap-2"><input type="text" id="blacklistDomainInput" placeholder="example.com" class="field flex-1 text-xs"><button onclick="addBlacklistedDomain()" class="btn-primary px-4 text-xs">Add</button></div>
         <div id="blacklistList" class="space-y-1 max-h-64 overflow-y-auto"></div>
+      </div>
+      <div id="ap-gifs" class="hidden space-y-4">
+        <p class="text-xs text-slate-400">Users paste GIF URLs in chat. You can ban abusive GIF domains or clear a message.</p>
+        <div class="flex gap-2"><input type="text" id="gifDomainInput" placeholder="tenor.com or giphy.com" class="field flex-1 text-xs"><button onclick="addGifDomainBan()" class="btn-primary px-4 text-xs">Ban Domain</button></div>
+        <div id="gifBanList" class="space-y-1 max-h-48 overflow-y-auto"></div>
+      </div>
+      <div id="ap-bans" class="hidden space-y-4">
+        <p class="text-xs text-slate-400">Ban a user by UID or email. Banned users cannot login.</p>
+        <div class="flex gap-2"><input type="text" id="banUidInput" placeholder="user uid or email" class="field flex-1 text-xs"><button onclick="banUser()" class="btn-primary px-4 text-xs">Ban</button></div>
+        <div id="banList" class="space-y-1 max-h-64 overflow-y-auto"></div>
       </div>
     </div>
   </div>
@@ -463,6 +497,10 @@ const ADMIN_EMAIL = 'moddarkrevolt@gmail.com';
 const MAX_SERVERS = 100;
 const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
 
+// Different styles so servers look distinct from user avatars
+const USER_AVATAR_STYLE = 'bottts';      // robots for users
+const SERVER_ICON_STYLE = 'shapes';     // geometric shapes for servers
+
 const app = initializeApp({
   apiKey: "AIzaSyDYXyAmDC_HF4scI21VeLlS4aM2k2RJ1Wc",
   authDomain: "mainframe-e3b13.firebaseapp.com",
@@ -482,6 +520,9 @@ const rand = (n=6) => Math.random().toString(36).slice(2,2+n).toUpperCase();
 const shortTime = ts => ts ? new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
 const safe = (v, f='') => (v===undefined||v===null) ? f : String(v);
 
+function userAvatar(seed){ return `https://api.dicebear.com/7.x/${USER_AVATAR_STYLE}/svg?seed=${encodeURIComponent(seed||'Guest')}`; }
+function serverIcon(seed){ return `https://api.dicebear.com/7.x/${SERVER_ICON_STYLE}/svg?seed=${encodeURIComponent(seed||'server')}`; }
+
 const EMOJI_MAP = {':smile:':'😊',':fire:':'🔥',':heart:':'❤️',':bch:':'💚',':thumbsup:':'👍',':rocket:':'🚀',':star:':'⭐'};
 function parseEmojis(t){ return t.replace(/:[a-z0-9_+-]+:/gi, m => EMOJI_MAP[m.toLowerCase()]||m); }
 
@@ -496,13 +537,14 @@ const S = {
   server:null, channel:null, channelType:'text',
   canManage:false, locked:false, inDMs:false,
   unsubMsgs:null, unsubMembers:null,
-  pendingImage:null, pendingAvatarFile:null, pendingAudio:null,
+  pendingImage:null, pendingImageUrl:null, pendingAudio:null,
   roles:[], membersCache:[], voiceUsers:{},
   friends:[], myServerCount:0,
   dmTarget:null, currentInviteCode:null,
   micMuted:false, deafened:false, camOn:false,
   reactionTarget:null,
-  peers: {}, localStream: null
+  peers: {}, localStream: null,
+  avatarMode: 'seed', serverIconMode: 'seed', ssIconMode: 'seed'
 };
 
 // ========== AUTH ==========
@@ -514,28 +556,35 @@ onAuthStateChanged(auth, async user => {
       if(snap.exists()){
         S.profile = snap.data();
         if(!S.profile.handle) S.profile.handle = user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0]||'User');
-        if(!S.profile.avatar) S.profile.avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`;
+        if(!S.profile.avatar) S.profile.avatar = userAvatar(user.uid);
       } else {
-        S.profile = { uid:user.uid, email:user.email||null, handle: user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0]||'User'), avatar:`https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`, bio:'', status:'', createdAt:Date.now() };
+        S.profile = { uid:user.uid, email:user.email||null, handle: user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0]||'User'), avatar:userAvatar(user.uid), bio:'', status:'', createdAt:Date.now() };
         await setDoc(doc(db,'users',user.uid), S.profile);
       }
-    }catch(e){ S.profile = { uid:user.uid, email:user.email||null, handle: user.isAnonymous?`Anon_${user.uid.slice(0,6)}`:(user.email?.split('@')[0]||'User'), avatar:`https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`, bio:'', status:'' }; }
+    }catch(e){ S.profile = { uid:user.uid, email:user.email||null, handle: user.isAnonymous?`Anon_${user.uid.slice(0,6)}`:(user.email?.split('@')[0]||'User'), avatar:userAvatar(user.uid), bio:'', status:'' }; }
     S.isAdmin = (user.email === ADMIN_EMAIL);
     $('adminBtn').classList.toggle('hidden', !S.isAdmin);
     $('imgUploadBtn').classList.toggle('hidden', user.isAnonymous);
+    $('gifBtn') && $('gifBtn').classList.toggle('hidden', user.isAnonymous);
     $('audioClipBtn').classList.toggle('hidden', user.isAnonymous);
     loadFriends();
   } else {
     S.profile=null; S.isAdmin=false;
     $('adminBtn').classList.add('hidden');
     $('imgUploadBtn').classList.add('hidden');
+    $('gifBtn') && $('gifBtn').classList.add('hidden');
     $('audioClipBtn').classList.add('hidden');
   }
   updateUserUI();
   loadMyServers();
 });
 
-window.doLogin = async e => { e.preventDefault(); clearAuthErr(); const email=$('lEmail').value.trim(), pass=$('lPass').value; try{ await signInWithEmailAndPassword(auth,email,pass); saveRemember(email,pass); closeModal('auth'); }catch(err){ showAuthErr(err.message); } };
+window.doLogin = async e => { e.preventDefault(); clearAuthErr(); const email=$('lEmail').value.trim(), pass=$('lPass').value; try{
+  const ban1 = await getDoc(doc(db,'bannedUsers', email.toLowerCase()));
+  if(ban1.exists()) return showAuthErr('This account is banned');
+  await signInWithEmailAndPassword(auth,email,pass);
+  saveRemember(email,pass); closeModal('auth');
+}catch(err){ showAuthErr(err.message); } };
 window.doRegister = async e => {
   e.preventDefault(); clearAuthErr();
   const handle=$('rHandle').value.trim(), email=$('rEmail').value.trim().toLowerCase(), pass=$('rPass').value;
@@ -543,9 +592,14 @@ window.doRegister = async e => {
   const domain=email.split('@')[1];
   if(domain){ const ban=await getDoc(doc(db,'blacklistedDomains',domain)); if(ban.exists()) return showAuthErr(`@${domain} is blocked`); }
   try{
+    const handleKey = handle.toLowerCase();
+    const taken = await getDoc(doc(db,'usernames', handleKey));
+    if(taken.exists()) return showAuthErr('Handle already taken');
     const cred=await createUserWithEmailAndPassword(auth,email,pass);
-    const profile={uid:cred.user.uid,email,handle,avatar:`https://api.dicebear.com/7.x/bottts/svg?seed=${cred.user.uid}`,bio:'',status:'',createdAt:Date.now()};
-    await setDoc(doc(db,'users',cred.user.uid),profile); S.profile=profile; closeModal('auth');
+    const profile={uid:cred.user.uid,email,handle,avatar:userAvatar(cred.user.uid),bio:'',status:'',createdAt:Date.now()};
+    await setDoc(doc(db,'users',cred.user.uid),profile);
+    await setDoc(doc(db,'usernames', handleKey), { uid:cred.user.uid, handle, updatedAt:Date.now() });
+    S.profile=profile; closeModal('auth');
   }catch(err){ showAuthErr(err.message); }
 };
 window.doAnon = async () => { clearAuthErr(); try{ await signInAnonymously(auth); closeModal('auth'); }catch(err){ showAuthErr(err.message); } };
@@ -565,7 +619,7 @@ window.doSignOut = async () => {
   showChannelsView(); closeModal('profile'); updateUserUI();
 };
 
-// ========== DM HOME (Discord style) ==========
+// ========== DM ==========
 window.openDMs = () => {
   S.inDMs = true; S.server = null; S.channel = null; leaveVoice();
   $('dmHomeBtn').classList.add('dm-active');
@@ -598,29 +652,21 @@ window.filterDMs = (q) => {
 window.promptNewDM = () => {
   const handle = prompt('Enter handle of user to message:');
   if(!handle) return;
-  // simple: search friends first
   const f = S.friends.find(x => x.handle.toLowerCase() === handle.toLowerCase());
   if(f) startDM(f.uid, f.handle, f.avatar);
   else alert('User not in your friends list. Add them first by right-clicking their avatar.');
 };
 
-// ========== AVATAR ==========
+// ========== AVATAR (Seed + URL only) ==========
 window.avatarMethod = (m) => {
-  ['seed','url','upload'].forEach(x => {
+  S.avatarMode = m;
+  ['seed','url'].forEach(x => {
     $(`am-${x}`).className = `px-2 py-1 rounded ${x===m?'bg-bch/20 text-bch':'bg-dark-800 text-slate-400'}`;
     $(`avatar${x.charAt(0).toUpperCase()+x.slice(1)}Box`).classList.toggle('hidden', x!==m);
   });
 };
-window.previewAvatar = seed => { if(S.pendingAvatarFile) return; $('profileAvatarPreview').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed||'Guest')}`; };
+window.previewAvatar = seed => { $('profileAvatarPreview').src = userAvatar(seed||'Guest'); };
 window.previewFromUrl = url => { if(url && url.startsWith('http')) $('profileAvatarPreview').src = url; };
-window.handleAvatarUpload = e => {
-  const f = e.target.files[0]; if(!f) return;
-  if(f.size > 3*1024*1024) return alert('Max 3 MB');
-  S.pendingAvatarFile = f;
-  const reader = new FileReader();
-  reader.onload = ev => { $('profileAvatarPreview').src = ev.target.result; };
-  reader.readAsDataURL(f);
-};
 
 window.saveProfile = async () => {
   if(!S.user) return showProfileMsg('Login required', true);
@@ -628,31 +674,51 @@ window.saveProfile = async () => {
   const bio = $('profileBio').value.trim();
   const status = $('profileStatus').value.trim();
   if(!handle) return showProfileMsg('Handle required', true);
+  if(handle.length < 2 || handle.length > 24) return showProfileMsg('Handle must be 2-24 chars', true);
+  if(!/^[a-zA-Z0-9_]+$/.test(handle)) return showProfileMsg('Handle: letters, numbers, _ only', true);
 
-  let avatar = S.profile.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`;
+  // Username uniqueness – no one can steal your name
+  const handleKey = handle.toLowerCase();
+  try {
+    const taken = await getDoc(doc(db,'usernames', handleKey));
+    if(taken.exists() && taken.data().uid !== S.user.uid){
+      return showProfileMsg('Handle already taken', true);
+    }
+  } catch(e){ console.warn('username check', e); }
+
+  let avatar = S.profile.avatar || userAvatar(S.user.uid);
+  if(S.avatarMode === 'url' && $('profileAvatarUrl').value.trim()){
+    const url = $('profileAvatarUrl').value.trim();
+    if(url.startsWith('http')) avatar = url;
+  } else {
+    const seed = $('profileSeed').value.trim() || S.user.uid;
+    avatar = userAvatar(seed);
+  }
 
   try {
-    // Priority: Upload > URL > Seed
-    if(S.pendingAvatarFile){
-      try {
-        avatar = await uploadImage(S.pendingAvatarFile, `avatars/${S.user.uid}_${Date.now()}`);
-        S.pendingAvatarFile = null;
-      } catch(upErr) {
-        console.warn('Upload failed, falling back', upErr);
-        showProfileMsg('Upload failed – use URL or Seed instead', true);
-        return;
-      }
-    } else if($('profileAvatarUrl') && $('profileAvatarUrl').value.trim()){
-      const url = $('profileAvatarUrl').value.trim();
-      if(url.startsWith('http')) avatar = url;
-    } else {
-      const seed = $('profileSeed').value.trim() || S.user.uid;
-      avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed)}`;
+    // release old username mapping if changed
+    const oldHandle = (S.profile.handle||'').toLowerCase();
+    if(oldHandle && oldHandle !== handleKey){
+      try{ await deleteDoc(doc(db,'usernames', oldHandle)); }catch(e){}
     }
-
+    await setDoc(doc(db,'usernames', handleKey), { uid:S.user.uid, handle, updatedAt:Date.now() });
     await updateDoc(doc(db,'users',S.user.uid), { handle, bio, status, avatar });
     S.profile = { ...S.profile, handle, bio, status, avatar };
+
+    // Propagate new handle + avatar to every server member doc so members list updates
+    try {
+      const serversSnap = await getDocs(collection(db,'servers'));
+      for(const s of serversSnap.docs){
+        const mRef = doc(db,'servers', s.id, 'members', S.user.uid);
+        const mSnap = await getDoc(mRef);
+        if(mSnap.exists()){
+          await updateDoc(mRef, { handle, avatar });
+        }
+      }
+    } catch(propErr){ console.warn('propagate', propErr); }
+
     updateUserUI();
+    if(S.server) listenMembers(S.server.id);
     showProfileMsg('✓ Profile saved', false);
   } catch(err) {
     console.error(err);
@@ -666,23 +732,49 @@ function showProfileMsg(msg, isErr){
   el.classList.remove('hidden');
 }
 
+// ========== SERVER ICON (Seed + URL) ==========
+window.serverIconMethod = (m) => {
+  S.serverIconMode = m;
+  ['seed','url'].forEach(x => {
+    $(`sim-${x}`).className = `px-2 py-0.5 rounded ${x===m?'bg-bch/20 text-bch':'bg-dark-800 text-slate-400'}`;
+    $(`serverIcon${x.charAt(0).toUpperCase()+x.slice(1)}Box`).classList.toggle('hidden', x!==m);
+  });
+};
+window.previewServerSeed = seed => { $('newServerIconPreview').src = serverIcon(seed||'server'); };
+window.previewServerUrl = url => { if(url&&url.startsWith('http')) $('newServerIconPreview').src=url; };
+
+window.ssIconMethod = (m) => {
+  S.ssIconMode = m;
+  ['seed','url'].forEach(x => {
+    $(`ssim-${x}`).className = `px-2 py-0.5 rounded ${x===m?'bg-bch/20 text-bch':'bg-dark-800 text-slate-400'}`;
+    $(`ssIcon${x.charAt(0).toUpperCase()+x.slice(1)}Box`).classList.toggle('hidden', x!==m);
+  });
+};
+window.previewSsSeed = seed => { $('ssIconPreview').src = serverIcon(seed||'server'); };
+window.previewSsIcon = url => { if(url&&url.startsWith('http')) $('ssIconPreview').src=url; };
+
 async function uploadImage(file, path){
   const r = ref(storage, path);
   await uploadBytes(r, file);
   return await getDownloadURL(r);
 }
-window.previewServerUrl = url => { if(url&&url.startsWith('http')) $('newServerIconPreview').src=url; };
-window.previewSsIcon = url => { if(url&&url.startsWith('http')) $('ssIconPreview').src=url; };
-window.triggerImageUpload = () => { if(!S.user||S.user.isAnonymous) return alert('Registered users only'); $('imgFileInput').click(); };
-window.handleImageSelect = e => {
-  const f=e.target.files[0]; if(!f) return;
-  if(f.size>5*1024*1024) return alert('Max 5 MB');
-  S.pendingImage=f;
-  const reader=new FileReader();
-  reader.onload=ev=>{ $('imgPreviewSrc').src=ev.target.result; $('imgPreview').classList.remove('hidden'); };
-  reader.readAsDataURL(f);
+window.triggerImageUpload = () => {
+  if(!S.user||S.user.isAnonymous) return alert('Registered users only');
+  const url = prompt('Paste image URL (must end with .png .jpg .jpeg .webp .gif):');
+  if(!url || !url.startsWith('http')) return;
+  S.pendingImageUrl = url;
+  $('imgPreviewSrc').src = url;
+  $('imgPreview').classList.remove('hidden');
 };
-window.clearImagePreview = () => { S.pendingImage=null; $('imgFileInput').value=''; $('imgPreview').classList.add('hidden'); };
+window.clearImagePreview = () => { S.pendingImageUrl=null; S.pendingImage=null; $('imgPreview').classList.add('hidden'); };
+window.openGifPicker = () => {
+  if(!S.user||S.user.isAnonymous) return alert('Registered users only');
+  const url = prompt('Paste GIF URL (https://... .gif):');
+  if(!url || !url.startsWith('http')) return;
+  S.pendingImageUrl = url;
+  $('imgPreviewSrc').src = url;
+  $('imgPreview').classList.remove('hidden');
+};
 
 // ========== AUDIO CLIPS ==========
 let mediaRecorder = null, audioChunks = [];
@@ -780,12 +872,21 @@ window.createServer = async () => {
   if(!S.profile?.handle){
     S.profile = S.profile || {};
     S.profile.handle = S.user.isAnonymous ? `Anon_${S.user.uid.slice(0,6)}` : (S.user.email?.split('@')[0]||'User');
-    S.profile.avatar = S.profile.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`;
+    S.profile.avatar = S.profile.avatar || userAvatar(S.user.uid);
   }
   const name = $('newServerName').value.trim();
   const desc = $('newServerDesc').value.trim();
-  const iconUrl = $('newServerIconUrl').value.trim() || null;
   if(!name){ $('createServerErr').textContent='Name required'; $('createServerErr').classList.remove('hidden'); return; }
+
+  let iconUrl = null;
+  if(S.serverIconMode === 'url' && $('newServerIconUrl').value.trim()){
+    const url = $('newServerIconUrl').value.trim();
+    if(url.startsWith('http')) iconUrl = url;
+  } else {
+    const seed = $('newServerSeed').value.trim() || name || 'server';
+    iconUrl = serverIcon(seed);
+  }
+
   $('createServerErr').classList.add('hidden');
   try{
     const ref = doc(collection(db,'servers'));
@@ -793,7 +894,7 @@ window.createServer = async () => {
     await setDoc(ref, serverData);
     await setDoc(doc(db,'servers',ref.id,'members',S.user.uid), {
       role:'owner', handle:safe(S.profile.handle,'Owner'),
-      avatar:safe(S.profile.avatar,`https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`),
+      avatar:safe(S.profile.avatar, userAvatar(S.user.uid)),
       uid:S.user.uid, joinedAt:Date.now(), roles:[]
     });
     await setDoc(doc(db,'servers',ref.id,'channels','general'), {name:'general',type:'text',createdAt:Date.now()});
@@ -802,7 +903,7 @@ window.createServer = async () => {
     const code = `HAVOC-${rand()}`;
     await setDoc(doc(db,'invites',code), {code,serverId:ref.id,serverName:name,createdBy:S.user.uid,createdByHandle:safe(S.profile.handle,'Owner'),maxUses:10,uses:0,active:true,createdAt:Date.now()});
     closeModal('createServer');
-    $('newServerName').value=''; $('newServerDesc').value=''; $('newServerIconUrl').value='';
+    $('newServerName').value=''; $('newServerDesc').value=''; $('newServerSeed').value=''; $('newServerIconUrl').value='';
     await loadMyServers();
     await switchServer({id:ref.id, ...serverData});
   }catch(err){ console.error(err); $('createServerErr').textContent=err.message; $('createServerErr').classList.remove('hidden'); }
@@ -918,7 +1019,7 @@ window.openInviteToFriends = async () => {
   else S.friends.forEach(f => {
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
-    row.innerHTML = `<img src="${esc(f.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-7 h-7 rounded-full"><span class="text-xs text-slate-300 flex-1 truncate">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
+    row.innerHTML = `<img src="${esc(f.avatar||userAvatar('x'))}" class="w-7 h-7 rounded-full"><span class="text-xs text-slate-300 flex-1 truncate">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
     el.appendChild(row);
   });
   openModal('inviteFriends');
@@ -996,7 +1097,7 @@ window.joinViaInvite = async () => {
     if(!mSnap.exists()){
       await setDoc(doc(db,'servers',inv.serverId,'members',S.user.uid), {
         role:'member', handle:safe(S.profile?.handle,'Member'),
-        avatar:safe(S.profile?.avatar,`https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`),
+        avatar:safe(S.profile?.avatar, userAvatar(S.user.uid)),
         uid:S.user.uid, joinedAt:Date.now(), roles:[]
       });
       await updateDoc(doc(db,'invites',code), {uses:(inv.uses||0)+1});
@@ -1078,7 +1179,7 @@ function renderMsgs(msgs){
     const div = document.createElement('div');
     div.className = `flex items-start gap-3 hover:bg-dark-800/40 px-2 py-2 rounded-lg group relative ${mentionsMe&&!isServerMuted(S.server?.id,'notif')?'bg-bch/5 border-l-2 border-bch':''}`;
     div.innerHTML = `
-      <img src="${esc(m.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-9 h-9 rounded-full border ${isOwner?'border-carrot/60':'border-dark-600'} shrink-0 cursor-pointer"
+      <img src="${esc(m.avatar||userAvatar('x'))}" class="w-9 h-9 rounded-full border ${isOwner?'border-carrot/60':'border-dark-600'} shrink-0 cursor-pointer"
            oncontextmenu="showUserContext(event,'${esc(m.uid)}','${esc(m.handle)}','${esc(m.avatar||'')}')">
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5">
@@ -1136,7 +1237,7 @@ window.toggleReaction = async (msgId, emoji) => {
 async function actuallySendMessage(content, imageUrl, audioUrl){
   await addDoc(collection(db,'servers',S.server.id,'channels',S.channel,'messages'), {
     uid:S.user.uid, handle:safe(S.profile?.handle,'User'),
-    avatar:safe(S.profile?.avatar,`https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`),
+    avatar:safe(S.profile?.avatar, userAvatar(S.user.uid)),
     content: content||'', imageUrl: imageUrl||null, audioUrl: audioUrl||null,
     reactions: {}, ts: Date.now()
   });
@@ -1145,7 +1246,7 @@ window.sendMsg = async e => {
   e.preventDefault();
   const input = $('chatInput');
   const content = input.value.trim();
-  if((!content && !S.pendingImage && !S.pendingAudio) || !S.user) return;
+  if((!content && !S.pendingImage && !S.pendingImageUrl && !S.pendingAudio) || !S.user) return;
 
   if(S.inDMs && S.dmTarget){
     input.value = '';
@@ -1159,7 +1260,8 @@ window.sendMsg = async e => {
   input.value = '';
   let imageUrl = null;
   try{
-    if(S.pendingImage){ imageUrl = await uploadImage(S.pendingImage, `messages/${S.server.id}/${S.channel}/${Date.now()}`); clearImagePreview(); }
+    if(S.pendingImageUrl){ imageUrl = S.pendingImageUrl; clearImagePreview(); }
+    else if(S.pendingImage){ imageUrl = await uploadImage(S.pendingImage, `messages/${S.server.id}/${S.channel}/${Date.now()}`); clearImagePreview(); }
     await actuallySendMessage(content, imageUrl, null);
   }catch(err){ alert('Send failed: '+err.message); }
 };
@@ -1182,7 +1284,7 @@ function listenMembers(serverId){
         const div = document.createElement('div');
         div.className = 'flex items-center gap-2 px-1.5 py-1.5 rounded hover:bg-dark-800 cursor-pointer';
         div.oncontextmenu = e => { e.preventDefault(); showUserContext(e, m.uid, m.handle, m.avatar); };
-        div.innerHTML = `<img src="${esc(m.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-7 h-7 rounded-full border border-dark-600"><div class="min-w-0"><div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(m.handle||'User')}</div><div class="text-[9px] text-slate-500">${isOwner?'Owner':(m.status||'Member')}</div></div>`;
+        div.innerHTML = `<img src="${esc(m.avatar||userAvatar('x'))}" class="w-7 h-7 rounded-full border border-dark-600"><div class="min-w-0"><div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(m.handle||'User')}</div><div class="text-[9px] text-slate-500">${isOwner?'Owner':(m.status||'Member')}</div></div>`;
         list.appendChild(div);
       });
       $('memberCount').textContent = count;
@@ -1226,7 +1328,7 @@ function renderFriends(){
     div.className = 'dm-item';
     div.dataset.name = (f.handle||'').toLowerCase();
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
-    div.innerHTML = `<img src="${esc(f.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-8 h-8 rounded-full"><span class="text-xs text-slate-300 truncate">${esc(f.handle)}</span>`;
+    div.innerHTML = `<img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full"><span class="text-xs text-slate-300 truncate">${esc(f.handle)}</span>`;
     el.appendChild(div);
   });
 }
@@ -1238,7 +1340,7 @@ function renderDMList(){
     div.className = `dm-item ${S.dmTarget?.uid===f.uid?'active':''}`;
     div.dataset.name = (f.handle||'').toLowerCase();
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
-    div.innerHTML = `<img src="${esc(f.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-8 h-8 rounded-full"><span class="text-xs truncate">${esc(f.handle)}</span>`;
+    div.innerHTML = `<img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full"><span class="text-xs truncate">${esc(f.handle)}</span>`;
     el.appendChild(div);
   });
 }
@@ -1258,10 +1360,9 @@ window.startDM = (uid, handle, avatar) => {
   $('chanHeader').textContent = handle;
   $('chatInput').disabled = false;
   $('chatInput').placeholder = `Message @${handle}`;
-  // show profile panel
   $('membersContent').classList.add('hidden');
   $('dmProfileContent').classList.remove('hidden');
-  $('dmProfileAvatar').src = avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${uid}`;
+  $('dmProfileAvatar').src = avatar || userAvatar(uid);
   $('dmProfileHandle').textContent = handle;
   $('dmProfileStatus').textContent = 'Direct Message';
   loadDms(uid);
@@ -1416,8 +1517,11 @@ window.openModal = id => {
   if(id === 'serverSettings' && S.canManage){
     $('ssName').value = safe(S.server?.name,'');
     $('ssDesc').value = safe(S.server?.desc,'');
-    $('ssIconUrl').value = safe(S.server?.iconUrl,'');
-    $('ssIconPreview').src = S.server?.iconUrl || 'https://api.dicebear.com/7.x/shapes/svg?seed=server';
+    $('ssSeed').value = '';
+    $('ssIconUrl').value = '';
+    $('ssIconPreview').src = S.server?.iconUrl || serverIcon('server');
+    S.ssIconMode = 'seed';
+    ssIconMethod('seed');
     sSettingsTab('overview');
   }
   if(id === 'admin' && S.isAdmin) adminTab('servers');
@@ -1425,12 +1529,21 @@ window.openModal = id => {
     $('profileHandle').value = safe(S.profile.handle,'');
     $('profileBio').value = safe(S.profile.bio,'');
     $('profileStatus').value = safe(S.profile.status,'');
-    $('profileAvatarPreview').src = safe(S.profile.avatar,'https://api.dicebear.com/7.x/bottts/svg?seed=Guest');
-    S.pendingAvatarFile = null;
+    $('profileAvatarPreview').src = safe(S.profile.avatar, userAvatar('Guest'));
+    $('profileSeed').value = '';
+    $('profileAvatarUrl').value = '';
+    S.avatarMode = 'seed';
     avatarMethod('seed');
   }
   if(id === 'auth') loadRemember();
   if(id === 'createServer' && !S.user){ openModal('auth'); return; }
+  if(id === 'createServer'){
+    S.serverIconMode = 'seed';
+    serverIconMethod('seed');
+    $('newServerSeed').value = '';
+    $('newServerIconUrl').value = '';
+    $('newServerIconPreview').src = serverIcon('server');
+  }
   $(`modal-${id}`)?.classList.remove('hidden');
 };
 window.closeModal = id => $(`modal-${id}`)?.classList.add('hidden');
@@ -1448,8 +1561,16 @@ window.sSettingsTab = tab => {
 window.saveServerSettings = async () => {
   if(!S.canManage) return;
   const name = $('ssName').value.trim(), desc = $('ssDesc').value.trim();
-  const iconUrl = $('ssIconUrl').value.trim() || null;
   if(!name) return;
+
+  let iconUrl = S.server?.iconUrl || null;
+  if(S.ssIconMode === 'url' && $('ssIconUrl').value.trim()){
+    const url = $('ssIconUrl').value.trim();
+    if(url.startsWith('http')) iconUrl = url;
+  } else if(S.ssIconMode === 'seed' && $('ssSeed').value.trim()){
+    iconUrl = serverIcon($('ssSeed').value.trim());
+  }
+
   await updateDoc(doc(db,'servers',S.server.id), {name,desc,iconUrl});
   S.server = {...S.server, name, desc, iconUrl};
   $('currentServerName').textContent = name;
@@ -1464,7 +1585,7 @@ async function renderServerMembers(){
     const m = d.data();
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
-    row.innerHTML = `<img src="${esc(m.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-7 h-7 rounded-full border border-dark-600"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-slate-200 truncate">${esc(m.handle||'User')}</div><div class="text-[10px] text-slate-500 mono">${esc(m.role||'member')}</div></div>${m.role!=='owner'?`<button onclick="kickMember('${esc(m.uid)}','${esc(m.handle)}')" class="text-amber-500 text-xs"><i class="fa-solid fa-right-from-bracket"></i></button>`:'<span class="badge-owner">OWNER</span>'}`;
+    row.innerHTML = `<img src="${esc(m.avatar||userAvatar('x'))}" class="w-7 h-7 rounded-full border border-dark-600"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-slate-200 truncate">${esc(m.handle||'User')}</div><div class="text-[10px] text-slate-500 mono">${esc(m.role||'member')}</div></div>${m.role!=='owner'?`<button onclick="kickMember('${esc(m.uid)}','${esc(m.handle)}')" class="text-amber-500 text-xs"><i class="fa-solid fa-right-from-bracket"></i></button>`:'<span class="badge-owner">OWNER</span>'}`;
     el.appendChild(row);
   });
 }
@@ -1511,7 +1632,7 @@ window.deleteServer = async () => {
   await loadMyServers();
 };
 window.adminTab = tab => {
-  ['servers','users','blacklist'].forEach(t => {
+  ['servers','users','blacklist','gifs','bans'].forEach(t => {
     $(`ap-${t}`)?.classList.add('hidden');
     $(`at-${t}`)?.classList.remove('tab-active'); $(`at-${t}`)?.classList.add('tab-inactive');
   });
@@ -1520,7 +1641,45 @@ window.adminTab = tab => {
   if(tab === 'servers') loadAdminServers();
   if(tab === 'users') loadAdminUsers();
   if(tab === 'blacklist') loadBlacklist();
+  if(tab === 'gifs') loadGifBans();
+  if(tab === 'bans') loadBans();
 };
+window.addGifDomainBan = async () => {
+  let d = ($('gifDomainInput').value||'').trim().toLowerCase().replace(/^https?:\/\//,'').split('/')[0];
+  if(!d) return;
+  await setDoc(doc(db,'gifBannedDomains', d), { domain:d, addedBy:S.user.uid, addedAt:Date.now() });
+  $('gifDomainInput').value=''; loadGifBans();
+};
+window.loadGifBans = async () => {
+  const snap = await getDocs(collection(db,'gifBannedDomains'));
+  const el = $('gifBanList'); el.innerHTML='';
+  if(snap.empty){ el.innerHTML='<p class="text-xs text-slate-500 mono">No GIF domains banned.</p>'; return; }
+  snap.forEach(d=>{
+    const row=document.createElement('div');
+    row.className='flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2';
+    row.innerHTML=`<span class="mono text-carrot text-xs flex-1">${esc(d.id)}</span><button onclick="removeGifDomain('${esc(d.id)}')" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>`;
+    el.appendChild(row);
+  });
+};
+window.removeGifDomain = async d => { if(!confirm('Unban '+d+'?')) return; await deleteDoc(doc(db,'gifBannedDomains',d)); loadGifBans(); };
+window.banUser = async () => {
+  const key = ($('banUidInput').value||'').trim();
+  if(!key) return;
+  await setDoc(doc(db,'bannedUsers', key), { key, bannedBy:S.user.uid, bannedAt:Date.now() });
+  $('banUidInput').value=''; loadBans();
+};
+window.loadBans = async () => {
+  const snap = await getDocs(collection(db,'bannedUsers'));
+  const el = $('banList'); el.innerHTML='';
+  if(snap.empty){ el.innerHTML='<p class="text-xs text-slate-500 mono">No banned users.</p>'; return; }
+  snap.forEach(d=>{
+    const row=document.createElement('div');
+    row.className='flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2';
+    row.innerHTML=`<span class="mono text-red-400 text-xs flex-1">${esc(d.id)}</span><button onclick="unbanUser('${esc(d.id)}')" class="text-bch text-xs">Unban</button>`;
+    el.appendChild(row);
+  });
+};
+window.unbanUser = async id => { if(!confirm('Unban?')) return; await deleteDoc(doc(db,'bannedUsers',id)); loadBans(); };
 window.loadAdminServers = async () => {
   const snap = await getDocs(collection(db,'servers'));
   const el = $('adminServerList'); el.innerHTML = '';
@@ -1540,7 +1699,7 @@ window.loadAdminUsers = async () => {
     const u = d.data();
     const row = document.createElement('div');
     row.className = 'flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-3 py-2';
-    row.innerHTML = `<img src="${esc(u.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-8 h-8 rounded-full border border-dark-700"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-white">${esc(u.handle||'User')} <span class="text-slate-500 font-normal">${esc(u.email||'')}</span></div></div>${u.email===ADMIN_EMAIL?'<span class="badge-admin">ADMIN</span>':''}`;
+    row.innerHTML = `<img src="${esc(u.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full border border-dark-700"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-white">${esc(u.handle||'User')} <span class="text-slate-500 font-normal">${esc(u.email||'')}</span></div></div>${u.email===ADMIN_EMAIL?'<span class="badge-admin">ADMIN</span>':''}`;
     el.appendChild(row);
   });
 };
@@ -1571,12 +1730,12 @@ function updateUserUI(){
   if(S.user && S.profile){
     $('ucHandle').textContent = safe(S.profile.handle,'User');
     $('ucRole').textContent = S.isAdmin ? '⚡ ADMIN' : (S.user.isAnonymous ? 'Anonymous' : (S.profile.status || 'Signed in'));
-    $('ucAvatar').src = safe(S.profile.avatar, 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest');
+    $('ucAvatar').src = safe(S.profile.avatar, userAvatar('Guest'));
     logoutBtn.classList.remove('hidden');
     bar.innerHTML = `<div class="flex items-center gap-2"><img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-bch/40"><span class="font-bold text-slate-200 mono text-xs">${esc(S.profile.handle)}</span>${S.isAdmin?'<span class="badge-admin">ADMIN</span>':''}<button onclick="doSignOut()" class="text-slate-400 hover:text-red-400 ml-1" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button></div>`;
   } else {
     $('ucHandle').textContent = 'Guest'; $('ucRole').textContent = 'Not signed in';
-    $('ucAvatar').src = 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest';
+    $('ucAvatar').src = userAvatar('Guest');
     logoutBtn.classList.add('hidden');
     bar.innerHTML = `<button onclick="openModal('auth')" class="btn-primary px-3 py-1.5 text-xs">Login / Register</button>`;
   }
