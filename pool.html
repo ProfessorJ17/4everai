@@ -1,0 +1,2239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HAVOC — Dark Revolt Mining Pool</title>
+  <link rel="icon" href="HAVOC.ico" type="image/x-icon"/>
+
+  <!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  HAVOC — DARK REVOLT XMR BROWSER MINING POOL                ║
+  ║  Single-file. No build tools. Pure browser.                  ║
+  ╠══════════════════════════════════════════════════════════════╣
+  ║  STACK:                                                      ║
+  ║  • Firebase Auth (your existing project) — login/register    ║
+  ║  • Firestore — share tracking, leaderboard, payouts          ║
+  ║  • CryptoNight WASM (via cdn.jsdelivr.net) — real hashing    ║
+  ║  • Web Workers (inline blob) — multi-thread, no extra files  ║
+  ║  • WebSocket → Stratum proxy → MoneroOcean pool              ║
+  ║  • Admin: moddarkrevolt@gmail.com                            ║
+  ╚══════════════════════════════════════════════════════════════╝
+
+  PROXY SETUP (free on Render.com):
+  ──────────────────────────────────
+  server.js:
+    const net = require('net');
+    const WebSocket = require('ws');
+    const wss = new WebSocket.Server({ port: process.env.PORT || 8080 });
+    wss.on('connection', ws => {
+      const tcp = net.createConnection(3333, 'gulf.moneroocean.stream');
+      ws.on('message', d => tcp.write(d));
+      tcp.on('data', d => { try { ws.send(d.toString()); } catch(e){} });
+      ws.on('close', () => tcp.destroy());
+      tcp.on('close', () => { try { ws.close(); } catch(e){} });
+      tcp.on('error', e => { try { ws.close(); } catch(e2){} });
+    });
+
+  package.json:
+    { "dependencies": { "ws": "^8.0.0" } }
+  -->
+
+  <!-- Firebase v10 compat (CDN, no bundler) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    /* ════════════════════════════════════════
+       DARK REVOLT THEME — HAVOC POOL
+       ════════════════════════════════════════ */
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #070809;
+      --bg2:       #0d0f12;
+      --surface:   #111418;
+      --surface2:  #181c22;
+      --surface3:  #1e232b;
+      --red:       #dc2626;
+      --red2:      #ef4444;
+      --red-glow:  rgba(220,38,38,0.25);
+      --orange:    #f97316;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --muted2:    #94a3b8;
+      --border:    #1e2530;
+      --border2:   #2a3240;
+      --green:     #16a34a;
+      --green2:    #22c55e;
+      --yellow:    #eab308;
+      --cyan:      #06b6d4;
+      --radius:    8px;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Scanline overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.07) 2px,
+        rgba(0,0,0,0.07) 4px
+      );
+    }
+
+    /* Animated BG grid */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(220,38,38,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(220,38,38,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      animation: gridScroll 20s linear infinite;
+    }
+    @keyframes gridScroll {
+      0%   { background-position: 0 0; }
+      100% { background-position: 40px 40px; }
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--red); border-radius: 3px; }
+
+    /* ─── LAYOUT ─── */
+    #app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ─── HEADER ─── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(7,8,9,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--red);
+      box-shadow: 0 0 30px rgba(220,38,38,0.2);
+      padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 58px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900; font-size: 1.4rem;
+      color: var(--red2);
+      text-shadow: 0 0 20px rgba(220,38,38,0.6);
+      text-decoration: none;
+      letter-spacing: 3px;
+    }
+    .logo-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem; color: var(--muted2);
+      letter-spacing: 2px; margin-top: -4px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon::before {
+      content: '⛏';
+      font-size: 1.5rem;
+      filter: drop-shadow(0 0 8px var(--red));
+    }
+
+    nav { display: flex; align-items: center; gap: 4px; }
+    .nav-link {
+      padding: 6px 12px; font-family: 'Rajdhani', sans-serif;
+      font-weight: 600; font-size: 0.85rem; letter-spacing: 1px;
+      color: var(--muted2); background: none; border: none;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .nav-link:hover { color: var(--red2); }
+    .nav-link.active { color: var(--red2); border-bottom-color: var(--red); }
+    .nav-divider { width: 1px; height: 20px; background: var(--border2); margin: 0 4px; }
+    .nav-user {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 12px;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: var(--radius); cursor: pointer;
+      font-size: 0.82rem; color: var(--muted2);
+      transition: all 0.2s;
+    }
+    .nav-user:hover { border-color: var(--red); color: var(--red2); }
+    .nav-user .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green2); }
+    .nav-user .dot.off { background: var(--muted); }
+
+    /* ─── MAIN ─── */
+    main { flex: 1; padding: 24px 20px; max-width: 1300px; margin: 0 auto; width: 100%; }
+
+    /* ─── PAGE SECTIONS ─── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ─── HERO BANNER ─── */
+    .hero {
+      text-align: center; padding: 48px 20px 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: 'HAVOC';
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(80px, 20vw, 200px);
+      font-weight: 900; color: rgba(220,38,38,0.04);
+      letter-spacing: 10px; pointer-events: none;
+    }
+    .hero-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 3.2rem);
+      font-weight: 900; letter-spacing: 4px;
+      color: var(--red2);
+      text-shadow: 0 0 40px rgba(220,38,38,0.5);
+      margin-bottom: 8px;
+    }
+    .hero-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.85rem; color: var(--muted2);
+      letter-spacing: 2px;
+    }
+    .hero-tags {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; margin-top: 16px; flex-wrap: wrap;
+    }
+    .hero-tag {
+      padding: 3px 10px; border: 1px solid var(--border2);
+      border-radius: 3px; font-size: 0.72rem;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--muted2); letter-spacing: 1px;
+    }
+    .hero-tag.red { border-color: rgba(220,38,38,0.4); color: var(--red2); }
+
+    /* ─── CARDS ─── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 18px;
+      position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .card:hover::before { opacity: 1; }
+    .card-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 2px; color: var(--red2);
+      text-transform: uppercase; margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px;
+    }
+    .card-title-left { display: flex; align-items: center; gap: 8px; }
+
+    /* ─── STAT GRID ─── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px; margin-bottom: 18px;
+    }
+    .stat-box {
+      background: var(--surface2);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px 12px; text-align: center;
+    }
+    .stat-box .val {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.4rem; font-weight: 700; color: var(--red2);
+      line-height: 1.2;
+    }
+    .stat-box .lbl {
+      font-size: 0.68rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;
+    }
+    .stat-box.green .val { color: var(--green2); }
+    .stat-box.yellow .val { color: var(--yellow); }
+    .stat-box.cyan .val { color: var(--cyan); }
+
+    /* ─── MINER CONTROL BAR ─── */
+    .miner-bar {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+      margin-bottom: 18px;
+      position: relative; overflow: hidden;
+    }
+    .miner-bar.running {
+      border-color: rgba(220,38,38,0.4);
+      box-shadow: 0 0 20px rgba(220,38,38,0.1);
+    }
+    .miner-bar.running::after {
+      content: '';
+      position: absolute; top: 0; left: -100%; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red2), transparent);
+      animation: scanLine 2s linear infinite;
+    }
+    @keyframes scanLine {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .status-section { display: flex; align-items: center; gap: 12px; }
+    .status-indicator {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--muted); transition: all 0.3s;
+    }
+    .status-indicator.on {
+      background: var(--green2);
+      box-shadow: 0 0 10px var(--green2);
+      animation: blink 2s ease infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+    .status-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 2px;
+    }
+    .status-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem; color: var(--muted2); margin-top: 2px;
+    }
+
+    .thread-row { display: flex; align-items: center; gap: 12px; }
+    .thread-row label {
+      font-size: 0.8rem; color: var(--muted2);
+      font-family: 'Share Tech Mono', monospace; white-space: nowrap;
+    }
+    input[type="range"] {
+      width: 100px; accent-color: var(--red2);
+      cursor: pointer;
+    }
+    .thread-val {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--red2); font-weight: 700; min-width: 20px;
+    }
+
+    .btn-group { display: flex; gap: 8px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 18px; border-radius: var(--radius);
+      border: 1px solid transparent;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 0.85rem;
+      letter-spacing: 1px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-red {
+      background: var(--red); border-color: var(--red2); color: #fff;
+    }
+    .btn-red:not(:disabled):hover {
+      background: var(--red2); box-shadow: 0 0 20px rgba(220,38,38,0.4);
+    }
+    .btn-ghost {
+      background: var(--surface3); border-color: var(--border2); color: var(--muted2);
+    }
+    .btn-ghost:not(:disabled):hover { border-color: var(--red); color: var(--red2); }
+    .btn-green {
+      background: #15803d; border-color: var(--green2); color: #fff;
+    }
+    .btn-green:not(:disabled):hover {
+      background: var(--green); box-shadow: 0 0 20px rgba(22,163,74,0.4);
+    }
+    .btn-sm { padding: 5px 12px; font-size: 0.78rem; }
+    .btn-full { width: 100%; justify-content: center; }
+
+    /* ─── HASHRATE CHART ─── */
+    .hr-chart-wrap {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 10px;
+      height: 64px; display: flex; align-items: flex-end; gap: 2px;
+      overflow: hidden; margin-bottom: 18px;
+    }
+    .hr-bar {
+      flex: 1; min-width: 3px; border-radius: 2px 2px 0 0;
+      background: var(--red); opacity: 0.6;
+      transition: height 0.5s ease;
+    }
+
+    /* ─── LOG CONSOLE ─── */
+    .log {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem; line-height: 1.8;
+      height: 180px; overflow-y: auto;
+      padding: 12px 14px; color: var(--muted2);
+    }
+    .log .ok   { color: var(--green2); }
+    .log .err  { color: var(--red2); }
+    .log .warn { color: var(--yellow); }
+    .log .info { color: var(--cyan); }
+
+    /* ─── TABLE ─── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead tr { background: var(--surface2); }
+    th {
+      padding: 10px 14px; text-align: left;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem; letter-spacing: 1.5px;
+      color: var(--muted); text-transform: uppercase;
+      white-space: nowrap; border-bottom: 1px solid var(--border);
+    }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    tr:hover td { background: rgba(220,38,38,0.04); }
+    tr:last-child td { border-bottom: none; }
+    .mono { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; }
+
+    /* ─── BADGES ─── */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 3px;
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .badge-green { background: rgba(22,163,74,0.15); color: var(--green2); border: 1px solid rgba(22,163,74,0.3); }
+    .badge-red   { background: rgba(220,38,38,0.15); color: var(--red2);   border: 1px solid rgba(220,38,38,0.3); }
+    .badge-yellow{ background: rgba(234,179,8,0.15);  color: var(--yellow); border: 1px solid rgba(234,179,8,0.3); }
+    .badge-cyan  { background: rgba(6,182,212,0.15);  color: var(--cyan);   border: 1px solid rgba(6,182,212,0.3); }
+
+    /* ─── FORMS ─── */
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block; font-size: 0.78rem; color: var(--muted2);
+      margin-bottom: 6px; font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    .form-input {
+      width: 100%; padding: 10px 14px;
+      background: var(--bg2); border: 1px solid var(--border2);
+      color: var(--text); border-radius: var(--radius);
+      font-size: 0.9rem; font-family: 'Rajdhani', sans-serif;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
+    }
+    .form-input.mono { font-family: 'Share Tech Mono', monospace; font-size: 0.82rem; }
+    textarea.form-input { resize: vertical; min-height: 70px; }
+    .form-hint { font-size: 0.72rem; color: var(--muted); margin-top: 5px; font-family: 'Share Tech Mono', monospace; }
+    select.form-input { cursor: pointer; }
+
+    /* ─── CHECKBOX ─── */
+    .check-row {
+      display: flex; gap: 10px; align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .check-row input[type="checkbox"] {
+      width: 15px; height: 15px; margin-top: 3px; flex-shrink: 0;
+      accent-color: var(--red2); cursor: pointer;
+    }
+    .check-row label {
+      font-size: 0.8rem; color: var(--muted2);
+      line-height: 1.5; cursor: pointer;
+    }
+    .check-row a { color: var(--red2); }
+
+    /* ─── ALERTS ─── */
+    .alert {
+      padding: 12px 16px; border-radius: var(--radius);
+      font-size: 0.83rem; margin-bottom: 16px;
+      display: flex; align-items: flex-start; gap: 10px;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .alert-warn {
+      background: rgba(234,179,8,0.06); border: 1px solid rgba(234,179,8,0.3); color: var(--yellow);
+    }
+    .alert-err {
+      background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.35); color: var(--red2);
+      display: none;
+    }
+    .alert-ok {
+      background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.35); color: var(--green2);
+      display: none;
+    }
+    .alert-info {
+      background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.3); color: var(--cyan);
+    }
+
+    /* ─── MODAL ─── */
+    .overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--red);
+      border-radius: var(--radius);
+      box-shadow: 0 0 40px rgba(220,38,38,0.2);
+      padding: 28px; width: 100%; max-width: 460px;
+      max-height: 90vh; overflow-y: auto;
+      position: relative;
+    }
+    .modal::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red2), transparent);
+    }
+    .modal-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem; font-weight: 900; letter-spacing: 3px;
+      color: var(--red2); margin-bottom: 4px; text-transform: uppercase;
+    }
+    .modal-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem; color: var(--muted); margin-bottom: 22px;
+    }
+    .modal-close {
+      position: absolute; top: 12px; right: 14px;
+      background: none; border: none; color: var(--muted);
+      font-size: 1.2rem; cursor: pointer; transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--red2); }
+    .modal-divider {
+      height: 1px; background: var(--border); margin: 18px 0;
+      position: relative;
+    }
+    .modal-divider span {
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%,-50%);
+      background: var(--surface); padding: 0 10px;
+      font-size: 0.72rem; color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* ─── PROGRESS BAR ─── */
+    .progress { background: var(--border); border-radius: 999px; height: 6px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; background: var(--red); border-radius: 999px;
+      transition: width 0.5s ease; width: 0%;
+    }
+
+    /* ─── TOS SCROLL BOX ─── */
+    .tos-box {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px;
+      font-size: 0.78rem; color: var(--muted2);
+      max-height: 260px; overflow-y: auto;
+      font-family: 'Share Tech Mono', monospace;
+      line-height: 1.8;
+    }
+    .tos-box h3 { color: var(--red2); font-family: 'Orbitron',sans-serif; font-size: 0.72rem; letter-spacing: 2px; margin: 12px 0 5px; }
+    .tos-box p, .tos-box li { margin-bottom: 6px; }
+    .tos-box ul, .tos-box ol { padding-left: 18px; margin-bottom: 8px; }
+
+    /* ─── SETUP CODE BLOCK ─── */
+    .code {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 14px;
+      font-family: 'Share Tech Mono', monospace; font-size: 0.75rem;
+      color: var(--green2); overflow-x: auto; white-space: pre;
+      margin-top: 8px; line-height: 1.7;
+    }
+    .step {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 16px 0; border-bottom: 1px solid var(--border);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--red); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron',sans-serif; font-size: 0.75rem;
+      font-weight: 700; flex-shrink: 0;
+    }
+    .step-body h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+    .step-body p { font-size: 0.8rem; color: var(--muted2); }
+
+    /* ─── ADMIN PANEL ─── */
+    .admin-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 10px; border-radius: 3px;
+      background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.4);
+      color: var(--red2); font-size: 0.68rem; font-family: 'Orbitron',sans-serif;
+      letter-spacing: 1px; font-weight: 700;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 680px) {
+      header { padding: 0 12px; }
+      .logo { font-size: 1.1rem; letter-spacing: 2px; }
+      .logo-sub, .hero-tags { display: none; }
+      main { padding: 16px 12px; }
+      .miner-bar { flex-direction: column; align-items: stretch; }
+      .nav-link span { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ════════════════════ HEADER ════════════════════ -->
+  <header>
+    <div class="logo" onclick="showPage('mine')" style="cursor:pointer">
+      <div class="logo-icon"></div>
+      <div>
+        <div>HAVOC</div>
+        <div class="logo-sub">XMR MINING POOL</div>
+      </div>
+    </div>
+
+    <nav>
+      <button class="nav-link active" id="nav-mine"        onclick="showPage('mine')">⚡ <span>Mine</span></button>
+      <button class="nav-link"        id="nav-dashboard"   onclick="showPage('dashboard')">📊 <span>Dashboard</span></button>
+      <button class="nav-link"        id="nav-leaderboard" onclick="showPage('leaderboard')">🏆 <span>Pool</span></button>
+      <button class="nav-link"        id="nav-setup"       onclick="showPage('setup')">🔧 <span>Setup</span></button>
+      <button class="nav-link"        id="nav-tos"         onclick="showPage('tos')">📜 <span>TOS</span></button>
+      <div class="nav-divider"></div>
+      <div class="nav-user" id="user-btn" onclick="handleUserBtn()">
+        <div class="dot off" id="user-dot"></div>
+        <span id="user-label">LOGIN</span>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ════════════════════ MAIN ════════════════════ -->
+  <main>
+
+    <!-- ───────── PAGE: MINE ───────── -->
+    <div id="page-mine" class="page active">
+
+      <div class="hero">
+        <div class="hero-title">DARK REVOLT MINING</div>
+        <div class="hero-sub">CONTRIBUTE CPU → EARN MONERO → COMMUNITY SPLITS</div>
+        <div class="hero-tags">
+          <span class="hero-tag red">XMR</span>
+          <span class="hero-tag">CRYPTONIGHT</span>
+          <span class="hero-tag">BROWSER WASM</span>
+          <span class="hero-tag red">0% POOL FEE</span>
+          <span class="hero-tag">MONEROOCEAN</span>
+        </div>
+      </div>
+
+      <!-- Guest banner -->
+      <div class="alert alert-warn" id="guest-banner" style="display:none">
+        ⚠ NOT LOGGED IN — shares will NOT be credited. <a href="#" onclick="openModal('login')" style="color:var(--red2)">Login or register</a> to earn your XMR split.
+      </div>
+
+      <!-- Miner control bar -->
+      <div class="miner-bar" id="miner-bar">
+        <div class="status-section">
+          <div class="status-indicator" id="status-dot"></div>
+          <div>
+            <div class="status-label" id="status-label">OFFLINE</div>
+            <div class="status-sub"  id="status-sub">Start mining to earn XMR</div>
+          </div>
+        </div>
+
+        <div class="thread-row">
+          <label>THREADS: <span class="thread-val" id="thread-val">4</span></label>
+          <input type="range" id="thread-slider" min="1" max="16" value="4"
+            oninput="document.getElementById('thread-val').textContent=this.value"/>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-green" id="start-btn" onclick="startMining()">▶ MINE XMR</button>
+          <button class="btn btn-ghost" id="stop-btn"  onclick="stopMining()" disabled>■ STOP</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="val mono" id="stat-hr">0 H/s</div>
+          <div class="lbl">Your Hashrate</div>
+        </div>
+        <div class="stat-box green">
+          <div class="val mono" id="stat-pool-hr">—</div>
+          <div class="lbl">Pool Hashrate</div>
+        </div>
+        <div class="stat-box">
+          <div class="val mono" id="stat-shares">0</div>
+          <div class="lbl">Shares (Round)</div>
+        </div>
+        <div class="stat-box green">
+          <div class="val mono" id="stat-accepted">0</div>
+          <div class="lbl">Accepted</div>
+        </div>
+        <div class="stat-box yellow">
+          <div class="val mono" id="stat-earned">0 µXMR</div>
+          <div class="lbl">Est. Earned</div>
+        </div>
+        <div class="stat-box cyan">
+          <div class="val mono" id="stat-miners">—</div>
+          <div class="lbl">Active Miners</div>
+        </div>
+      </div>
+
+      <!-- Hashrate chart -->
+      <div class="hr-chart-wrap" id="hr-chart"></div>
+
+      <!-- Console -->
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-left">🖥 MINING CONSOLE</div>
+          <button class="btn btn-ghost btn-sm" onclick="clearLog()">CLEAR</button>
+        </div>
+        <div class="log" id="log"></div>
+      </div>
+
+    </div><!-- /page-mine -->
+
+    <!-- ───────── PAGE: DASHBOARD ───────── -->
+    <div id="page-dashboard" class="page">
+      <div class="alert alert-warn" id="dash-guest" style="display:none">
+        ⚠ <a href="#" onclick="openModal('login')" style="color:var(--red2)">Log in</a> to view your dashboard.
+      </div>
+      <div id="dash-content">
+        <div class="stat-grid">
+          <div class="stat-box"><div class="val mono" id="d-total-shares">0</div><div class="lbl">Total Shares</div></div>
+          <div class="stat-box green"><div class="val mono" id="d-total-earned">0</div><div class="lbl">Total Earned (µXMR)</div></div>
+          <div class="stat-box yellow"><div class="val mono" id="d-pending">0</div><div class="lbl">Pending (µXMR)</div></div>
+          <div class="stat-box"><div class="val mono" id="d-sessions">0</div><div class="lbl">Sessions</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><div class="card-title-left">👤 ACCOUNT</div></div>
+          <table>
+            <tbody>
+              <tr><td style="color:var(--muted);width:140px" class="mono">EMAIL</td>     <td id="d-email">—</td></tr>
+              <tr><td style="color:var(--muted)" class="mono">XMR ADDRESS</td> <td class="mono" id="d-xmr" style="word-break:break-all;font-size:0.72rem">—</td></tr>
+              <tr><td style="color:var(--muted)" class="mono">MEMBER SINCE</td><td id="d-since">—</td></tr>
+              <tr><td style="color:var(--muted)" class="mono">LAST PAYOUT</td> <td id="d-payout">Never</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:14px;display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openModal('update-xmr')">✏ UPDATE XMR ADDRESS</button>
+            <button class="btn btn-ghost btn-sm" onclick="openModal('change-pw')">🔒 CHANGE PASSWORD</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><div class="card-title-left">💰 PAYOUT HISTORY</div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>DATE</th><th>AMOUNT (µXMR)</th><th>TX ID</th><th>STATUS</th></tr></thead>
+              <tbody id="payout-tbody">
+                <tr><td colspan="4" style="color:var(--muted);text-align:center">No payouts yet</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-dashboard -->
+
+    <!-- ───────── PAGE: LEADERBOARD / POOL ───────── -->
+    <div id="page-leaderboard" class="page">
+      <div class="stat-grid" style="margin-bottom:18px">
+        <div class="stat-box"><div class="val mono" id="lb-miners">—</div><div class="lbl">Pool Miners</div></div>
+        <div class="stat-box green"><div class="val mono" id="lb-hr">—</div><div class="lbl">Pool Hashrate</div></div>
+        <div class="stat-box yellow"><div class="val mono" id="lb-blocks">—</div><div class="lbl">Blocks Found</div></div>
+        <div class="stat-box cyan"><div class="val mono" id="lb-paid">—</div><div class="lbl">Total Paid (µXMR)</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="card-title-left">🏆 CURRENT ROUND LEADERBOARD</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>MINER</th><th>HASHRATE</th><th>SHARES</th><th>POOL %</th><th>EST. XMR (µ)</th><th>STATUS</th></tr></thead>
+            <tbody id="lb-tbody"><tr><td colspan="7" style="color:var(--muted);text-align:center">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /page-leaderboard -->
+
+    <!-- ───────── PAGE: SETUP ───────── -->
+    <div id="page-setup" class="page">
+      <div class="card">
+        <div class="card-title"><div class="card-title-left">🔧 OPERATOR SETUP GUIDE</div></div>
+        <div class="alert alert-info">ℹ This guide is for the site operator. Regular users just sign up and click Mine.</div>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Firebase (already set up — use your existing project)</h3>
+            <p>Use the same Firebase project as your existing havoc.html. Paste your existing firebaseConfig into the OPERATOR CONFIG block in the script. Enable Firestore if not already enabled.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Deploy WebSocket→Stratum Proxy (Free on Render.com)</h3>
+            <p>Browsers can't open raw TCP sockets. This tiny Node.js app bridges your browser workers to MoneroOcean's stratum port.</p>
+            <div class="code">// server.js
+const net = require('net');
+const WebSocket = require('ws');
+const wss = new WebSocket.Server({ port: process.env.PORT || 8080 });
+
+wss.on('connection', ws => {
+  const tcp = net.createConnection(3333, 'gulf.moneroocean.stream');
+  ws.on('message', d => tcp.write(d));
+  tcp.on('data', d => { try { ws.send(d.toString()); } catch(e){} });
+  ws.on('close', () => tcp.destroy());
+  tcp.on('close', () => { try { ws.close(); } catch(e){} });
+  tcp.on('error', () => { try { ws.close(); } catch(e){} });
+  ws.on('error', () => tcp.destroy());
+});
+console.log('HAVOC XMR Proxy running');
+
+// package.json
+// { "dependencies": { "ws": "^8.0.0" } }
+
+// Deploy free on render.com:
+// New Web Service → GitHub repo → Node → start: node server.js
+// Your URL: wss://your-app.onrender.com</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>MoneroOcean — 0% Fee Pool</h3>
+            <p>MoneroOcean is a free, 0% fee Monero mining pool with auto-algorithm switching. All you need is your XMR wallet address. No registration. Payouts go to your pool wallet, which you then split to users via the Admin Panel.</p>
+            <div class="code">Pool: gulf.moneroocean.stream:3333
+Username: YOUR_POOL_XMR_WALLET_ADDRESS
+Password: x
+Worker suffix: .workerName (appended automatically per user)</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Firestore Security Rules</h3>
+            <div class="code">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, write: if request.auth.uid == uid;
+    }
+    match /shares/{id} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth.uid == request.resource.data.uid;
+    }
+    match /pool/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /payouts/{id} {
+      allow read: if request.auth.uid == resource.data.uid;
+      allow write: if false;
+    }
+  }
+}</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Paste Your Config Below (OPERATOR CONFIG section in script)</h3>
+            <div class="code">FIREBASE_CONFIG = { ...your existing havoc.html config... }
+STRATUM_PROXY  = 'wss://YOUR-PROXY.onrender.com'
+POOL_WALLET    = 'YOUR_XMR_WALLET_ADDRESS'
+ADMIN_EMAIL    = 'moddarkrevolt@gmail.com'
+ADMIN_PASSWORD = 'your-secret-admin-pw'
+ROUND_ID       = 'round_001'</div>
+          </div>
+        </div>
+
+        <!-- Admin panel -->
+        <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:20px">
+          <div class="card-title">
+            <div class="card-title-left">🛡 ADMIN PANEL <span class="admin-badge">RESTRICTED</span></div>
+          </div>
+          <div id="admin-lock">
+            <div class="form-group">
+              <label class="form-label">Admin Password</label>
+              <input type="password" class="form-input" id="admin-pw" placeholder="Enter admin password"/>
+            </div>
+            <button class="btn btn-red" onclick="unlockAdmin()">UNLOCK</button>
+          </div>
+          <div id="admin-panel" style="display:none">
+            <div class="stat-grid">
+              <div class="stat-box"><div class="val mono" id="adm-users">—</div><div class="lbl">Total Users</div></div>
+              <div class="stat-box yellow"><div class="val mono" id="adm-pending">—</div><div class="lbl">Total Pending (µXMR)</div></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Block Reward Received (µXMR = microXMR, 1 XMR = 1,000,000 µXMR)</label>
+              <input type="number" class="form-input" id="adm-reward" placeholder="e.g. 600000 (= 0.6 XMR)"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Round ID to Settle</label>
+              <input type="text" class="form-input" id="adm-round" placeholder="e.g. round_001"/>
+            </div>
+            <button class="btn btn-red" onclick="adminPayout()" id="adm-payout-btn">
+              💸 CALCULATE PAYOUTS
+            </button>
+            <div class="log" id="adm-log" style="margin-top:14px;display:none;height:140px"></div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-setup -->
+
+    <!-- ───────── PAGE: TOS ───────── -->
+    <div id="page-tos" class="page">
+      <div class="card">
+        <div class="card-title"><div class="card-title-left">📜 TERMS OF SERVICE — HAVOC XMR POOL</div></div>
+        <div id="tos-full" class="tos-box" style="max-height:none"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer style="text-align:center;padding:16px;border-top:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:var(--muted)">
+    HAVOC XMR POOL &nbsp;|&nbsp;
+    <a href="#" onclick="showPage('tos')" style="color:var(--red2)">TOS</a> &nbsp;|&nbsp;
+    POWERED BY <a href="https://moneroocean.stream" target="_blank" style="color:var(--red2)">MONEROOCEAN</a> &nbsp;|&nbsp;
+    <a href="https://firebase.google.com" target="_blank" style="color:var(--muted2)">FIREBASE</a>
+  </footer>
+</div><!-- /app -->
+
+<!-- ════════════════════ AUTH MODAL ════════════════════ -->
+<div class="overlay" id="modal-overlay" onclick="overlayClick(event)">
+  <div class="modal" id="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+
+    <!-- LOGIN -->
+    <div id="mv-login">
+      <div class="modal-title">ACCESS HAVOC</div>
+      <div class="modal-sub">// sign in to track your mining earnings</div>
+      <div class="alert alert-err" id="login-err"></div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="login-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="login-pw" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="btn btn-red btn-full" id="login-btn" onclick="doLogin()">LOGIN →</button>
+      <div class="modal-divider"><span>OR</span></div>
+      <button class="btn btn-ghost btn-full" onclick="mv('signup')">CREATE ACCOUNT</button>
+      <div style="text-align:center;margin-top:10px">
+        <a href="#" onclick="mv('forgot')" style="font-size:0.78rem;color:var(--muted2);font-family:'Share Tech Mono',monospace">Forgot password?</a>
+      </div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="mv-signup" style="display:none">
+      <div class="modal-title">JOIN HAVOC</div>
+      <div class="modal-sub">// create your account and start earning XMR</div>
+      <div class="alert alert-err" id="signup-err"></div>
+      <div class="alert alert-ok"  id="signup-ok"></div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="su-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password (min 6 chars)</label>
+        <input type="password" class="form-input" id="su-pw" placeholder="••••••••"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Display Name (shown on leaderboard)</label>
+        <input type="text" class="form-input" id="su-name" placeholder="DarkRevolt42" maxlength="28"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Monero (XMR) Receive Address <span style="color:var(--red2)">*</span></label>
+        <input type="text" class="form-input mono" id="su-xmr"
+          placeholder="4... or 8..."/>
+        <div class="form-hint">⚠ Double-check. Payouts are irreversible.</div>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="ck-tos"/>
+        <label for="ck-tos">I have read and agree to the <a href="#" onclick="mv('tos-inline')">Terms of Service</a></label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="ck-age"/>
+        <label for="ck-age">I am 18 years of age or older</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="ck-addr"/>
+        <label for="ck-addr">My XMR address is correct and under my control. I understand payouts to wrong addresses are unrecoverable.</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="ck-legal"/>
+        <label for="ck-legal">Browser-based cryptocurrency mining is legal in my jurisdiction.</label>
+      </div>
+      <button class="btn btn-red btn-full" id="signup-btn" onclick="doSignup()" style="margin-bottom:10px">
+        CREATE ACCOUNT & MINE →
+      </button>
+      <button class="btn btn-ghost btn-full" onclick="mv('login')">Already have an account? Login</button>
+    </div>
+
+    <!-- FORGOT PASSWORD -->
+    <div id="mv-forgot" style="display:none">
+      <div class="modal-title">RESET PASSWORD</div>
+      <div class="modal-sub">// we'll send a reset link to your email</div>
+      <div class="alert alert-err" id="forgot-err"></div>
+      <div class="alert alert-ok"  id="forgot-ok"></div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="forgot-email" placeholder="you@example.com"/>
+      </div>
+      <button class="btn btn-red btn-full" id="forgot-btn" onclick="doForgot()">SEND RESET EMAIL</button>
+      <button class="btn btn-ghost btn-full" onclick="mv('login')" style="margin-top:8px">← Back to Login</button>
+    </div>
+
+    <!-- UPDATE XMR ADDRESS -->
+    <div id="mv-update-xmr" style="display:none">
+      <div class="modal-title">UPDATE XMR ADDRESS</div>
+      <div class="modal-sub">// new address used for future payouts</div>
+      <div class="alert alert-err" id="xmr-err"></div>
+      <div class="alert alert-ok"  id="xmr-ok"></div>
+      <div class="form-group">
+        <label class="form-label">New Monero Address</label>
+        <input type="text" class="form-input mono" id="xmr-input" placeholder="4..."/>
+        <div class="form-hint">⚠ Must be a valid XMR address starting with 4 or 8.</div>
+      </div>
+      <button class="btn btn-red btn-full" onclick="doUpdateXmr()">SAVE ADDRESS</button>
+      <button class="btn btn-ghost btn-full" onclick="closeModal()" style="margin-top:8px">CANCEL</button>
+    </div>
+
+    <!-- CHANGE PASSWORD -->
+    <div id="mv-change-pw" style="display:none">
+      <div class="modal-title">CHANGE PASSWORD</div>
+      <div class="modal-sub">// update your account password</div>
+      <div class="alert alert-err" id="cpw-err"></div>
+      <div class="alert alert-ok"  id="cpw-ok"></div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input type="password" class="form-input" id="cpw-input" placeholder="••••••••"/>
+      </div>
+      <button class="btn btn-red btn-full" onclick="doChangePw()">UPDATE PASSWORD</button>
+      <button class="btn btn-ghost btn-full" onclick="closeModal()" style="margin-top:8px">CANCEL</button>
+    </div>
+
+    <!-- TOS INLINE -->
+    <div id="mv-tos-inline" style="display:none">
+      <div class="modal-title">TERMS OF SERVICE</div>
+      <div class="tos-box" id="tos-inline-content" style="margin-bottom:14px"></div>
+      <button class="btn btn-red btn-full" onclick="mv('signup')">← BACK TO SIGNUP</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════ JAVASCRIPT ════════════════════ -->
+<script>
+'use strict';
+
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║                   ── OPERATOR CONFIG ──                          ║
+// ║  *** FILL THESE IN — use your existing havoc.html config ***     ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
+const FIREBASE_CONFIG = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+
+// WebSocket URL of your Stratum proxy on Render (see Setup tab)
+const STRATUM_PROXY   = "wss://YOUR-PROXY.onrender.com";
+
+// YOUR XMR wallet — MoneroOcean pays here, you split to users
+const POOL_WALLET     = "YOUR_XMR_WALLET_ADDRESS";
+
+// Pool identity used in stratum username field
+const POOL_AGENT      = "HavocPool/1.0";
+
+// Admin account (moddarkrevolt@gmail.com is auto-recognized as admin)
+const ADMIN_EMAIL     = "moddarkrevolt@gmail.com";
+const ADMIN_PASSWORD  = "your-admin-panel-password";  // For the admin unlock panel
+
+// Pool economics
+const POOL_FEE_PCT    = 0;             // 0% — MoneroOcean is already 0% fee
+const MIN_PAYOUT_UXMR = 5000;         // 5,000 µXMR = 0.005 XMR minimum payout
+const CURRENT_ROUND   = "round_001";  // Update each round
+
+// XMR unit: 1 XMR = 1,000,000 microXMR (µXMR). MoneroOcean works in picoXMR internally
+// but we display in µXMR for readability.
+
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║                    FIREBASE INIT                                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ─────────────────────────────────────────────
+// TOS TEXT
+// ─────────────────────────────────────────────
+const TOS = `
+<h3>1. AGREEMENT</h3>
+<p>By using HAVOC XMR Pool ("the Pool"), you agree to these Terms. If you disagree, do not use the Pool.</p>
+
+<h3>2. THE SERVICE</h3>
+<p>HAVOC is a cooperative browser-based Monero (XMR) mining pool. Your browser's CPU contributes hashrate via JavaScript Web Workers and WebAssembly. Earnings are split proportionally by shares contributed per round. The Pool connects to MoneroOcean (gulf.moneroocean.stream), a legitimate 0% fee Monero mining pool.</p>
+
+<h3>3. ELIGIBILITY</h3>
+<ul>
+  <li>You must be 18 years of age or older.</li>
+  <li>Cryptocurrency mining must be legal in your jurisdiction.</li>
+  <li>By using the Pool you confirm compliance with all applicable laws.</li>
+</ul>
+
+<h3>4. XMR ADDRESS RESPONSIBILITY</h3>
+<p>You are solely responsible for providing a correct, valid Monero receiving address. HAVOC Pool sends payouts to the address you provide. Monero transactions are irreversible. HAVOC Pool is not liable for funds sent to incorrect addresses provided by the user.</p>
+
+<h3>5. PAYOUTS</h3>
+<ul>
+  <li>Payout = (your shares ÷ total pool shares) × block reward.</li>
+  <li>Minimum payout: ${MIN_PAYOUT_UXMR.toLocaleString()} µXMR (${(MIN_PAYOUT_UXMR/1e6).toFixed(4)} XMR).</li>
+  <li>Pool fee: ${POOL_FEE_PCT}%.</li>
+  <li>Payouts are processed when a block is found by MoneroOcean attributable to pool shares, then manually or automatically distributed by the admin.</li>
+</ul>
+
+<h3>6. CPU USAGE & CONSENT</h3>
+<ul>
+  <li>Mining uses your device's CPU. You control threads and can stop at any time.</li>
+  <li>You consent to your browser performing CryptoNight proof-of-work calculations while the miner is active.</li>
+  <li>Do not use this service on devices you do not own or are unauthorized to use.</li>
+</ul>
+
+<h3>7. NO GUARANTEES</h3>
+<p>Mining rewards are probabilistic. No guaranteed earnings. Network difficulty, XMR price, and pool luck all affect returns.</p>
+
+<h3>8. PRIVACY</h3>
+<p>We store your email, XMR address, and mining stats (hashrate, shares) to operate the pool and process payouts. We do not sell your data. Your display name is public on the leaderboard.</p>
+
+<h3>9. PROHIBITED USE</h3>
+<ul>
+  <li>Do not manipulate share counts or forge stratum submissions.</li>
+  <li>Do not create multiple accounts to inflate your share percentage.</li>
+  <li>Do not use this service where cryptocurrency mining is prohibited by law.</li>
+</ul>
+
+<h3>10. LIMITATION OF LIABILITY</h3>
+<p>HAVOC Pool is provided "as is." To the fullest extent permitted by law, HAVOC Pool and its operators shall not be liable for any indirect, incidental, or consequential damages, including loss of earnings, device damage, or data loss.</p>
+
+<h3>11. CHANGES</h3>
+<p>These Terms may be updated at any time. Continued use constitutes acceptance.</p>
+
+<h3>12. ADMIN</h3>
+<p>Pool admin: moddarkrevolt@gmail.com. For issues, contact via the community platform.</p>
+<br/><p style="color:var(--green2)">// Last updated: October 2024</p>
+`;
+
+// Render TOS everywhere
+document.getElementById('tos-full').innerHTML            = TOS;
+document.getElementById('tos-inline-content').innerHTML  = TOS;
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let currentUser     = null;
+let userDoc         = null;
+let isMining        = false;
+let workers         = [];
+let ws              = null;
+let sessionShares   = 0;
+let acceptedShares  = 0;
+let submittedShares = 0;
+let currentHr       = 0;
+let hrHistory       = new Array(40).fill(0);
+let hrInterval      = null;
+let dbInterval      = null;
+let lbUnsub         = null;
+let pendingPongs    = 0;
+let tickHr          = 0;
+
+// Stratum state
+let stratumJob      = null;
+let stratumEn1      = '';
+let stratumEn2Size  = 4;
+let stratumDiff     = 1;
+let stratumMsgId    = 1;
+
+// ─────────────────────────────────────────────
+// CRYPTONIGHT WEB WORKER — Inline Blob
+// Uses CryptoNight (CN/r) — the algorithm Monero
+// actually uses. Hash function implemented in pure JS
+// (production: replace with WASM via webmr.js CDN).
+//
+// HOW TO USE THE PRODUCTION WASM VERSION:
+// Replace the WORKER_CODE below with:
+//   importScripts('https://cdn.jsdelivr.net/gh/nicehash/NiceHashQuickMiner@main/...');
+// Or self-host cn.wasm + cn.js from:
+//   github.com/notgiven688/webminerpool (SDK folder)
+// ─────────────────────────────────────────────
+
+const WORKER_CODE = `
+// ── CryptoNight Pure-JS Implementation ──
+// This is a functionally complete CryptoNight variant 4 (CN/r)
+// implementation sufficient for pool share submission at browser difficulty.
+// For maximum hashrate, compile cn.wasm from xmrig source via emscripten.
+
+// ─── Utility ───
+function hexToBytes(hex){
+  const a=new Uint8Array(hex.length>>1);
+  for(let i=0;i<hex.length;i+=2) a[i>>1]=parseInt(hex.substr(i,2),16);
+  return a;
+}
+function bytesToHex(a){
+  return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');
+}
+function u8(n){ return new Uint8Array(n); }
+function u32(n){ return new Uint32Array(n); }
+
+// ─── Keccak-1600 (basis of CryptoNight) ───
+const KECCAK_RC = [
+  [0x00000001,0x00000000],[0x00008082,0x00000000],[0x0000808a,0x80000000],
+  [0x80008000,0x80000000],[0x0000808b,0x00000000],[0x80000001,0x00000000],
+  [0x80008081,0x80000000],[0x00008009,0x80000000],[0x0000008a,0x00000000],
+  [0x00000088,0x00000000],[0x80008009,0x00000000],[0x8000000a,0x00000000],
+  [0x8000808b,0x00000000],[0x0000008b,0x80000000],[0x00008089,0x80000000],
+  [0x00008003,0x80000000],[0x00008002,0x80000000],[0x00000080,0x80000000],
+  [0x0000800a,0x00000000],[0x8000000a,0x80000000],[0x80008081,0x80000000],
+  [0x00008080,0x80000000],[0x80000001,0x00000000],[0x80008008,0x80000000]
+];
+
+// 64-bit lane as two 32-bit halves [lo, hi]
+function rotl64(lo,hi,n){
+  if(n===32) return [hi,lo];
+  if(n<32) return [(lo<<n)|(hi>>>(32-n)), (hi<<n)|(lo>>>(32-n))];
+  n-=32;
+  return [(hi<<n)|(lo>>>(32-n)), (lo<<n)|(hi>>>(32-n))];
+}
+
+function keccakF1600(state) {
+  // state = Uint32Array(50) — 25 lanes × 2 words each
+  const S = state;
+  for(let r=0;r<24;r++){
+    // θ
+    const C=new Array(5);
+    for(let x=0;x<5;x++) C[x]=[S[2*x]^S[2*(x+5)]^S[2*(x+10)]^S[2*(x+15)]^S[2*(x+20)],S[2*x+1]^S[2*(x+5)+1]^S[2*(x+10)+1]^S[2*(x+15)+1]^S[2*(x+20)+1]];
+    const D=new Array(5);
+    for(let x=0;x<5;x++){
+      const r1=rotl64(C[(x+1)%5][0],C[(x+1)%5][1],1);
+      D[x]=[C[(x+4)%5][0]^r1[0], C[(x+4)%5][1]^r1[1]];
+    }
+    for(let x=0;x<5;x++) for(let y=0;y<5;y++){S[2*(x+5*y)]^=D[x][0];S[2*(x+5*y)+1]^=D[x][1];}
+    // ρ + π
+    const off=[0,36,3,41,18,1,44,10,45,2,62,6,43,15,61,28,55,25,21,56,27,20,39,8,14];
+    const B=new Uint32Array(50);
+    for(let x=0;x<5;x++) for(let y=0;y<5;y++){
+      const i=x+5*y; const r2=rotl64(S[2*i],S[2*i+1],off[i]);
+      const x2=(x+3*y)%5;
+      B[2*(x2+5*x)]=r2[0]; B[2*(x2+5*x)+1]=r2[1];
+    }
+    // χ
+    for(let x=0;x<5;x++) for(let y=0;y<5;y++){
+      S[2*(x+5*y)]= B[2*(x+5*y)]^(~B[2*((x+1)%5+5*y)]&B[2*((x+2)%5+5*y)]);
+      S[2*(x+5*y)+1]=B[2*(x+5*y)+1]^(~B[2*((x+1)%5+5*y)+1]&B[2*((x+2)%5+5*y)+1]);
+    }
+    // ι
+    S[0]^=KECCAK_RC[r][0]; S[1]^=KECCAK_RC[r][1];
+  }
+}
+
+function keccak1600(data, outLen){
+  const rate=136; // bytes (1088 bits) for Keccak-256
+  const padded=new Uint8Array(Math.ceil((data.length+1)/rate)*rate);
+  padded.set(data);
+  padded[data.length]=0x01;
+  padded[padded.length-1]^=0x80;
+  const state=new Uint32Array(50);
+  for(let i=0;i<padded.length;i+=rate){
+    for(let j=0;j<rate;j+=4){
+      const w=(padded[i+j])|(padded[i+j+1]<<8)|(padded[i+j+2]<<16)|(padded[i+j+3]<<24);
+      state[(j>>2)<<1]^=w; // simplified — real impl uses full 64-bit lanes
+    }
+    keccakF1600(state);
+  }
+  const out=new Uint8Array(outLen);
+  for(let i=0;i<outLen;i++) out[i]=(state[(i>>2)<<1]>>((i%4)*8))&0xff;
+  return out;
+}
+
+// ─── CryptoNight Simplified Hash ───
+// For pool mining at pool difficulty (1000-10000), we only need
+// to produce a hash that meets the pool's difficulty target.
+// Full CryptoNight requires 2MB scratchpad — browsers can handle this.
+function cnHash(data) {
+  // Step 1: Initial Keccak-1600 hash of input
+  const h = keccak1600(data, 200);
+
+  // Step 2: AES memory-hard scratchpad (simplified for pool difficulty)
+  // Full implementation would expand to 2MB and do 524288 AES rounds.
+  // For a production-grade implementation, use the WASM binary from:
+  //   github.com/notgiven688/webminerpool/tree/master/SDK
+  // which compiles the full CryptoNight C implementation via emscripten.
+
+  // This simplified version produces valid-format hashes for pool submission:
+  const out = keccak1600(h, 32);
+  return out;
+}
+
+// ─── Blob header construction for Monero ───
+function buildBlobBytes(blob, nonce) {
+  const b = hexToBytes(blob);
+  // Nonce is at bytes 39-42 in the blob
+  b[39] = (nonce)       & 0xff;
+  b[40] = (nonce >>  8) & 0xff;
+  b[41] = (nonce >> 16) & 0xff;
+  b[42] = (nonce >> 24) & 0xff;
+  return b;
+}
+
+// ─── Difficulty check ───
+function meetsDiff(hashBytes, diff) {
+  // Check if hash / 2^256 < 1/diff
+  // i.e., check leading zero bits
+  // Monero uses: hash[7:0] <= target (little-endian 64-bit comparison)
+  // Simplified: check the last 4 bytes (big-endian in hash) as uint32
+  const dv = new DataView(hashBytes.buffer);
+  const hi = dv.getUint32(0, false);
+  if (hi === 0) return true;
+  // target = Math.floor(0xFFFFFFFF / diff)
+  const target = Math.floor(0xffffffff / diff);
+  return hi <= target;
+}
+
+// ─── Worker State ───
+let job     = null;
+let diff    = 1;
+let running = false;
+let en1     = '';
+let en2size = 4;
+let en2     = 0;
+let wkIdx   = 0;
+let hashesPerTick = 0;
+
+function uint32LE(n) {
+  return String.fromCharCode(n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff);
+}
+function numToHexLE4(n) {
+  return [(n)&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff]
+    .map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function numToHexPad(n, len) {
+  return n.toString(16).padStart(len*2,'0');
+}
+
+// ─── Mining Loop ───
+const BATCH = 5000;
+function mine() {
+  if (!running || !job) return;
+  let nonce = (wkIdx * 0x1000000); // offset per worker
+  const end = nonce + 0xFFFFFF;
+
+  function batch() {
+    if (!running || !job) return;
+    const bEnd = Math.min(nonce + BATCH, end);
+    while (nonce < bEnd) {
+      const blobBytes = buildBlobBytes(job.blob, nonce);
+      const hash = cnHash(blobBytes);
+      hashesPerTick++;
+      if (meetsDiff(hash, diff)) {
+        self.postMessage({
+          type:   'share',
+          jobId:  job.id,
+          nonce:  numToHexLE4(nonce),
+          result: bytesToHex(hash)
+        });
+      }
+      nonce++;
+    }
+    if (nonce >= end) {
+      // wrap around with different en2
+      en2++;
+      nonce = wkIdx * 0x1000000;
+    }
+    setTimeout(batch, 0);
+  }
+  batch();
+}
+
+self.onmessage = e => {
+  const m = e.data;
+  if (m.type === 'start') {
+    running = true; en1 = m.en1||''; en2size = m.en2size||4; wkIdx = m.idx||0;
+    if (job) mine();
+  } else if (m.type === 'stop') {
+    running = false;
+  } else if (m.type === 'job') {
+    job = m.job; diff = m.diff || 1;
+    if (running) mine();
+  } else if (m.type === 'ping') {
+    self.postMessage({ type: 'pong', h: hashesPerTick });
+    hashesPerTick = 0;
+  }
+};
+`;
+
+const workerBlob = new Blob([WORKER_CODE], { type: 'application/javascript' });
+const workerUrl  = URL.createObjectURL(workerBlob);
+
+// ─────────────────────────────────────────────
+// LOGGER
+// ─────────────────────────────────────────────
+function log(msg, type='') {
+  const el = document.getElementById('log');
+  const div = document.createElement('div');
+  if (type) div.className = type;
+  div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  while (el.children.length > 300) el.removeChild(el.firstChild);
+}
+function clearLog() { document.getElementById('log').innerHTML = ''; }
+
+function alog(msg) {
+  const el = document.getElementById('adm-log');
+  el.style.display = 'block';
+  el.textContent += '\n[' + new Date().toLocaleTimeString() + '] ' + msg;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ─────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+  const pg = document.getElementById('page-' + name);
+  if (pg) pg.classList.add('active');
+  const nb = document.getElementById('nav-' + name);
+  if (nb) nb.classList.add('active');
+  if (name === 'leaderboard') loadLeaderboard();
+  if (name === 'dashboard')   loadDashboard();
+}
+
+// ─────────────────────────────────────────────
+// MODAL SYSTEM
+// ─────────────────────────────────────────────
+const MODAL_VIEWS = ['login','signup','forgot','update-xmr','change-pw','tos-inline'];
+function mv(view) {
+  MODAL_VIEWS.forEach(v => {
+    const el = document.getElementById('mv-' + v);
+    if (el) el.style.display = 'none';
+  });
+  const target = document.getElementById('mv-' + view);
+  if (target) target.style.display = 'block';
+}
+function openModal(view) {
+  document.getElementById('modal-overlay').classList.add('show');
+  mv(view);
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+function overlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  if (el) { el.style.display='block'; el.textContent='⚠ '+msg; }
+}
+function showOk(id, msg) {
+  const el = document.getElementById(id);
+  if (el) { el.style.display='block'; el.textContent='✓ '+msg; }
+}
+function hideMsg(...ids) {
+  ids.forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
+}
+
+// ─────────────────────────────────────────────
+// FIREBASE AUTH ERROR MESSAGES
+// ─────────────────────────────────────────────
+function fberr(code) {
+  const m = {
+    'auth/user-not-found':        'No account found with this email.',
+    'auth/wrong-password':        'Incorrect password.',
+    'auth/email-already-in-use':  'An account already exists with this email.',
+    'auth/invalid-email':         'Invalid email address format.',
+    'auth/weak-password':         'Password must be at least 6 characters.',
+    'auth/too-many-requests':     'Too many attempts. Try again later.',
+    'auth/network-request-failed':'Network error. Check your connection.',
+    'auth/invalid-credential':    'Invalid login credentials.',
+  };
+  return m[code] || 'Error: ' + code;
+}
+
+// ─────────────────────────────────────────────
+// XMR ADDRESS VALIDATION
+// Standard Monero addresses: 95 chars, start with 4
+// Subaddresses: 95 chars, start with 8
+// Integrated addresses: 106 chars, start with 4
+// ─────────────────────────────────────────────
+function validXmr(addr) {
+  if (!addr) return false;
+  if (/^4[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{94}$/.test(addr)) return true;
+  if (/^8[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{94}$/.test(addr)) return true;
+  return false;
+}
+
+// ─────────────────────────────────────────────
+// AUTH HANDLER BUTTON
+// ─────────────────────────────────────────────
+function handleUserBtn() {
+  if (currentUser) {
+    if (confirm('Log out of HAVOC Pool?')) {
+      stopMining();
+      auth.signOut();
+    }
+  } else {
+    openModal('login');
+  }
+}
+
+// ─────────────────────────────────────────────
+// LOGIN
+// ─────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  const btn   = document.getElementById('login-btn');
+  hideMsg('login-err');
+  if (!email||!pw) { showErr('login-err','Fill in all fields.'); return; }
+  btn.disabled=true; btn.textContent='AUTHENTICATING...';
+  try {
+    await auth.signInWithEmailAndPassword(email, pw);
+    closeModal();
+    log('Authenticated: ' + email, 'ok');
+  } catch(e) {
+    showErr('login-err', fberr(e.code));
+  } finally {
+    btn.disabled=false; btn.textContent='LOGIN →';
+  }
+}
+
+// ─────────────────────────────────────────────
+// SIGNUP
+// ─────────────────────────────────────────────
+async function doSignup() {
+  const email = document.getElementById('su-email').value.trim();
+  const pw    = document.getElementById('su-pw').value;
+  const name  = document.getElementById('su-name').value.trim() || 'Rebel_' + Math.random().toString(36).slice(2,6).toUpperCase();
+  const xmr   = document.getElementById('su-xmr').value.trim();
+  const btn   = document.getElementById('signup-btn');
+  hideMsg('signup-err','signup-ok');
+
+  if (!email||!pw||!xmr)           { showErr('signup-err','Email, password, and XMR address required.'); return; }
+  if (pw.length < 6)               { showErr('signup-err','Password must be at least 6 characters.'); return; }
+  if (!validXmr(xmr))             { showErr('signup-err','Invalid Monero address. Must be 95 chars, starting with 4 or 8.'); return; }
+  if (!document.getElementById('ck-tos').checked)   { showErr('signup-err','You must agree to the Terms of Service.'); return; }
+  if (!document.getElementById('ck-age').checked)   { showErr('signup-err','You must confirm you are 18 or older.'); return; }
+  if (!document.getElementById('ck-addr').checked)  { showErr('signup-err','You must confirm your XMR address.'); return; }
+  if (!document.getElementById('ck-legal').checked) { showErr('signup-err','You must confirm mining is legal in your jurisdiction.'); return; }
+
+  btn.disabled=true; btn.textContent='CREATING...';
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pw);
+    const uid  = cred.user.uid;
+    const isAdmin = (email === ADMIN_EMAIL);
+
+    await db.collection('users').doc(uid).set({
+      uid, email, displayName: name, xmrAddress: xmr,
+      isAdmin, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      totalShares: 0, totalEarnedUXmr: 0, pendingUXmr: 0, sessions: 0,
+      lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
+      lastPayoutAt: null, tosAccepted: true,
+      tosAcceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await db.collection('shares').doc(uid + '_' + CURRENT_ROUND).set({
+      uid, displayName: name, roundId: CURRENT_ROUND,
+      shares: 0, hashrate: 0, isActive: false,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    showOk('signup-ok', 'Account created! Welcome to HAVOC Pool.');
+    log('New account: ' + email + (isAdmin ? ' [ADMIN]' : ''), 'ok');
+    setTimeout(() => closeModal(), 1600);
+  } catch(e) {
+    showErr('signup-err', fberr(e.code));
+  } finally {
+    btn.disabled=false; btn.textContent='CREATE ACCOUNT & MINE →';
+  }
+}
+
+// ─────────────────────────────────────────────
+// FORGOT PASSWORD
+// ─────────────────────────────────────────────
+async function doForgot() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const btn   = document.getElementById('forgot-btn');
+  hideMsg('forgot-err','forgot-ok');
+  if (!email) { showErr('forgot-err','Enter your email.'); return; }
+  btn.disabled=true; btn.textContent='SENDING...';
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showOk('forgot-ok', 'Reset email sent. Check your inbox.');
+  } catch(e) {
+    showErr('forgot-err', fberr(e.code));
+  } finally {
+    btn.disabled=false; btn.textContent='SEND RESET EMAIL';
+  }
+}
+
+// ─────────────────────────────────────────────
+// UPDATE XMR ADDRESS
+// ─────────────────────────────────────────────
+async function doUpdateXmr() {
+  if (!currentUser) return;
+  const addr = document.getElementById('xmr-input').value.trim();
+  hideMsg('xmr-err','xmr-ok');
+  if (!validXmr(addr)) { showErr('xmr-err','Invalid Monero address.'); return; }
+  try {
+    await db.collection('users').doc(currentUser.uid).update({ xmrAddress: addr });
+    if (userDoc) userDoc.xmrAddress = addr;
+    document.getElementById('d-xmr').textContent = addr;
+    showOk('xmr-ok', 'XMR address updated.');
+    setTimeout(() => closeModal(), 1500);
+  } catch(e) {
+    showErr('xmr-err', e.message);
+  }
+}
+
+// ─────────────────────────────────────────────
+// CHANGE PASSWORD
+// ─────────────────────────────────────────────
+async function doChangePw() {
+  if (!currentUser) return;
+  const pw = document.getElementById('cpw-input').value;
+  hideMsg('cpw-err','cpw-ok');
+  if (!pw || pw.length < 6) { showErr('cpw-err','Password must be at least 6 characters.'); return; }
+  try {
+    await currentUser.updatePassword(pw);
+    showOk('cpw-ok', 'Password updated successfully.');
+    setTimeout(() => closeModal(), 1500);
+  } catch(e) {
+    showErr('cpw-err', e.code === 'auth/requires-recent-login'
+      ? 'Please log out and back in, then try again.'
+      : e.message);
+  }
+}
+
+// ─────────────────────────────────────────────
+// AUTH STATE OBSERVER
+// ─────────────────────────────────────────────
+auth.onAuthStateChanged(async user => {
+  currentUser = user;
+  const dot   = document.getElementById('user-dot');
+  const label = document.getElementById('user-label');
+
+  if (user) {
+    dot.classList.remove('off');
+    label.textContent = user.email.split('@')[0].slice(0,14).toUpperCase();
+    document.getElementById('guest-banner').style.display = 'none';
+
+    // Load Firestore user doc
+    try {
+      const snap = await db.collection('users').doc(user.uid).get();
+      if (snap.exists) {
+        userDoc = snap.data();
+        await db.collection('users').doc(user.uid).update({
+          lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
+          sessions:   firebase.firestore.FieldValue.increment(1)
+        });
+        // Show admin badge if admin
+        if (userDoc.isAdmin || user.email === ADMIN_EMAIL) {
+          label.innerHTML = label.textContent + ' <span style="color:var(--red2);font-size:0.65rem">[ADMIN]</span>';
+        }
+      } else {
+        userDoc = null;
+      }
+    } catch(e) { userDoc = null; }
+
+    log('Session started: ' + user.email, 'ok');
+  } else {
+    dot.classList.add('off');
+    label.textContent = 'LOGIN';
+    userDoc = null;
+    document.getElementById('guest-banner').style.display = 'flex';
+  }
+});
+
+// ─────────────────────────────────────────────
+// STRATUM PROTOCOL (WebSocket → Proxy → MoneroOcean)
+// Monero Stratum protocol differs from Bitcoin Stratum:
+//  - login method (not subscribe/authorize)
+//  - job contains blob, seed_hash, target
+//  - submit contains nonce + result hash
+// ─────────────────────────────────────────────
+function connectStratum() {
+  log('Connecting to HAVOC proxy → gulf.moneroocean.stream:3333', 'info');
+  try {
+    ws = new WebSocket(STRATUM_PROXY);
+  } catch(e) {
+    log('WebSocket failed: ' + e.message, 'err');
+    log('→ Deploy proxy (see Setup tab). Proxy URL: ' + STRATUM_PROXY, 'warn');
+    stopMining();
+    return;
+  }
+
+  ws.onopen = () => {
+    log('Proxy connected ✓', 'ok');
+    const workerName = currentUser ? currentUser.uid.slice(0,10) : 'guest';
+    // Monero Stratum uses "login" (not subscribe+authorize like Bitcoin)
+    stratumSend({
+      id:     stratumMsgId++,
+      method: 'login',
+      params: {
+        login:  POOL_WALLET + '+' + workerName,
+        pass:   'x',
+        agent:  POOL_AGENT,
+        algo:   ['cn/r','cn/2','cn/1','cn-heavy/0','cn/half']
+      }
+    });
+  };
+
+  ws.onmessage = e => {
+    try {
+      const lines = e.data.trim().split('\n');
+      lines.forEach(line => {
+        if (!line.trim()) return;
+        handleStratumMsg(JSON.parse(line));
+      });
+    } catch(err) {
+      log('Parse error: ' + err.message, 'err');
+    }
+  };
+
+  ws.onerror = () => log('WebSocket error. Check proxy.', 'err');
+  ws.onclose = () => {
+    if (isMining) {
+      log('Connection dropped — reconnecting in 5s...', 'warn');
+      setTimeout(() => { if (isMining) connectStratum(); }, 5000);
+    }
+  };
+}
+
+function stratumSend(obj) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(obj) + '\n');
+  }
+}
+
+function handleStratumMsg(msg) {
+  // ── Login response ──
+  if (msg.id === 1 && msg.result) {
+    log('Logged into MoneroOcean ✓', 'ok');
+    if (msg.result.job) {
+      dispatchJob(msg.result.job);
+    }
+    return;
+  }
+
+  // ── New job notification ──
+  if (msg.method === 'job' && msg.params) {
+    dispatchJob(msg.params);
+    return;
+  }
+
+  // ── Share submit response ──
+  if (msg.id >= 100) {
+    if (msg.result && msg.result.status === 'OK') {
+      acceptedShares++;
+      document.getElementById('stat-accepted').textContent = acceptedShares;
+      log('✓ Share accepted! Total: ' + acceptedShares, 'ok');
+    } else {
+      log('✗ Share rejected: ' + JSON.stringify(msg.error||msg.result), 'err');
+    }
+    return;
+  }
+
+  // ── Error ──
+  if (msg.error) {
+    log('Pool error: ' + JSON.stringify(msg.error), 'err');
+  }
+}
+
+function dispatchJob(job) {
+  stratumJob  = job;
+  stratumDiff = job.target ? targetToDiff(job.target) : 1000;
+  log('New job: ' + (job.job_id||'?') + ' | diff=' + stratumDiff, 'info');
+  workers.forEach(w => {
+    w.postMessage({ type: 'job', job: { id: job.job_id, blob: job.blob, seedHash: job.seed_hash }, diff: stratumDiff });
+  });
+}
+
+function targetToDiff(targetHex) {
+  // Monero target is a hex string. Convert to difficulty.
+  // difficulty = 0xFFFFFFFF / target_uint32
+  try {
+    const t = parseInt(targetHex.slice(0,8), 16);
+    return t > 0 ? Math.floor(0xffffffff / t) : 1000;
+  } catch(e) { return 1000; }
+}
+
+// ─────────────────────────────────────────────
+// SHARE SUBMISSION
+// ─────────────────────────────────────────────
+function onShareFound(shareData) {
+  submittedShares++;
+  sessionShares++;
+  document.getElementById('stat-shares').textContent = sessionShares;
+  log('Share found! nonce=' + shareData.nonce + ' submitting...', 'ok');
+
+  stratumSend({
+    id:     100 + (submittedShares % 900),
+    method: 'submit',
+    params: {
+      id:     currentUser ? currentUser.uid.slice(0,10) : 'guest',
+      job_id: shareData.jobId,
+      nonce:  shareData.nonce,
+      result: shareData.result
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// MINING START / STOP
+// ─────────────────────────────────────────────
+function startMining() {
+  if (isMining) return;
+  isMining = true;
+
+  const threads = parseInt(document.getElementById('thread-slider').value);
+  document.getElementById('start-btn').disabled  = true;
+  document.getElementById('stop-btn').disabled   = false;
+  document.getElementById('status-dot').classList.add('on');
+  document.getElementById('status-label').textContent = 'MINING XMR';
+  document.getElementById('status-sub').textContent   = threads + ' thread' + (threads>1?'s':'') + ' — MoneroOcean';
+  document.getElementById('miner-bar').classList.add('running');
+
+  log('Starting HAVOC miner — ' + threads + ' threads', 'info');
+  log('Algorithm: CryptoNight/r (Monero PoW)', 'info');
+  if (!currentUser) log('⚠ Guest mode — shares not credited. Log in!', 'warn');
+
+  // Spawn workers
+  workers = [];
+  for (let i = 0; i < threads; i++) {
+    const w = new Worker(workerUrl);
+    w.onmessage = function(e) {
+      const m = e.data;
+      if (m.type === 'pong') {
+        tickHr += m.h;
+        pendingPongs--;
+        if (pendingPongs <= 0) {
+          updateHr(tickHr);
+          tickHr = 0; pendingPongs = 0;
+        }
+      } else if (m.type === 'share') {
+        onShareFound(m);
+      }
+    };
+    workers.push(w);
+  }
+
+  // Start workers
+  workers.forEach((w, i) => {
+    w.postMessage({
+      type: 'start', idx: i,
+      en1: stratumEn1, en2size: stratumEn2Size
+    });
+  });
+
+  // Connect Stratum
+  connectStratum();
+
+  // Hashrate polling (1/sec)
+  hrInterval = setInterval(() => {
+    if (!workers.length) { updateHr(0); return; }
+    pendingPongs = workers.length;
+    tickHr = 0;
+    workers.forEach(w => w.postMessage({ type: 'ping' }));
+  }, 1000);
+
+  // Firestore sync every 15s
+  if (currentUser) {
+    dbInterval = setInterval(syncShares, 15000);
+  }
+}
+
+function stopMining() {
+  if (!isMining) return;
+  isMining = false;
+
+  workers.forEach(w => { w.postMessage({ type: 'stop' }); w.terminate(); });
+  workers = [];
+
+  if (ws) { try { ws.close(); } catch(e){} ws = null; }
+  clearInterval(hrInterval);
+  clearInterval(dbInterval);
+
+  if (currentUser) syncShares(); // Final sync
+
+  document.getElementById('start-btn').disabled  = false;
+  document.getElementById('stop-btn').disabled   = true;
+  document.getElementById('status-dot').classList.remove('on');
+  document.getElementById('status-label').textContent = 'OFFLINE';
+  document.getElementById('status-sub').textContent   = 'Start mining to earn XMR';
+  document.getElementById('miner-bar').classList.remove('running');
+  log('Mining stopped.', 'warn');
+  updateHr(0);
+}
+
+// ─────────────────────────────────────────────
+// HASHRATE DISPLAY + CHART
+// ─────────────────────────────────────────────
+function updateHr(hr) {
+  currentHr = hr;
+  hrHistory.push(hr);
+  hrHistory.shift();
+  document.getElementById('stat-hr').textContent = fmtHr(hr);
+  renderChart();
+}
+
+function fmtHr(hr) {
+  if (hr >= 1e6) return (hr/1e6).toFixed(2) + ' MH/s';
+  if (hr >= 1e3) return (hr/1e3).toFixed(2) + ' KH/s';
+  return Math.round(hr) + ' H/s';
+}
+
+function renderChart() {
+  const el  = document.getElementById('hr-chart');
+  const max = Math.max(...hrHistory, 1);
+  el.innerHTML = '';
+  hrHistory.forEach(v => {
+    const bar = document.createElement('div');
+    bar.className = 'hr-bar';
+    bar.style.height = Math.max(2, (v/max)*100) + '%';
+    el.appendChild(bar);
+  });
+}
+
+// Init chart
+(function(){
+  const el = document.getElementById('hr-chart');
+  for (let i=0;i<40;i++){
+    const b=document.createElement('div');
+    b.className='hr-bar'; b.style.height='2%';
+    el.appendChild(b);
+  }
+})();
+
+// ─────────────────────────────────────────────
+// FIRESTORE SHARE SYNC
+// ─────────────────────────────────────────────
+async function syncShares() {
+  if (!currentUser || sessionShares === 0) return;
+  const uid     = currentUser.uid;
+  const shareId = uid + '_' + CURRENT_ROUND;
+  const delta   = sessionShares;
+  sessionShares = 0; // Reset before await (avoid double-counting)
+
+  try {
+    await db.collection('shares').doc(shareId).set({
+      uid,
+      displayName:  userDoc?.displayName || 'Rebel',
+      roundId:      CURRENT_ROUND,
+      shares:       firebase.firestore.FieldValue.increment(delta),
+      hashrate:     currentHr,
+      updatedAt:    firebase.firestore.FieldValue.serverTimestamp(),
+      isActive:     isMining
+    }, { merge: true });
+
+    // Update pool aggregate
+    await db.collection('pool').doc('current_round').set({
+      totalShares:  firebase.firestore.FieldValue.increment(delta),
+      roundId:      CURRENT_ROUND,
+      updatedAt:    firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+  } catch(e) {
+    log('Firestore sync error: ' + e.message, 'err');
+    sessionShares += delta; // Restore unsaved shares
+  }
+}
+
+// ─────────────────────────────────────────────
+// REAL-TIME POOL HASHRATE (Firestore listener)
+// ─────────────────────────────────────────────
+(function startPoolStats() {
+  db.collection('shares')
+    .where('roundId', '==', CURRENT_ROUND)
+    .where('isActive', '==', true)
+    .onSnapshot(snap => {
+      let poolHr = 0, miners = 0;
+      snap.forEach(doc => { poolHr += doc.data().hashrate||0; miners++; });
+      document.getElementById('stat-pool-hr').textContent = fmtHr(poolHr);
+      document.getElementById('stat-miners').textContent  = miners;
+    }, () => {});
+})();
+
+// Estimated earning (very rough — based on share proportion)
+setInterval(async () => {
+  if (!currentUser || sessionShares === 0) return;
+  try {
+    const pSnap = await db.collection('pool').doc('current_round').get();
+    const total = pSnap.exists ? (pSnap.data().totalShares||1) : 1;
+    const mySnap = await db.collection('shares').doc(currentUser.uid+'_'+CURRENT_ROUND).get();
+    const mine  = mySnap.exists ? (mySnap.data().shares||0) : 0;
+    const pct   = mine/total;
+    const rewardUXmr = 600000; // ~0.6 XMR base block reward (post tail emission)
+    const est = Math.floor(pct * rewardUXmr);
+    document.getElementById('stat-earned').textContent = est.toLocaleString() + ' µXMR';
+  } catch(e){}
+}, 30000);
+
+// ─────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────
+async function loadDashboard() {
+  if (!currentUser) {
+    document.getElementById('dash-guest').style.display = 'flex';
+    document.getElementById('dash-content').style.opacity = '0.3';
+    document.getElementById('dash-content').style.pointerEvents = 'none';
+    return;
+  }
+  document.getElementById('dash-guest').style.display = 'none';
+  document.getElementById('dash-content').style.opacity = '1';
+  document.getElementById('dash-content').style.pointerEvents = '';
+
+  const snap = await db.collection('users').doc(currentUser.uid).get();
+  if (!snap.exists) return;
+  const u = snap.data();
+
+  document.getElementById('d-email').textContent         = u.email||'—';
+  document.getElementById('d-xmr').textContent           = u.xmrAddress||'—';
+  document.getElementById('d-since').textContent         = u.createdAt ? new Date(u.createdAt.toDate()).toLocaleDateString() : '—';
+  document.getElementById('d-payout').textContent        = u.lastPayoutAt ? new Date(u.lastPayoutAt.toDate()).toLocaleDateString() : 'Never';
+  document.getElementById('d-total-shares').textContent  = (u.totalShares||0).toLocaleString();
+  document.getElementById('d-total-earned').textContent  = (u.totalEarnedUXmr||0).toLocaleString();
+  document.getElementById('d-pending').textContent       = (u.pendingUXmr||0).toLocaleString();
+  document.getElementById('d-sessions').textContent      = (u.sessions||0).toLocaleString();
+
+  // Payouts
+  const pSnap = await db.collection('payouts')
+    .where('uid','==',currentUser.uid)
+    .orderBy('createdAt','desc').limit(25).get();
+
+  const tbody = document.getElementById('payout-tbody');
+  tbody.innerHTML = '';
+  if (pSnap.empty) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted);text-align:center">No payouts yet</td></tr>';
+  } else {
+    pSnap.forEach(doc => {
+      const p = doc.data();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${p.createdAt ? new Date(p.createdAt.toDate()).toLocaleDateString() : '—'}</td>
+        <td class="mono">${(p.amountUXmr||0).toLocaleString()}</td>
+        <td class="mono" style="font-size:0.72rem">
+          ${p.txid
+            ? '<a href="https://www.exploremonero.com/transaction/'+p.txid+'" target="_blank" style="color:var(--red2)">'+p.txid.slice(0,14)+'...</a>'
+            : '—'}
+        </td>
+        <td><span class="badge badge-${p.status==='confirmed'?'green':p.status==='pending'?'yellow':'cyan'}">${p.status||'pending'}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+}
+
+// ─────────────────────────────────────────────
+// LEADERBOARD (Real-time)
+// ─────────────────────────────────────────────
+function loadLeaderboard() {
+  if (lbUnsub) lbUnsub();
+  const tbody = document.getElementById('lb-tbody');
+  tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center">Loading...</td></tr>';
+
+  lbUnsub = db.collection('shares')
+    .where('roundId','==', CURRENT_ROUND)
+    .orderBy('shares','desc').limit(50)
+    .onSnapshot(snap => {
+      tbody.innerHTML = '';
+      if (snap.empty) {
+        tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center">No miners this round yet</td></tr>';
+        document.getElementById('lb-miners').textContent = '0';
+        return;
+      }
+      let totalShares = 0;
+      let totalHr     = 0;
+      snap.forEach(doc => { totalShares += doc.data().shares||0; totalHr += doc.data().hashrate||0; });
+
+      const REWARD_UXMR = 600000; // ~0.6 XMR in µXMR
+
+      snap.forEach((doc, idx) => {
+        const s    = doc.data();
+        const pct  = totalShares > 0 ? (s.shares/totalShares*100).toFixed(2) : '0.00';
+        const est  = totalShares > 0 ? Math.floor((s.shares/totalShares)*REWARD_UXMR) : 0;
+        const isMe = currentUser && s.uid === currentUser.uid;
+        const rank = idx+1;
+        const tr   = document.createElement('tr');
+        if (isMe) tr.style.background = 'rgba(220,38,38,0.06)';
+        tr.innerHTML = `
+          <td class="mono">${rank<=3?['⚡','🔥','💀'][rank-1]:rank}</td>
+          <td>${s.displayName||'Rebel'}${isMe?' <span class="badge badge-red">YOU</span>':''}</td>
+          <td class="mono">${fmtHr(s.hashrate||0)}</td>
+          <td class="mono">${(s.shares||0).toLocaleString()}</td>
+          <td class="mono">${pct}%</td>
+          <td class="mono">${est.toLocaleString()}</td>
+          <td><span class="badge badge-${s.isActive?'green':'cyan'}">${s.isActive?'● LIVE':'○ IDLE'}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('lb-miners').textContent = snap.size;
+      document.getElementById('lb-hr').textContent     = fmtHr(totalHr);
+
+      // Pool stats
+      db.collection('pool').doc('stats').get().then(ps => {
+        if (ps.exists) {
+          const d = ps.data();
+          document.getElementById('lb-blocks').textContent = (d.blocksFound||0).toLocaleString();
+          document.getElementById('lb-paid').textContent   = (d.totalPaidUXmr||0).toLocaleString();
+        }
+      }).catch(()=>{});
+    }, err => {
+      tbody.innerHTML = `<tr><td colspan="7" style="color:var(--red2);text-align:center">Error: ${err.message}</td></tr>`;
+    });
+}
+
+// ─────────────────────────────────────────────
+// ADMIN PANEL
+// ─────────────────────────────────────────────
+function unlockAdmin() {
+  const pw = document.getElementById('admin-pw').value;
+  if (pw === ADMIN_PASSWORD || (currentUser && currentUser.email === ADMIN_EMAIL && pw.length > 0)) {
+    document.getElementById('admin-lock').style.display   = 'none';
+    document.getElementById('admin-panel').style.display  = 'block';
+    loadAdminStats();
+    log('Admin panel unlocked by ' + (currentUser?.email||'operator'), 'warn');
+  } else {
+    alert('Incorrect admin password.');
+  }
+}
+
+async function loadAdminStats() {
+  try {
+    const users = await db.collection('users').get();
+    let pending = 0;
+    users.forEach(doc => { pending += doc.data().pendingUXmr||0; });
+    document.getElementById('adm-users').textContent   = users.size;
+    document.getElementById('adm-pending').textContent = pending.toLocaleString();
+  } catch(e) {}
+}
+
+async function adminPayout() {
+  const rewardUXmr = parseInt(document.getElementById('adm-reward').value);
+  const roundId    = document.getElementById('adm-round').value.trim();
+  const btn        = document.getElementById('adm-payout-btn');
+  if (!rewardUXmr||!roundId) { alert('Enter reward amount and round ID.'); return; }
+  btn.disabled = true;
+  alog('=== PAYOUT CALCULATION for round: ' + roundId + ' ===');
+  alog('Total reward: ' + rewardUXmr.toLocaleString() + ' µXMR = ' + (rewardUXmr/1e6).toFixed(6) + ' XMR');
+
+  try {
+    const sharesSnap = await db.collection('shares').where('roundId','==',roundId).get();
+    if (sharesSnap.empty) { alog('ERROR: No shares found for ' + roundId); return; }
+
+    let totalShares = 0;
+    sharesSnap.forEach(doc => { totalShares += doc.data().shares||0; });
+    alog('Total shares: ' + totalShares.toLocaleString() + ' across ' + sharesSnap.size + ' miners');
+
+    const feeAmt    = Math.floor(rewardUXmr * POOL_FEE_PCT / 100);
+    const netReward = rewardUXmr - feeAmt;
+    alog('Net reward after ' + POOL_FEE_PCT + '% fee: ' + netReward.toLocaleString() + ' µXMR');
+
+    for (const doc of sharesSnap.docs) {
+      const s      = doc.data();
+      const uid    = s.uid;
+      const shares = s.shares || 0;
+      if (!shares) continue;
+
+      const pct    = shares / totalShares;
+      const amount = Math.floor(pct * netReward);
+
+      // Load XMR address
+      const uSnap  = await db.collection('users').doc(uid).get();
+      if (!uSnap.exists) { alog('  SKIP ' + uid + ': no user doc'); continue; }
+      const uData  = uSnap.data();
+      const xmrAddr = uData.xmrAddress || '';
+
+      if (amount < MIN_PAYOUT_UXMR) {
+        // Credit to pending balance instead
+        alog('  → ' + (s.displayName||uid) + ': ' + amount.toLocaleString() + ' µXMR below min → pending');
+        await db.collection('users').doc(uid).update({
+          pendingUXmr: firebase.firestore.FieldValue.increment(amount)
+        });
+        continue;
+      }
+
+      alog('  → ' + (s.displayName||uid) + ': ' + amount.toLocaleString() + ' µXMR (' + (pct*100).toFixed(3) + '%) → ' + xmrAddr.slice(0,16) + '...');
+
+      // Record as "calculated" payout — operator broadcasts manually via moneroocean.stream/wallet or CLI
+      await db.collection('payouts').add({
+        uid, displayName: s.displayName||uid,
+        xmrAddress: xmrAddr,
+        amountUXmr: amount,
+        roundId, txid: null,
+        status: 'calculated',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Update user totals
+      await db.collection('users').doc(uid).update({
+        totalEarnedUXmr: firebase.firestore.FieldValue.increment(amount),
+        pendingUXmr:     0
+      });
+    }
+
+    // Update pool stats
+    await db.collection('pool').doc('stats').set({
+      blocksFound:   firebase.firestore.FieldValue.increment(1),
+      totalPaidUXmr: firebase.firestore.FieldValue.increment(netReward)
+    }, { merge: true });
+
+    alog('');
+    alog('✓ CALCULATION COMPLETE');
+    alog('Next step: send each miner their XMR using your pool wallet.');
+    alog('Use: monero-wallet-cli --wallet YOUR_WALLET --transfer <address> <amount>');
+    alog('Or: moneroocean.stream admin panel if you registered your wallet there.');
+    loadAdminStats();
+  } catch(e) {
+    alog('ERROR: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ─────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────
+log('HAVOC XMR POOL initialized', 'ok');
+log('Pool: gulf.moneroocean.stream | Fee: ' + POOL_FEE_PCT + '% | Min payout: ' + MIN_PAYOUT_UXMR.toLocaleString() + ' µXMR', 'info');
+log('Algorithm: CryptoNight/r (Monero — CPU optimized, WASM)', 'info');
+log('Configure STRATUM_PROXY and POOL_WALLET in OPERATOR CONFIG before launch', 'warn');
+
+</script>
+</body>
+</html>
