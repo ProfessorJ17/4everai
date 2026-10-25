@@ -242,6 +242,7 @@
       <div class="flex flex-wrap gap-3 justify-center">
         <button id="muteBtn" onclick="toggleMute()" class="px-4 py-2 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-sm font-bold"><i class="fa-solid fa-microphone"></i> Mute</button>
         <button id="camBtn" onclick="toggleCamera()" class="px-4 py-2 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-sm font-bold"><i class="fa-solid fa-video"></i> Camera</button>
+        <button id="screenBtn" onclick="toggleScreenShare()" class="px-4 py-2 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-sm font-bold"><i class="fa-solid fa-desktop"></i> Share Screen</button>
         <button onclick="leaveVoice()" class="px-4 py-2 bg-red-900/50 hover:bg-red-800 border border-red-500/40 rounded-lg text-sm font-bold text-red-200"><i class="fa-solid fa-phone-slash"></i> Disconnect</button>
       </div>
     </div>
@@ -293,9 +294,15 @@
         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">About Me</div>
         <div id="upBio" class="text-xs text-slate-300 whitespace-pre-wrap break-words">—</div>
       </div>
-      <div id="upMutualWrap" class="hidden">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Member Since</div>
-        <div id="upJoined" class="text-xs text-slate-400"></div>
+      <div id="upDatesWrap" class="space-y-2">
+        <div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Account Created</div>
+          <div id="upCreated" class="text-xs text-slate-400">—</div>
+        </div>
+        <div id="upServerJoinWrap" class="hidden">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Joined Server</div>
+          <div id="upServerJoined" class="text-xs text-slate-400">—</div>
+        </div>
       </div>
       <div>
         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Note</div>
@@ -843,7 +850,15 @@ window.doSignOut = async () => {
 
 // ========== DM ==========
 window.openDMs = () => {
-  S.inDMs = true; S.server = null; S.channel = null; leaveVoice();
+  // Stop server message listeners so they cannot overwrite the feed
+  if(S.unsubMsgs){ try{ S.unsubMsgs(); }catch(e){} S.unsubMsgs = null; }
+  if(S.unsubMembers){ try{ S.unsubMembers(); }catch(e){} S.unsubMembers = null; }
+  leaveVoice();
+  S.inDMs = true;
+  S.server = null;
+  S.channel = null;
+  S.channelType = null;
+  S.dmTarget = null;
   $('dmHomeBtn').classList.add('dm-active');
   document.querySelectorAll('#serverList button').forEach(b => b.classList.remove('server-active'));
   $('currentServerName').textContent = 'Direct Messages';
@@ -855,11 +870,17 @@ window.openDMs = () => {
   $('chanIcon').className = 'fa-solid fa-at text-slate-500 text-xs';
   $('chanHeader').textContent = 'Friends & DMs';
   $('chatInput').disabled = true;
-  $('chatInput').placeholder = 'Select a friend to message…';
-  $('msgFeed').innerHTML = '<div class="text-center py-16 text-slate-600 mono text-xs">Select a friend on the left to start a conversation.</div>';
+  $('chatInput').placeholder = 'Select a friend to start chatting…';
+  $('textArea').classList.remove('hidden');
+  $('voiceArea').classList.add('hidden');
+  $('msgFeed').innerHTML = '<div class="text-center py-16 text-slate-600 mono text-xs">Select a friend to start chatting.<br><span class="text-slate-700">Friends appear on the left.</span></div>';
   $('membersContent').classList.add('hidden');
   $('dmProfileContent').classList.add('hidden');
+  // Ensure members panel shows friends context not server members
+  if($('memberCount')) $('memberCount').textContent = '0';
+  if($('membersList')) $('membersList').innerHTML = '';
   loadFriends(); renderDMList();
+  dmTab('friends');
 };
 function showDMView(){ $('channelsView').classList.add('hidden'); $('dmView').classList.remove('hidden'); $('membersPanel').classList.remove('hidden'); }
 function showChannelsView(){ $('dmView').classList.add('hidden'); $('channelsView').classList.remove('hidden'); $('membersContent').classList.remove('hidden'); $('dmProfileContent').classList.add('hidden'); $('dmHomeBtn').classList.remove('dm-active'); }
@@ -1203,10 +1224,21 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   dot.className = 'absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#111214] ' +
     (status==='online'?'status-online':status==='idle'?'status-idle':status==='dnd'?'status-dnd':'status-offline');
   if(createdAt){
-    $('upJoined').textContent = new Date(createdAt).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
-    $('upMutualWrap').classList.remove('hidden');
+    $('upCreated').textContent = new Date(createdAt).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
   } else {
-    $('upMutualWrap').classList.add('hidden');
+    $('upCreated').textContent = '—';
+  }
+  // Server join date from members cache or passed meta
+  let serverJoined = 0;
+  if(S.server){
+    const mem = (S.membersCache||[]).find(x => x.uid === uid);
+    serverJoined = mem?.joinedAt || 0;
+  }
+  if(serverJoined){
+    $('upServerJoined').textContent = new Date(serverJoined).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+    $('upServerJoinWrap')?.classList.remove('hidden');
+  } else {
+    $('upServerJoinWrap')?.classList.add('hidden');
   }
 
   // Load private note (only you see this)
@@ -1541,12 +1573,13 @@ function listenMessages(serverId, channelId){
   if(S.unsubMsgs) S.unsubMsgs();
   const ref = collection(db,'servers',serverId,'channels',channelId,'messages');
   const load = async () => {
+    // Never paint server messages while in DM view
+    if(S.inDMs || !S.server || S.server.id !== serverId || S.channel !== channelId) return;
     try{
       const snap = await getDocs(ref);
       const msgs = [];
       snap.forEach(d => msgs.push({id:d.id, ...d.data()}));
       msgs.sort((a,b) => (a.ts||0) - (b.ts||0));
-      // Notify on truly new messages
       if(S._seenMsgIds && S._seenMsgIds.size > 0){
         for(const m of msgs){
           if(m.id && !S._seenMsgIds.has(m.id)){
@@ -1556,10 +1589,10 @@ function listenMessages(serverId, channelId){
       }
       if(!S._seenMsgIds) S._seenMsgIds = new Set();
       msgs.forEach(m => { if(m.id) S._seenMsgIds.add(m.id); });
-      // Cap set size
       if(S._seenMsgIds.size > 500){
         S._seenMsgIds = new Set([...S._seenMsgIds].slice(-300));
       }
+      if(S.inDMs) return;
       await renderMsgs(msgs);
     }catch(e){}
   };
@@ -1773,15 +1806,17 @@ function listenMembers(serverId){
       const snap = await getDocs(collection(db,'servers',serverId,'members'));
       S.membersCache = [];
       const list = $('membersList'); list.innerHTML = '';
-      let count = 0;
       const members = [];
       snap.forEach(d => { const m = {uid:d.id, ...d.data()}; members.push(m); S.membersCache.push(m); });
-      // Live profile + presence for each member
+
+      const online = [];
+      const offline = [];
+
       for(const m of members){
-        count++;
         let handle = m.handle || 'User';
         let avatar = m.avatar || userAvatar(m.uid||'x');
         let presence = 'offline';
+        let createdAt = 0;
         try{
           const uSnap = await getDoc(doc(db,'users', m.uid));
           if(uSnap.exists()){
@@ -1789,23 +1824,40 @@ function listenMembers(serverId){
             if(u.handle) handle = u.handle;
             if(u.avatar) avatar = u.avatar;
             presence = computePresence(u);
+            createdAt = u.createdAt || 0;
           }
         }catch(e){}
-        const isOwner = m.role === 'owner';
-        const color = getMemberColor(m) || (isOwner ? '#F7931A' : null);
-        const nameStyle = color ? `style="color:${color}"` : '';
-        const dotClass = presence === 'online' ? 'status-online' : presence === 'idle' ? 'status-idle' : presence === 'dnd' ? 'status-dnd' : 'status-offline';
-        const statusLabel = presence === 'online' ? 'Online' : presence === 'idle' ? 'Idle' : presence === 'dnd' ? 'Do Not Disturb' : 'Offline';
-        const div = document.createElement('div');
-        div.className = 'flex items-center gap-2 px-1.5 py-1.5 rounded hover:bg-dark-800 cursor-pointer';
-        div.onclick = e => { showUserProfile(e, m.uid, handle, avatar); };
-        div.oncontextmenu = e => { e.preventDefault(); showUserContext(e, m.uid, handle, avatar); };
-        div.innerHTML = `<div class="relative shrink-0"><img src="${esc(avatar)}" class="w-7 h-7 rounded-full border border-dark-600"><span class="member-status-dot ${dotClass}"></span></div>
-          <div class="min-w-0"><div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(handle)}${isNewMember(m.uid)?' <i class="fa-solid fa-seedling new-member-leaf" title="New member"></i>':''}</div>
-          <div class="text-[9px] text-slate-500">${isOwner?'Owner':statusLabel}</div></div>`;
-        list.appendChild(div);
+        const row = { ...m, handle, avatar, presence, createdAt, joinedAt: m.joinedAt || 0 };
+        if(presence === 'offline' || presence === 'invisible') offline.push(row);
+        else online.push(row);
       }
-      $('memberCount').textContent = count;
+
+      const renderGroup = (title, arr) => {
+        if(!arr.length) return;
+        const hdr = document.createElement('div');
+        hdr.className = 'text-[10px] font-bold text-slate-500 uppercase tracking-wider mono px-1 pt-2 pb-1';
+        hdr.textContent = `${title} — ${arr.length}`;
+        list.appendChild(hdr);
+        arr.forEach(m => {
+          const isOwner = m.role === 'owner';
+          const color = getMemberColor(m) || (isOwner ? '#F7931A' : null);
+          const nameStyle = color ? `style="color:${color}"` : '';
+          const dotClass = m.presence === 'online' ? 'status-online' : m.presence === 'idle' ? 'status-idle' : m.presence === 'dnd' ? 'status-dnd' : 'status-offline';
+          const statusLabel = m.presence === 'online' ? 'Online' : m.presence === 'idle' ? 'Idle' : m.presence === 'dnd' ? 'Do Not Disturb' : 'Offline';
+          const div = document.createElement('div');
+          div.className = 'flex items-center gap-2 px-1.5 py-1.5 rounded hover:bg-dark-800 cursor-pointer';
+          div.onclick = e => { showUserProfile(e, m.uid, m.handle, m.avatar, m); };
+          div.oncontextmenu = e => { e.preventDefault(); showUserContext(e, m.uid, m.handle, m.avatar); };
+          div.innerHTML = `<div class="relative shrink-0"><img src="${esc(m.avatar)}" class="w-7 h-7 rounded-full border border-dark-600"><span class="member-status-dot ${dotClass}"></span></div>
+            <div class="min-w-0"><div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(m.handle)}${isNewMember(m.uid)?' <i class="fa-solid fa-seedling new-member-leaf" title="New member"></i>':''}</div>
+            <div class="text-[9px] text-slate-500">${isOwner?'Owner · ':''}${statusLabel}</div></div>`;
+          list.appendChild(div);
+        });
+      };
+
+      renderGroup('Online', online);
+      renderGroup('Offline', offline);
+      $('memberCount').textContent = members.length;
     }catch(e){ console.warn(e); }
   };
   load();
@@ -2722,6 +2774,58 @@ document.addEventListener('click', () => {
 // Hook: track last seen message ids so we only notify on NEW ones
 S._seenMsgIds = new Set();
 const _origRenderMsgs = typeof renderMsgs === 'function' ? renderMsgs : null;
+
+
+// ===== SCREEN SHARE =====
+S.screenStream = null;
+S.sharingScreen = false;
+window.toggleScreenShare = async () => {
+  if(!S.localStream) return alert('Join a voice channel first');
+  if(S.sharingScreen){
+    if(S.screenStream){
+      S.screenStream.getTracks().forEach(tr => tr.stop());
+      S.screenStream = null;
+    }
+    Object.values(S.peers||{}).forEach(pc => {
+      pc.getSenders().forEach(sender => {
+        if(sender.track && sender.track.kind === 'video'){
+          try{ pc.removeTrack(sender); }catch(e){}
+        }
+      });
+    });
+    const tile = document.getElementById('tile-screen-local');
+    if(tile) tile.remove();
+    S.sharingScreen = false;
+    if($('screenBtn')) $('screenBtn').innerHTML = '<i class="fa-solid fa-desktop"></i> Share Screen';
+    return;
+  }
+  try{
+    const displayStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { cursor: 'always' },
+      audio: false
+    });
+    S.screenStream = displayStream;
+    S.sharingScreen = true;
+    const screenTrack = displayStream.getVideoTracks()[0];
+    screenTrack.onended = () => { if(S.sharingScreen) window.toggleScreenShare(); };
+    Object.values(S.peers||{}).forEach(pc => {
+      try{ pc.addTrack(screenTrack, displayStream); }catch(e){ console.warn(e); }
+    });
+    $('videoGrid')?.classList.remove('hidden');
+    let tile = document.getElementById('tile-screen-local');
+    if(!tile){
+      tile = document.createElement('div');
+      tile.id = 'tile-screen-local';
+      tile.className = 'video-tile';
+      tile.innerHTML = '<video autoplay playsinline muted></video><div class="video-label">Your screen</div>';
+      $('videoGrid')?.prepend(tile);
+    }
+    tile.querySelector('video').srcObject = displayStream;
+    if($('screenBtn')) $('screenBtn').innerHTML = '<i class="fa-solid fa-desktop text-bch-bright"></i> Stop Share';
+  }catch(err){
+    if(err.name !== 'NotAllowedError') console.error(err);
+  }
+};
 
 console.log('%c havoc ready ', 'background:#0AC18E;color:#000;font-weight:900;padding:4px 10px;');
 </script>
