@@ -63,6 +63,8 @@
     .status-idle{background:#f0b232!important}
     .status-dnd{background:#f23f43!important}
     .status-offline,.status-invisible{background:#80848e!important}
+    .new-member-leaf{color:#23a559;font-size:12px;margin-left:3px;vertical-align:middle}
+    .new-member-leaf:hover{filter:brightness(1.2)}
 
     #userPopup{font-family:'Plus Jakarta Sans',sans-serif}
     #upNote:focus{border-color:#0AC18E}
@@ -185,14 +187,21 @@
 
   <!-- MAIN -->
   <main class="flex-1 flex flex-col bg-dark-850 min-w-0">
-    <div class="h-12 border-b border-dark-700 px-4 flex items-center justify-between bg-dark-900/90 shrink-0">
-      <div class="flex items-center gap-2">
+    <div class="h-12 border-b border-dark-700 px-4 flex items-center justify-between bg-dark-900/90 shrink-0 gap-2">
+      <div class="flex items-center gap-2 min-w-0">
         <i id="chanIcon" class="fa-solid fa-hashtag text-slate-500 text-xs"></i>
-        <span id="chanHeader" class="font-bold text-white text-sm">—</span>
+        <span id="chanHeader" class="font-bold text-white text-sm truncate">—</span>
+        <div id="lockBadge" class="hidden bg-carrot/20 text-carrot border border-carrot/40 text-[10px] mono px-1.5 py-0.5 rounded shrink-0"><i class="fa-solid fa-lock text-[9px]"></i> locked</div>
       </div>
-      <div class="flex items-center gap-2">
-        <div id="lockBadge" class="hidden bg-carrot/20 text-carrot border border-carrot/40 text-[10px] mono px-1.5 py-0.5 rounded"><i class="fa-solid fa-lock text-[9px]"></i> locked</div>
-        <button id="chanAdminBtn" onclick="openModal('chanSettings')" class="hidden text-slate-500 hover:text-white p-1 rounded hover:bg-dark-800 text-xs"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      <div class="flex items-center gap-0.5 shrink-0">
+        <button onclick="openThreadsPanel()" title="Threads" class="w-8 h-8 rounded hover:bg-dark-800 text-slate-400 hover:text-white flex items-center justify-center text-sm"><i class="fa-solid fa-comments"></i></button>
+        <button onclick="toggleNotifMenu(event)" title="Notification Settings" class="w-8 h-8 rounded hover:bg-dark-800 text-slate-400 hover:text-white flex items-center justify-center text-sm"><i class="fa-solid fa-bell"></i></button>
+        <button onclick="openPinsPanel()" title="Pinned Messages" class="w-8 h-8 rounded hover:bg-dark-800 text-slate-400 hover:text-white flex items-center justify-center text-sm"><i class="fa-solid fa-thumbtack"></i></button>
+        <button onclick="toggleMembersPanel()" title="Hide Member List" id="membersToggleBtn" class="w-8 h-8 rounded hover:bg-dark-800 text-slate-400 hover:text-white flex items-center justify-center text-sm"><i class="fa-solid fa-user-group"></i></button>
+        <div class="hidden md:flex items-center ml-1">
+          <input type="text" id="chanSearch" placeholder="Search" class="bg-dark-950 border border-dark-700 rounded px-2 py-1 text-[11px] text-white w-28 focus:outline-none focus:border-bch placeholder-slate-600">
+        </div>
+        <button id="chanAdminBtn" onclick="openModal('chanSettings')" class="hidden w-8 h-8 rounded hover:bg-dark-800 text-slate-400 hover:text-white flex items-center justify-center text-sm"><i class="fa-solid fa-ellipsis-vertical"></i></button>
       </div>
     </div>
 
@@ -299,6 +308,40 @@
       <button id="upMoreBtn" class="py-1.5 px-3 bg-[#1e1f22] hover:bg-dark-700 rounded text-xs border border-dark-600 text-slate-400"><i class="fa-solid fa-ellipsis"></i></button>
     </div>
   </div>
+</div>
+
+
+<!-- THREADS PANEL -->
+<div id="threadsPanel" class="fixed inset-y-0 right-0 w-80 bg-dark-900 border-l border-dark-700 z-40 hidden flex flex-col shadow-2xl">
+  <div class="h-12 border-b border-dark-700 px-4 flex items-center justify-between">
+    <span class="font-bold text-white text-sm">Threads</span>
+    <button onclick="closeThreadsPanel()" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="p-3 border-b border-dark-700">
+    <button onclick="startThread()" class="w-full py-2 btn-primary text-xs">Create Thread</button>
+  </div>
+  <div id="threadsList" class="flex-1 overflow-y-auto p-3 space-y-2">
+    <p class="text-xs text-slate-500 mono text-center py-8">No threads yet</p>
+  </div>
+</div>
+
+<!-- PINS PANEL -->
+<div id="pinsPanel" class="fixed inset-y-0 right-0 w-80 bg-dark-900 border-l border-dark-700 z-40 hidden flex flex-col shadow-2xl">
+  <div class="h-12 border-b border-dark-700 px-4 flex items-center justify-between">
+    <span class="font-bold text-white text-sm"><i class="fa-solid fa-thumbtack text-bch mr-1"></i> Pinned Messages</span>
+    <button onclick="closePinsPanel()" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div id="pinsList" class="flex-1 overflow-y-auto p-3 space-y-3">
+    <p class="text-xs text-slate-500 mono text-center py-8">No pinned messages</p>
+  </div>
+</div>
+
+<!-- NOTIF MENU -->
+<div id="notifMenu" class="ctx-menu hidden" style="min-width:220px">
+  <div class="px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase">Notifications</div>
+  <div class="ctx-item" onclick="setChanNotif('all')"><i class="fa-solid fa-bell w-4"></i> All Messages</div>
+  <div class="ctx-item" onclick="setChanNotif('mentions')"><i class="fa-solid fa-at w-4"></i> Only @mentions</div>
+  <div class="ctx-item" onclick="setChanNotif('nothing')"><i class="fa-solid fa-bell-slash w-4"></i> Nothing</div>
 </div>
 
 <div id="ctxMenu" class="ctx-menu hidden"></div>
@@ -1162,7 +1205,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-function hideCtx(){ $('ctxMenu').classList.add('hidden'); $('reactionPicker').classList.add('hidden'); $('statusMenu')?.classList.add('hidden'); }
+function hideCtx(){ $('ctxMenu').classList.add('hidden'); $('reactionPicker').classList.add('hidden'); $('statusMenu')?.classList.add('hidden'); $('notifMenu')?.classList.add('hidden'); }
 document.addEventListener('click', e => { if(!e.target.closest('#ctxMenu') && !e.target.closest('#reactionPicker')) hideCtx(); });
 
 window.createServer = async () => {
@@ -1464,7 +1507,7 @@ async function resolveProfiles(uids){
       const snap = await getDoc(doc(db,'users', uid));
       if(snap.exists()){
         const u = snap.data();
-        S.profileCache[uid] = { handle: u.handle || 'User', avatar: u.avatar || userAvatar(uid) };
+        S.profileCache[uid] = { handle: u.handle || 'User', avatar: u.avatar || userAvatar(uid), createdAt: u.createdAt || 0 };
       } else {
         S.profileCache[uid] = { handle: 'User', avatar: userAvatar(uid) };
       }
@@ -1511,9 +1554,11 @@ async function renderMsgs(msgs){
         <div class="flex items-center gap-1.5">
           <span class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-100'} cursor-pointer" ${nameStyle}
             onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')">${esc(displayHandle)}</span>
+          ${isNewMember(m.uid)?'<span class="new-member-leaf" title="New member (joined within the last week)"><i class="fa-solid fa-seedling"></i></span>':''}
           ${isOwner?'<span class="badge-owner">OWNER</span>':''}
           <span class="text-[10px] text-slate-600 mono">${shortTime(m.ts)}</span>
           <button onclick="showReactionPicker(event,'${esc(m.id)}')" class="hidden group-hover:inline text-slate-500 hover:text-bch text-[11px] ml-1" title="Add reaction"><i class="fa-regular fa-face-smile"></i></button>
+          <button onclick="pinMessage('${esc(m.id)}','${esc((m.content||'').replace(/'/g,"").slice(0,150))}','${esc(displayHandle)}')" class="hidden group-hover:inline text-slate-500 hover:text-bch text-[11px] ml-1" title="Pin Message"><i class="fa-solid fa-thumbtack"></i></button>
           ${S.canManage?`<button onclick="deleteMsg('${esc(m.id)}')" class="hidden group-hover:inline text-red-500 text-[10px] ml-auto"><i class="fa-solid fa-trash"></i></button>`:''}
         </div>
         <div class="text-xs text-slate-200 mt-0.5 break-words leading-relaxed">${contentHtml}</div>
@@ -1630,7 +1675,7 @@ function listenMembers(serverId){
         div.onclick = e => { showUserProfile(e, m.uid, handle, avatar); };
         div.oncontextmenu = e => { e.preventDefault(); showUserContext(e, m.uid, handle, avatar); };
         div.innerHTML = `<div class="relative shrink-0"><img src="${esc(avatar)}" class="w-7 h-7 rounded-full border border-dark-600"><span class="member-status-dot ${dotClass}"></span></div>
-          <div class="min-w-0"><div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(handle)}</div>
+          <div class="min-w-0"><div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(handle)}${isNewMember(m.uid)?' <i class="fa-solid fa-seedling new-member-leaf" title="New member"></i>':''}</div>
           <div class="text-[9px] text-slate-500">${isOwner?'Owner':statusLabel}</div></div>`;
         list.appendChild(div);
       }
@@ -2301,6 +2346,132 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape'){ document.querySelectorAll('[id^="modal-"]').forEach(m => m.classList.add('hidden')); hideCtx(); }
 });
 document.addEventListener('DOMContentLoaded', loadRemember);
+
+
+// ===== NEW MEMBER LEAF (< 7 days) =====
+function isNewMember(uid){
+  if(!uid) return false;
+  const m = (S.membersCache||[]).find(x => x.uid === uid);
+  const joined = m?.joinedAt || S.profileCache?.[uid]?.createdAt || 0;
+  if(!joined) return false;
+  return (Date.now() - joined) < 7 * 24 * 60 * 60 * 1000;
+}
+
+// ===== MEMBERS PANEL TOGGLE =====
+S.membersHidden = false;
+window.toggleMembersPanel = () => {
+  const panel = $('membersPanel');
+  if(!panel) return;
+  S.membersHidden = !S.membersHidden;
+  if(S.membersHidden){
+    panel.style.display = 'none';
+  } else {
+    panel.style.display = '';
+    panel.classList.remove('hidden');
+  }
+};
+
+// ===== NOTIFICATIONS =====
+window.toggleNotifMenu = (e) => {
+  e.stopPropagation();
+  const menu = $('notifMenu');
+  if(!menu) return;
+  menu.style.left = Math.min(e.clientX - 100, window.innerWidth - 240) + 'px';
+  menu.style.top = (e.clientY + 8) + 'px';
+  menu.classList.toggle('hidden');
+};
+window.setChanNotif = (mode) => {
+  if(!S.server || !S.channel) return;
+  localStorage.setItem(`havoc_notif_${S.server.id}_${S.channel}`, mode);
+  $('notifMenu')?.classList.add('hidden');
+};
+
+// ===== THREADS =====
+window.openThreadsPanel = async () => {
+  $('pinsPanel')?.classList.add('hidden');
+  $('threadsPanel')?.classList.remove('hidden');
+  await loadThreads();
+};
+window.closeThreadsPanel = () => $('threadsPanel')?.classList.add('hidden');
+window.startThread = async () => {
+  if(!S.user || !S.server || !S.channel) return alert('Join a channel first');
+  const name = prompt('Thread name:');
+  if(!name || !name.trim()) return;
+  try{
+    await addDoc(collection(db,'servers',S.server.id,'channels',S.channel,'threads'), {
+      name: name.trim().slice(0,80),
+      createdBy: S.user.uid,
+      createdByHandle: safe(S.profile?.handle,'User'),
+      createdAt: Date.now(),
+      messageCount: 0
+    });
+    await loadThreads();
+  }catch(e){ alert(e.message); }
+};
+async function loadThreads(){
+  const el = $('threadsList');
+  if(!el) return;
+  if(!S.server || !S.channel){ el.innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Select a channel</p>'; return; }
+  try{
+    const snap = await getDocs(collection(db,'servers',S.server.id,'channels',S.channel,'threads'));
+    const threads = [];
+    snap.forEach(d => threads.push({id:d.id, ...d.data()}));
+    threads.sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
+    if(!threads.length){ el.innerHTML = '<p class="text-xs text-slate-500 mono text-center py-8">No threads yet</p>'; return; }
+    el.innerHTML = '';
+    threads.forEach(th => {
+      const div = document.createElement('div');
+      div.className = 'p-2.5 rounded-lg bg-dark-950 border border-dark-700 hover:border-bch/40 cursor-pointer';
+      div.innerHTML = `<div class="font-bold text-xs text-white truncate">${esc(th.name)}</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">${esc(th.createdByHandle||'')} · ${shortTime(th.createdAt)}</div>`;
+      el.appendChild(div);
+    });
+  }catch(e){ el.innerHTML = '<p class="text-xs text-red-400">'+esc(e.message)+'</p>'; }
+}
+
+// ===== PINS =====
+window.openPinsPanel = async () => {
+  $('threadsPanel')?.classList.add('hidden');
+  $('pinsPanel')?.classList.remove('hidden');
+  await loadPins();
+};
+window.closePinsPanel = () => $('pinsPanel')?.classList.add('hidden');
+async function loadPins(){
+  const el = $('pinsList');
+  if(!el) return;
+  if(!S.server || !S.channel){ el.innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Select a channel</p>'; return; }
+  try{
+    const snap = await getDocs(collection(db,'servers',S.server.id,'channels',S.channel,'pins'));
+    const pins = [];
+    snap.forEach(d => pins.push({id:d.id, ...d.data()}));
+    pins.sort((a,b) => (b.pinnedAt||0)-(a.pinnedAt||0));
+    if(!pins.length){ el.innerHTML = '<p class="text-xs text-slate-500 mono text-center py-8">No pinned messages<br>Hover a message → pin icon</p>'; return; }
+    el.innerHTML = '';
+    pins.forEach(pin => {
+      const div = document.createElement('div');
+      div.className = 'p-2.5 rounded-lg bg-dark-950 border border-dark-700';
+      div.innerHTML = `<div class="flex items-center gap-1.5 mb-1"><span class="font-bold text-xs text-bch">${esc(pin.handle||'User')}</span><span class="text-[10px] text-slate-600">${shortTime(pin.pinnedAt)}</span>
+        ${S.canManage?`<button onclick="unpinMsg('${esc(pin.id)}')" class="ml-auto text-red-400 text-[10px]"><i class="fa-solid fa-xmark"></i></button>`:''}</div>
+        <div class="text-xs text-slate-300 break-words">${esc((pin.content||'').slice(0,200))}</div>`;
+      el.appendChild(div);
+    });
+  }catch(e){ el.innerHTML = '<p class="text-xs text-red-400">'+esc(e.message)+'</p>'; }
+}
+window.pinMessage = async (msgId, content, handle) => {
+  if(!S.user || !S.server || !S.channel) return;
+  try{
+    await setDoc(doc(db,'servers',S.server.id,'channels',S.channel,'pins',msgId), {
+      content: content||'', handle: handle||'', pinnedBy: S.user.uid, pinnedAt: Date.now()
+    });
+    alert('Message pinned');
+  }catch(e){ alert(e.message); }
+};
+window.unpinMsg = async (id) => {
+  if(!S.canManage) return;
+  await deleteDoc(doc(db,'servers',S.server.id,'channels',S.channel,'pins',id));
+  loadPins();
+};
+
 
 console.log('%c havoc ready ', 'background:#0AC18E;color:#000;font-weight:900;padding:4px 10px;');
 </script>
