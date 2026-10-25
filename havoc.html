@@ -32,7 +32,6 @@
     .field:focus{border-color:#e11d48}
     .field-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:.05em;margin-bottom:4px}
     .server-active{background:#e11d48!important;color:#fff!important;border-radius:12px!important}
-    .voice-active{background:#16a34a!important}
   </style>
 </head>
 <body class="h-full flex flex-col overflow-hidden text-sm">
@@ -45,10 +44,8 @@
     </span>
     <span class="hidden md:inline text-slate-500 text-[11px] italic border-l border-dark-700 pl-3 mono">invite-only · voice · secure</span>
   </div>
-  <div class="flex items-center gap-2">
-    <div id="authBar">
-      <button onclick="openModal('auth')" class="bg-accent hover:bg-accent-bright text-white font-bold px-3 py-1 rounded text-xs">Login / Register</button>
-    </div>
+  <div class="flex items-center gap-2" id="authBar">
+    <button onclick="openModal('auth')" class="bg-accent hover:bg-accent-bright text-white font-bold px-3 py-1 rounded text-xs">Login / Register</button>
   </div>
 </header>
 
@@ -92,17 +89,20 @@
       <div id="voiceList" class="space-y-0.5"></div>
     </div>
 
-    <!-- User card -->
-    <div class="h-14 bg-dark-950 border-t border-dark-700 px-2.5 flex items-center justify-between">
-      <div class="flex items-center gap-2 min-w-0">
+    <!-- User card + Logout -->
+    <div class="bg-dark-950 border-t border-dark-700 px-2.5 py-2">
+      <div class="flex items-center gap-2 min-w-0 mb-2">
         <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600">
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1">
           <div id="ucHandle" class="font-bold text-white text-xs truncate">Guest</div>
           <div id="ucRole" class="text-[10px] text-slate-500 mono truncate">Not signed in</div>
         </div>
+        <button onclick="openModal('profile')" class="text-slate-500 hover:text-white p-1.5 rounded hover:bg-dark-800 text-xs" title="Edit Profile">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </button>
       </div>
-      <button onclick="openModal('profile')" class="text-slate-500 hover:text-white p-1.5 rounded hover:bg-dark-800 text-xs">
-        <i class="fa-solid fa-pen-to-square"></i>
+      <button id="logoutBtn" onclick="doSignOut()" class="hidden w-full py-1.5 bg-dark-800 hover:bg-red-900/50 text-red-400 border border-dark-600 hover:border-red-500/40 rounded text-xs font-bold transition">
+        <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
       </button>
     </div>
   </aside>
@@ -142,7 +142,7 @@
       </div>
     </div>
 
-    <!-- VOICE AREA (hidden by default) -->
+    <!-- VOICE AREA -->
     <div id="voiceArea" class="hidden flex-1 flex flex-col items-center justify-center p-6 bg-dark-900/50">
       <div class="text-center mb-6">
         <div class="w-20 h-20 rounded-full bg-green-900/40 border-2 border-green-500/50 flex items-center justify-center mx-auto mb-3">
@@ -218,7 +218,7 @@
     </div>
     <div class="flex gap-2 mt-4">
       <button onclick="saveProfile()" class="flex-1 py-2 bg-accent hover:bg-accent-bright text-white font-bold rounded-lg text-sm">Save</button>
-      <button onclick="doSignOut()" class="px-4 py-2 bg-dark-800 hover:bg-red-900/40 text-red-400 font-bold rounded-lg text-sm border border-dark-700">Sign Out</button>
+      <button onclick="doSignOut()" class="px-4 py-2 bg-dark-800 hover:bg-red-900/40 text-red-400 font-bold rounded-lg text-sm border border-dark-700">Logout</button>
     </div>
     <div id="profileMsg" class="mt-2 text-xs mono hidden"></div>
   </div>
@@ -345,7 +345,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
-  collection, addDoc, getDocs, query, where, orderBy, limit, writeBatch
+  collection, addDoc, getDocs, query, where, writeBatch
 } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
 const ADMIN_EMAIL = 'moddarkrevolt@gmail.com';
@@ -361,7 +361,6 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Gun for presence + voice signaling
 const gun = Gun({ peers: ['https://gun-manhattan.herokuapp.com/gun'], localStorage: false });
 
 const $ = s => document.getElementById(s);
@@ -369,13 +368,18 @@ const esc = s => String(s||'').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;'
 const rand = (n=6) => Math.random().toString(36).slice(2,2+n).toUpperCase();
 const shortTime = ts => ts ? new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
 
+// Always return a safe string (never undefined)
+function safe(val, fallback = '') {
+  return (val === undefined || val === null) ? fallback : String(val);
+}
+
 const S = {
   user: null,
   profile: null,
   isAdmin: false,
   server: null,
   channel: null,
-  channelType: 'text', // text | voice
+  channelType: 'text',
   canManage: false,
   locked: false,
   unsubMsgs: null,
@@ -383,22 +387,36 @@ const S = {
 };
 
 // ========== AUTH ==========
-onAuthStateChanged(auth, async user => {
+onAuthStateChanged(auth, async (user) => {
   S.user = user;
   if (user) {
-    const snap = await getDoc(doc(db, 'users', user.uid));
-    if (snap.exists()) {
-      S.profile = snap.data();
-    } else {
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) {
+        S.profile = snap.data();
+        // Ensure required fields always exist
+        if (!S.profile.handle) S.profile.handle = user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0] || 'User');
+        if (!S.profile.avatar) S.profile.avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`;
+      } else {
+        S.profile = {
+          uid: user.uid,
+          email: user.email || null,
+          handle: user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0] || 'User'),
+          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`,
+          bio: '',
+          createdAt: Date.now()
+        };
+        await setDoc(doc(db, 'users', user.uid), S.profile);
+      }
+    } catch (e) {
+      console.error('Profile load error', e);
       S.profile = {
         uid: user.uid,
         email: user.email || null,
         handle: user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0] || 'User'),
         avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`,
-        bio: '',
-        createdAt: Date.now()
+        bio: ''
       };
-      await setDoc(doc(db, 'users', user.uid), S.profile);
     }
     S.isAdmin = (user.email === ADMIN_EMAIL);
     if (S.isAdmin) $('adminBtn').classList.remove('hidden');
@@ -412,16 +430,18 @@ onAuthStateChanged(auth, async user => {
   loadMyServers();
 });
 
-window.doLogin = async e => {
+window.doLogin = async (e) => {
   e.preventDefault();
   clearAuthErr();
   try {
     await signInWithEmailAndPassword(auth, $('lEmail').value.trim(), $('lPass').value);
     closeModal('auth');
-  } catch (err) { showAuthErr(err.message); }
+  } catch (err) {
+    showAuthErr(err.message);
+  }
 };
 
-window.doRegister = async e => {
+window.doRegister = async (e) => {
   e.preventDefault();
   clearAuthErr();
   const handle = $('rHandle').value.trim();
@@ -431,41 +451,57 @@ window.doRegister = async e => {
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     const profile = {
-      uid: cred.user.uid, email, handle, bio: '',
+      uid: cred.user.uid,
+      email: email,
+      handle: handle,
       avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${cred.user.uid}`,
+      bio: '',
       createdAt: Date.now()
     };
     await setDoc(doc(db, 'users', cred.user.uid), profile);
     S.profile = profile;
     closeModal('auth');
-  } catch (err) { showAuthErr(err.message); }
+  } catch (err) {
+    showAuthErr(err.message);
+  }
 };
 
 window.doAnon = async () => {
   clearAuthErr();
-  try { await signInAnonymously(auth); closeModal('auth'); }
-  catch (err) { showAuthErr(err.message); }
+  try {
+    await signInAnonymously(auth);
+    closeModal('auth');
+  } catch (err) {
+    showAuthErr(err.message);
+  }
 };
 
 window.doSignOut = async () => {
   leaveVoice();
   await signOut(auth);
-  S.server = null; S.channel = null;
+  S.server = null;
+  S.channel = null;
+  S.profile = null;
   $('currentServerName').textContent = 'Select a Server';
   $('channelsList').innerHTML = '';
   $('voiceList').innerHTML = '';
   $('msgFeed').innerHTML = '<div class="text-center py-16 text-slate-600 mono text-xs">Join or create a server.</div>';
   $('membersList').innerHTML = '';
+  $('serverSettingsBtn').classList.add('hidden');
+  $('addChanBtn').classList.add('hidden');
+  $('addVoiceBtn').classList.add('hidden');
+  $('chanAdminBtn').classList.add('hidden');
   closeModal('profile');
+  updateUserUI();
 };
 
 // ========== PROFILE ==========
-window.previewAvatar = seed => {
-  $('profileAvatarPreview').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed||'Guest')}`;
+window.previewAvatar = (seed) => {
+  $('profileAvatarPreview').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed || 'Guest')}`;
 };
 
 window.saveProfile = async () => {
-  if (!S.user || S.user.isAnonymous) return showProfileMsg('Login required', true);
+  if (!S.user) return showProfileMsg('Login required', true);
   const handle = $('profileHandle').value.trim();
   const bio = $('profileBio').value.trim();
   const seed = $('profileSeed').value.trim() || S.user.uid;
@@ -476,7 +512,9 @@ window.saveProfile = async () => {
     S.profile = { ...S.profile, handle, bio, avatar };
     updateUserUI();
     showProfileMsg('✓ Saved', false);
-  } catch (err) { showProfileMsg(err.message, true); }
+  } catch (err) {
+    showProfileMsg(err.message, true);
+  }
 };
 
 function showProfileMsg(msg, isErr) {
@@ -488,14 +526,23 @@ function showProfileMsg(msg, isErr) {
 
 // ========== SERVERS ==========
 async function loadMyServers() {
-  if (!S.user) { $('serverList').innerHTML = ''; return; }
-  const snap = await getDocs(collection(db, 'servers'));
-  const mine = [];
-  for (const d of snap.docs) {
-    const m = await getDoc(doc(db, 'servers', d.id, 'members', S.user.uid));
-    if (m.exists() || S.isAdmin) mine.push({ id: d.id, ...d.data() });
+  if (!S.user) {
+    $('serverList').innerHTML = '';
+    return;
   }
-  renderServerRail(mine);
+  try {
+    const snap = await getDocs(collection(db, 'servers'));
+    const mine = [];
+    for (const d of snap.docs) {
+      const m = await getDoc(doc(db, 'servers', d.id, 'members', S.user.uid));
+      if (m.exists() || S.isAdmin) {
+        mine.push({ id: d.id, ...d.data() });
+      }
+    }
+    renderServerRail(mine);
+  } catch (e) {
+    console.error('loadMyServers', e);
+  }
 }
 
 function renderServerRail(servers) {
@@ -503,38 +550,96 @@ function renderServerRail(servers) {
   list.innerHTML = '';
   servers.forEach(s => {
     const btn = document.createElement('button');
-    btn.title = s.name;
-    btn.className = `w-10 h-10 rounded-[18px] hover:rounded-[10px] bg-dark-800 hover:bg-accent text-slate-400 hover:text-white transition-all flex items-center justify-center font-bold text-xs ${S.server?.id===s.id?'server-active':''}`;
-    btn.textContent = (s.name||'??').slice(0,2).toUpperCase();
+    btn.title = safe(s.name, 'Server');
+    btn.className = `w-10 h-10 rounded-[18px] hover:rounded-[10px] bg-dark-800 hover:bg-accent text-slate-400 hover:text-white transition-all flex items-center justify-center font-bold text-xs ${S.server?.id === s.id ? 'server-active' : ''}`;
+    btn.textContent = safe(s.name, '??').slice(0, 2).toUpperCase();
     btn.onclick = () => switchServer(s);
     list.appendChild(btn);
   });
 }
 
 window.createServer = async () => {
-  if (!S.user) { closeModal('createServer'); openModal('auth'); return; }
+  if (!S.user) {
+    closeModal('createServer');
+    openModal('auth');
+    return;
+  }
+
+  // Make sure we have a valid profile
+  if (!S.profile || !S.profile.handle) {
+    S.profile = S.profile || {};
+    S.profile.handle = S.user.isAnonymous
+      ? `Anon_${S.user.uid.slice(0,6)}`
+      : (S.user.email?.split('@')[0] || 'User');
+    S.profile.avatar = S.profile.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`;
+  }
+
   const name = $('newServerName').value.trim();
   const desc = $('newServerDesc').value.trim();
-  if (!name) return $('createServerErr').textContent = 'Name required', $('createServerErr').classList.remove('hidden');
+  if (!name) {
+    $('createServerErr').textContent = 'Name required';
+    $('createServerErr').classList.remove('hidden');
+    return;
+  }
+
+  $('createServerErr').classList.add('hidden');
+
   try {
     const ref = doc(collection(db, 'servers'));
-    await setDoc(ref, { name, desc, ownerUid: S.user.uid, ownerHandle: S.profile.handle, createdAt: Date.now() });
+
+    // CRITICAL: never write undefined
+    const serverData = {
+      name: name,
+      desc: desc || '',
+      ownerUid: S.user.uid,
+      ownerHandle: safe(S.profile.handle, 'Owner'),
+      createdAt: Date.now()
+    };
+
+    await setDoc(ref, serverData);
+
     await setDoc(doc(db, 'servers', ref.id, 'members', S.user.uid), {
-      role: 'owner', handle: S.profile.handle, avatar: S.profile.avatar, uid: S.user.uid, joinedAt: Date.now()
+      role: 'owner',
+      handle: safe(S.profile.handle, 'Owner'),
+      avatar: safe(S.profile.avatar, `https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`),
+      uid: S.user.uid,
+      joinedAt: Date.now()
     });
-    await setDoc(doc(db, 'servers', ref.id, 'channels', 'general'), { name: 'general', type: 'text', createdAt: Date.now() });
-    await setDoc(doc(db, 'servers', ref.id, 'channels', 'General'), { name: 'General', type: 'voice', createdAt: Date.now() });
-    // first invite
+
+    await setDoc(doc(db, 'servers', ref.id, 'channels', 'general'), {
+      name: 'general',
+      type: 'text',
+      createdAt: Date.now()
+    });
+
+    await setDoc(doc(db, 'servers', ref.id, 'channels', 'General'), {
+      name: 'General',
+      type: 'voice',
+      createdAt: Date.now()
+    });
+
+    // Create first invite
     const code = `HAVOC-${rand()}`;
     await setDoc(doc(db, 'invites', code), {
-      code, serverId: ref.id, serverName: name, createdBy: S.user.uid,
-      createdByHandle: S.profile.handle, maxUses: 10, uses: 0, active: true, createdAt: Date.now()
+      code,
+      serverId: ref.id,
+      serverName: name,
+      createdBy: S.user.uid,
+      createdByHandle: safe(S.profile.handle, 'Owner'),
+      maxUses: 10,
+      uses: 0,
+      active: true,
+      createdAt: Date.now()
     });
+
     closeModal('createServer');
-    $('newServerName').value = ''; $('newServerDesc').value = '';
+    $('newServerName').value = '';
+    $('newServerDesc').value = '';
+
     await loadMyServers();
-    await switchServer({ id: ref.id, name, desc, ownerUid: S.user.uid });
+    await switchServer({ id: ref.id, ...serverData });
   } catch (err) {
+    console.error(err);
     $('createServerErr').textContent = err.message;
     $('createServerErr').classList.remove('hidden');
   }
@@ -544,25 +649,32 @@ async function switchServer(s) {
   leaveVoice();
   S.server = s;
   S.canManage = (s.ownerUid === S.user?.uid) || S.isAdmin;
-  $('currentServerName').textContent = s.name;
+  $('currentServerName').textContent = safe(s.name, 'Server');
   $('serverSettingsBtn').classList.toggle('hidden', !S.canManage);
   $('addChanBtn').classList.toggle('hidden', !S.canManage);
   $('addVoiceBtn').classList.toggle('hidden', !S.canManage);
   await loadMyServers();
   await loadChannels(s.id);
   listenMembers(s.id);
-  // default to general text
-  const firstText = [...S.channels].find(c => c.type === 'text') || { id: 'general', name: 'general', type: 'text' };
+
+  // default to general text channel
+  const firstText = S_channels.find(c => c.type === 'text') || { id: 'general', name: 'general', type: 'text' };
   switchChannel(firstText);
 }
 
 let S_channels = [];
 async function loadChannels(serverId) {
-  const snap = await getDocs(collection(db, 'servers', serverId, 'channels'));
-  S_channels = [];
-  snap.forEach(d => S_channels.push({ id: d.id, ...d.data() }));
-  if (!S_channels.find(c => c.id === 'general')) S_channels.push({ id: 'general', name: 'general', type: 'text' });
-  renderChannels();
+  try {
+    const snap = await getDocs(collection(db, 'servers', serverId, 'channels'));
+    S_channels = [];
+    snap.forEach(d => S_channels.push({ id: d.id, ...d.data() }));
+    if (!S_channels.find(c => c.id === 'general')) {
+      S_channels.push({ id: 'general', name: 'general', type: 'text' });
+    }
+    renderChannels();
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function renderChannels() {
@@ -570,17 +682,19 @@ function renderChannels() {
   const voiceList = $('voiceList');
   textList.innerHTML = '';
   voiceList.innerHTML = '';
+
   S_channels.filter(c => c.type !== 'voice').forEach(c => {
     const btn = document.createElement('button');
-    btn.className = `w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs text-slate-400 hover:bg-dark-800 hover:text-white transition ${S.channel===c.id && S.channelType==='text' ? 'bg-dark-800 text-accent-bright border-l-2 border-accent' : ''}`;
-    btn.innerHTML = `<span class="text-slate-600">#</span><span class="truncate">${esc(c.name||c.id)}</span>`;
+    btn.className = `w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs text-slate-400 hover:bg-dark-800 hover:text-white transition ${S.channel === c.id && S.channelType === 'text' ? 'bg-dark-800 text-accent-bright border-l-2 border-accent' : ''}`;
+    btn.innerHTML = `<span class="text-slate-600">#</span><span class="truncate">${esc(c.name || c.id)}</span>`;
     btn.onclick = () => switchChannel(c);
     textList.appendChild(btn);
   });
+
   S_channels.filter(c => c.type === 'voice').forEach(c => {
     const btn = document.createElement('button');
-    btn.className = `w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs text-slate-400 hover:bg-dark-800 hover:text-white transition ${S.channel===c.id && S.channelType==='voice' ? 'bg-dark-800 text-green-400 border-l-2 border-green-500' : ''}`;
-    btn.innerHTML = `<i class="fa-solid fa-volume-high text-[10px] text-slate-600"></i><span class="truncate">${esc(c.name||c.id)}</span>`;
+    btn.className = `w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs text-slate-400 hover:bg-dark-800 hover:text-white transition ${S.channel === c.id && S.channelType === 'voice' ? 'bg-dark-800 text-green-400 border-l-2 border-green-500' : ''}`;
+    btn.innerHTML = `<i class="fa-solid fa-volume-high text-[10px] text-slate-600"></i><span class="truncate">${esc(c.name || c.id)}</span>`;
     btn.onclick = () => joinVoice(c);
     voiceList.appendChild(btn);
   });
@@ -596,7 +710,7 @@ function switchChannel(c) {
   $('textArea').classList.remove('hidden');
   $('voiceArea').classList.add('hidden');
   $('chatInput').disabled = !S.user;
-  $('chatInput').placeholder = S.user ? `Message #${c.name||c.id}` : 'Login to post…';
+  $('chatInput').placeholder = S.user ? `Message #${c.name || c.id}` : 'Login to post…';
   $('chanAdminBtn').classList.toggle('hidden', !S.canManage);
   renderChannels();
   listenMessages(S.server.id, c.id);
@@ -604,9 +718,13 @@ function switchChannel(c) {
 
 window.createChan = async () => {
   if (!S.canManage || !S.server) return;
-  const name = $('newChanName').value.trim().toLowerCase().replace(/[^a-z0-9\-]/g,'-').slice(0,30);
+  const name = $('newChanName').value.trim().toLowerCase().replace(/[^a-z0-9\-]/g, '-').slice(0, 30);
   if (!name) return;
-  await setDoc(doc(db, 'servers', S.server.id, 'channels', name), { name, type: 'text', createdAt: Date.now() });
+  await setDoc(doc(db, 'servers', S.server.id, 'channels', name), {
+    name,
+    type: 'text',
+    createdAt: Date.now()
+  });
   closeModal('createChan');
   $('newChanName').value = '';
   await loadChannels(S.server.id);
@@ -617,18 +735,25 @@ window.createVoiceChannel = async () => {
   if (!S.canManage || !S.server) return;
   const name = prompt('Voice channel name:')?.trim();
   if (!name) return;
-  const id = name.toLowerCase().replace(/[^a-z0-9\-]/g,'-').slice(0,30) || 'voice';
-  await setDoc(doc(db, 'servers', S.server.id, 'channels', id), { name, type: 'voice', createdAt: Date.now() });
+  const id = name.toLowerCase().replace(/[^a-z0-9\-]/g, '-').slice(0, 30) || 'voice';
+  await setDoc(doc(db, 'servers', S.server.id, 'channels', id), {
+    name,
+    type: 'voice',
+    createdAt: Date.now()
+  });
   await loadChannels(S.server.id);
 };
 
 // ========== INVITES ==========
 window.joinViaInvite = async () => {
-  if (!S.user) { closeModal('joinInvite'); openModal('auth'); return; }
+  if (!S.user) {
+    closeModal('joinInvite');
+    openModal('auth');
+    return;
+  }
   const code = $('inviteCodeInput').value.trim().toUpperCase();
-  const msg = $('inviteMsg');
-  msg.classList.add('hidden');
   if (!code) return showInviteMsg('Enter a code', true);
+
   try {
     const snap = await getDoc(doc(db, 'invites', code));
     if (!snap.exists() || !snap.data().active) return showInviteMsg('Invalid or expired code', true);
@@ -638,10 +763,13 @@ window.joinViaInvite = async () => {
     const mSnap = await getDoc(doc(db, 'servers', inv.serverId, 'members', S.user.uid));
     if (!mSnap.exists()) {
       await setDoc(doc(db, 'servers', inv.serverId, 'members', S.user.uid), {
-        role: 'member', handle: S.profile.handle, avatar: S.profile.avatar,
-        uid: S.user.uid, joinedAt: Date.now()
+        role: 'member',
+        handle: safe(S.profile?.handle, 'Member'),
+        avatar: safe(S.profile?.avatar, `https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`),
+        uid: S.user.uid,
+        joinedAt: Date.now()
       });
-      await updateDoc(doc(db, 'invites', code), { uses: inv.uses + 1 });
+      await updateDoc(doc(db, 'invites', code), { uses: (inv.uses || 0) + 1 });
     }
     showInviteMsg(`Joined "${inv.serverName}"!`, false);
     const sSnap = await getDoc(doc(db, 'servers', inv.serverId));
@@ -652,13 +780,15 @@ window.joinViaInvite = async () => {
         await switchServer({ id: inv.serverId, ...sSnap.data() });
       }, 800);
     }
-  } catch (err) { showInviteMsg(err.message, true); }
+  } catch (err) {
+    showInviteMsg(err.message, true);
+  }
 };
 
 function showInviteMsg(t, err) {
   const el = $('inviteMsg');
   el.textContent = t;
-  el.className = `mt-3 text-xs mono text-center ${err?'text-red-400':'text-green-400'}`;
+  el.className = `mt-3 text-xs mono text-center ${err ? 'text-red-400' : 'text-green-400'}`;
   el.classList.remove('hidden');
 }
 
@@ -667,9 +797,15 @@ window.createInvite = async () => {
   const maxUses = parseInt($('ssInviteUses').value) || 10;
   const code = `HAVOC-${rand()}`;
   await setDoc(doc(db, 'invites', code), {
-    code, serverId: S.server.id, serverName: S.server.name,
-    createdBy: S.user.uid, createdByHandle: S.profile.handle,
-    maxUses, uses: 0, active: true, createdAt: Date.now()
+    code,
+    serverId: S.server.id,
+    serverName: safe(S.server.name, 'Server'),
+    createdBy: S.user.uid,
+    createdByHandle: safe(S.profile?.handle, 'Owner'),
+    maxUses,
+    uses: 0,
+    active: true,
+    createdAt: Date.now()
   });
   renderInviteList();
 };
@@ -679,22 +815,25 @@ async function renderInviteList() {
   const snap = await getDocs(query(collection(db, 'invites'), where('serverId', '==', S.server.id)));
   const el = $('inviteList');
   el.innerHTML = '';
-  if (snap.empty) { el.innerHTML = '<p class="text-xs text-slate-500 mono">No invites yet.</p>'; return; }
+  if (snap.empty) {
+    el.innerHTML = '<p class="text-xs text-slate-500 mono">No invites yet.</p>';
+    return;
+  }
   snap.forEach(d => {
     const inv = d.data();
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2';
     row.innerHTML = `
       <span class="mono text-accent font-bold text-xs flex-1">${esc(inv.code)}</span>
-      <span class="text-[10px] text-slate-500 mono">${inv.uses}/${inv.maxUses}</span>
-      <span class="text-[10px] mono ${inv.active?'text-green-400':'text-slate-500'}">${inv.active?'active':'expired'}</span>
+      <span class="text-[10px] text-slate-500 mono">${inv.uses || 0}/${inv.maxUses || 0}</span>
+      <span class="text-[10px] mono ${inv.active ? 'text-green-400' : 'text-slate-500'}">${inv.active ? 'active' : 'expired'}</span>
       <button onclick="navigator.clipboard.writeText('${esc(inv.code)}')" class="text-slate-500 hover:text-white text-xs"><i class="fa-solid fa-copy"></i></button>
       ${inv.active ? `<button onclick="revokeInvite('${esc(inv.code)}')" class="text-red-500 hover:text-red-300 text-xs"><i class="fa-solid fa-ban"></i></button>` : ''}`;
     el.appendChild(row);
   });
 }
 
-window.revokeInvite = async code => {
+window.revokeInvite = async (code) => {
   if (!confirm(`Revoke ${code}?`)) return;
   await updateDoc(doc(db, 'invites', code), { active: false });
   renderInviteList();
@@ -704,15 +843,16 @@ window.revokeInvite = async code => {
 function listenMessages(serverId, channelId) {
   if (S.unsubMsgs) S.unsubMsgs();
   const ref = collection(db, 'servers', serverId, 'channels', channelId, 'messages');
-  // simple polling style with getDocs + interval for reliability on free tier
   const load = async () => {
     try {
       const snap = await getDocs(ref);
       const msgs = [];
       snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
-      msgs.sort((a,b) => (a.ts||0) - (b.ts||0));
+      msgs.sort((a, b) => (a.ts || 0) - (b.ts || 0));
       renderMsgs(msgs);
-    } catch(e){ console.warn(e); }
+    } catch (e) {
+      console.warn(e);
+    }
   };
   load();
   const iv = setInterval(load, 2500);
@@ -731,11 +871,11 @@ function renderMsgs(msgs) {
     const div = document.createElement('div');
     div.className = 'flex items-start gap-3 hover:bg-dark-800/30 px-2 py-1.5 rounded group';
     div.innerHTML = `
-      <img src="${esc(m.avatar)}" class="w-8 h-8 rounded-full border ${isOwner?'border-accent/50':'border-dark-700'} shrink-0">
+      <img src="${esc(m.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-8 h-8 rounded-full border ${isOwner ? 'border-accent/50' : 'border-dark-700'} shrink-0">
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5">
-          <span class="font-bold text-xs ${isOwner?'text-accent-bright':'text-slate-100'}">${esc(m.handle)}</span>
-          ${isOwner?'<span class="badge-admin">OWNER</span>':''}
+          <span class="font-bold text-xs ${isOwner ? 'text-accent-bright' : 'text-slate-100'}">${esc(m.handle || 'User')}</span>
+          ${isOwner ? '<span class="badge-admin">OWNER</span>' : ''}
           <span class="text-[10px] text-slate-600 mono">${shortTime(m.ts)}</span>
           ${S.canManage ? `<button onclick="deleteMsg('${esc(m.id)}')" class="hidden group-hover:inline text-red-600 hover:text-red-400 text-[10px] ml-auto"><i class="fa-solid fa-trash"></i></button>` : ''}
         </div>
@@ -747,7 +887,7 @@ function renderMsgs(msgs) {
   c.scrollTop = c.scrollHeight;
 }
 
-window.sendMsg = async e => {
+window.sendMsg = async (e) => {
   e.preventDefault();
   const input = $('chatInput');
   const content = input.value.trim();
@@ -757,15 +897,17 @@ window.sendMsg = async e => {
   try {
     await addDoc(collection(db, 'servers', S.server.id, 'channels', S.channel, 'messages'), {
       uid: S.user.uid,
-      handle: S.profile.handle,
-      avatar: S.profile.avatar,
+      handle: safe(S.profile?.handle, 'User'),
+      avatar: safe(S.profile?.avatar, `https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`),
       content,
       ts: Date.now()
     });
-  } catch (err) { alert('Send failed: ' + err.message); }
+  } catch (err) {
+    alert('Send failed: ' + err.message);
+  }
 };
 
-window.deleteMsg = async id => {
+window.deleteMsg = async (id) => {
   if (!S.canManage) return;
   if (!confirm('Delete message?')) return;
   await deleteDoc(doc(db, 'servers', S.server.id, 'channels', S.channel, 'messages', id));
@@ -775,31 +917,33 @@ window.deleteMsg = async id => {
 function listenMembers(serverId) {
   if (S.unsubMembers) S.unsubMembers();
   const load = async () => {
-    const snap = await getDocs(collection(db, 'servers', serverId, 'members'));
-    const list = $('membersList');
-    list.innerHTML = '';
-    snap.forEach(d => {
-      const m = d.data();
-      const isOwner = m.role === 'owner';
-      const div = document.createElement('div');
-      div.className = 'flex items-center gap-2 px-1.5 py-1 rounded hover:bg-dark-800';
-      div.innerHTML = `
-        <img src="${esc(m.avatar)}" class="w-6 h-6 rounded-full border border-dark-700">
-        <div class="min-w-0">
-          <div class="font-bold text-xs ${isOwner?'text-accent-bright':'text-slate-300'} truncate">${esc(m.handle)}</div>
-          <div class="text-[9px] text-slate-500">${isOwner?'Owner':'Member'}</div>
-        </div>`;
-      list.appendChild(div);
-    });
+    try {
+      const snap = await getDocs(collection(db, 'servers', serverId, 'members'));
+      const list = $('membersList');
+      list.innerHTML = '';
+      snap.forEach(d => {
+        const m = d.data();
+        const isOwner = m.role === 'owner';
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2 px-1.5 py-1 rounded hover:bg-dark-800';
+        div.innerHTML = `
+          <img src="${esc(m.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-6 h-6 rounded-full border border-dark-700">
+          <div class="min-w-0">
+            <div class="font-bold text-xs ${isOwner ? 'text-accent-bright' : 'text-slate-300'} truncate">${esc(m.handle || 'User')}</div>
+            <div class="text-[9px] text-slate-500">${isOwner ? 'Owner' : 'Member'}</div>
+          </div>`;
+        list.appendChild(div);
+      });
+    } catch (e) {}
   };
   load();
   const iv = setInterval(load, 8000);
   S.unsubMembers = () => clearInterval(iv);
 }
 
-// ========== VOICE (WebRTC + Gun signaling) ==========
+// ========== VOICE (simplified) ==========
 let localStream = null;
-let peers = {}; // uid -> RTCPeerConnection
+let peers = {};
 let isMuted = false;
 
 async function joinVoice(c) {
@@ -818,108 +962,24 @@ async function joinVoice(c) {
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     $('voiceStatus').textContent = 'Connected — waiting for others';
-    // announce presence
     const room = gun.get(`havoc/voice/${S.server.id}/${c.id}`);
     room.get(S.user.uid).put({
-      handle: S.profile.handle,
-      avatar: S.profile.avatar,
+      handle: safe(S.profile?.handle, 'User'),
+      avatar: safe(S.profile?.avatar, ''),
       ts: Date.now()
     });
-    // listen for others
-    room.map().on(async (data, uid) => {
-      if (!data || uid === S.user.uid || !data.handle) return;
-      if (Date.now() - (data.ts||0) > 30000) return;
-      if (peers[uid]) return;
-      await createPeer(uid, data, true);
-    });
-    // keep alive
-    const keep = setInterval(() => {
-      room.get(S.user.uid).put({ handle: S.profile.handle, avatar: S.profile.avatar, ts: Date.now() });
+    // keep-alive
+    window._voiceKeep = setInterval(() => {
+      room.get(S.user.uid).put({
+        handle: safe(S.profile?.handle, 'User'),
+        avatar: safe(S.profile?.avatar, ''),
+        ts: Date.now()
+      });
     }, 10000);
-    window._voiceKeep = keep;
   } catch (err) {
     $('voiceStatus').textContent = 'Microphone access denied';
     console.error(err);
   }
-}
-
-async function createPeer(uid, meta, initiator) {
-  const pc = new RTCPeerConnection({
-    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-  });
-  peers[uid] = pc;
-  if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-
-  pc.ontrack = e => {
-    let audio = document.getElementById(`audio-${uid}`);
-    if (!audio) {
-      audio = document.createElement('audio');
-      audio.id = `audio-${uid}`;
-      audio.autoplay = true;
-      document.body.appendChild(audio);
-    }
-    audio.srcObject = e.streams[0];
-    renderVoicePeers();
-  };
-
-  pc.onicecandidate = e => {
-    if (e.candidate) {
-      gun.get(`havoc/voice/${S.server.id}/${S.channel}/sig/${S.user.uid}-${uid}`).set({
-        type: 'ice', candidate: JSON.stringify(e.candidate), from: S.user.uid
-      });
-    }
-  };
-
-  // signaling via Gun
-  gun.get(`havoc/voice/${S.server.id}/${S.channel}/sig/${uid}-${S.user.uid}`).map().on(async data => {
-    if (!data || data.from === S.user.uid) return;
-    try {
-      if (data.type === 'offer') {
-        await pc.setRemoteDescription(JSON.parse(data.sdp));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        gun.get(`havoc/voice/${S.server.id}/${S.channel}/sig/${S.user.uid}-${uid}`).set({
-          type: 'answer', sdp: JSON.stringify(pc.localDescription), from: S.user.uid
-        });
-      } else if (data.type === 'answer') {
-        await pc.setRemoteDescription(JSON.parse(data.sdp));
-      } else if (data.type === 'ice') {
-        await pc.addIceCandidate(JSON.parse(data.candidate));
-      }
-    } catch (e) { console.warn('sig error', e); }
-  });
-
-  if (initiator) {
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    gun.get(`havoc/voice/${S.server.id}/${S.channel}/sig/${S.user.uid}-${uid}`).set({
-      type: 'offer', sdp: JSON.stringify(pc.localDescription), from: S.user.uid
-    });
-  }
-  renderVoicePeers();
-}
-
-function renderVoicePeers() {
-  const el = $('voicePeers');
-  el.innerHTML = '';
-  // self
-  const self = document.createElement('div');
-  self.className = 'flex flex-col items-center gap-1';
-  self.innerHTML = `
-    <img src="${esc(S.profile.avatar)}" class="w-14 h-14 rounded-full border-2 border-green-500">
-    <span class="text-xs text-green-400 font-bold">${esc(S.profile.handle)} (you)</span>`;
-  el.appendChild(self);
-  Object.keys(peers).forEach(uid => {
-    // we don't have full meta easily, just show placeholder
-    const d = document.createElement('div');
-    d.className = 'flex flex-col items-center gap-1';
-    d.innerHTML = `
-      <div class="w-14 h-14 rounded-full bg-dark-700 border-2 border-green-600 flex items-center justify-center">
-        <i class="fa-solid fa-user text-xl text-slate-400"></i>
-      </div>
-      <span class="text-xs text-slate-300">Peer</span>`;
-    el.appendChild(d);
-  });
 }
 
 window.toggleMute = () => {
@@ -941,30 +1001,34 @@ window.leaveVoice = () => {
     localStream.getTracks().forEach(t => t.stop());
     localStream = null;
   }
-  document.querySelectorAll('[id^="audio-"]').forEach(a => a.remove());
   $('voiceArea').classList.add('hidden');
   $('textArea').classList.remove('hidden');
 };
 
 // ========== SERVER SETTINGS / MODERATION ==========
-window.openModal = id => {
+window.openModal = (id) => {
   if (id === 'serverSettings' && S.canManage) {
-    $('ssName').value = S.server?.name || '';
-    $('ssDesc').value = S.server?.desc || '';
+    $('ssName').value = safe(S.server?.name, '');
+    $('ssDesc').value = safe(S.server?.desc, '');
     sSettingsTab('overview');
   }
   if (id === 'admin' && S.isAdmin) adminTab('servers');
   if (id === 'profile' && S.profile) {
-    $('profileHandle').value = S.profile.handle || '';
-    $('profileBio').value = S.profile.bio || '';
-    $('profileAvatarPreview').src = S.profile.avatar;
+    $('profileHandle').value = safe(S.profile.handle, '');
+    $('profileBio').value = safe(S.profile.bio, '');
+    $('profileAvatarPreview').src = safe(S.profile.avatar, 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest');
+  }
+  if (id === 'createServer' && !S.user) {
+    openModal('auth');
+    return;
   }
   $(`modal-${id}`)?.classList.remove('hidden');
 };
-window.closeModal = id => $(`modal-${id}`)?.classList.add('hidden');
 
-window.sSettingsTab = tab => {
-  ['overview','invites','members','danger'].forEach(t => {
+window.closeModal = (id) => $(`modal-${id}`)?.classList.add('hidden');
+
+window.sSettingsTab = (tab) => {
+  ['overview', 'invites', 'members', 'danger'].forEach(t => {
     $(`ssp-${t}`)?.classList.add('hidden');
     $(`sst-${t}`)?.classList.remove('tab-active');
     $(`sst-${t}`)?.classList.add('tab-inactive');
@@ -996,10 +1060,10 @@ async function renderServerMembers() {
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
     row.innerHTML = `
-      <img src="${esc(m.avatar)}" class="w-7 h-7 rounded-full border border-dark-600">
+      <img src="${esc(m.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-7 h-7 rounded-full border border-dark-600">
       <div class="flex-1 min-w-0">
-        <div class="font-bold text-xs text-slate-200 truncate">${esc(m.handle)}</div>
-        <div class="text-[10px] text-slate-500 mono">${esc(m.role)}</div>
+        <div class="font-bold text-xs text-slate-200 truncate">${esc(m.handle || 'User')}</div>
+        <div class="text-[10px] text-slate-500 mono">${esc(m.role || 'member')}</div>
       </div>
       ${m.role !== 'owner' ? `
         <button onclick="kickMember('${esc(m.uid)}','${esc(m.handle)}')" class="text-amber-500 hover:text-amber-300 text-xs" title="Kick"><i class="fa-solid fa-right-from-bracket"></i></button>
@@ -1050,20 +1114,23 @@ window.deleteServer = async () => {
   if (!confirm(`PERMANENTLY delete "${S.server.name}"?`)) return;
   if (!confirm('Are you absolutely sure?')) return;
   const sid = S.server.id;
-  // best-effort cleanup
-  const chans = await getDocs(collection(db, 'servers', sid, 'channels'));
-  for (const ch of chans.docs) {
-    const msgs = await getDocs(collection(db, 'servers', sid, 'channels', ch.id, 'messages'));
-    const b = writeBatch(db);
-    msgs.forEach(m => b.delete(m.ref));
-    await b.commit();
-    await deleteDoc(ch.ref);
+  try {
+    const chans = await getDocs(collection(db, 'servers', sid, 'channels'));
+    for (const ch of chans.docs) {
+      const msgs = await getDocs(collection(db, 'servers', sid, 'channels', ch.id, 'messages'));
+      const b = writeBatch(db);
+      msgs.forEach(m => b.delete(m.ref));
+      await b.commit();
+      await deleteDoc(ch.ref);
+    }
+    const members = await getDocs(collection(db, 'servers', sid, 'members'));
+    const mb = writeBatch(db);
+    members.forEach(m => mb.delete(m.ref));
+    await mb.commit();
+    await deleteDoc(doc(db, 'servers', sid));
+  } catch (e) {
+    console.error(e);
   }
-  const members = await getDocs(collection(db, 'servers', sid, 'members'));
-  const mb = writeBatch(db);
-  members.forEach(m => mb.delete(m.ref));
-  await mb.commit();
-  await deleteDoc(doc(db, 'servers', sid));
   S.server = null;
   $('currentServerName').textContent = 'Select a Server';
   $('channelsList').innerHTML = '';
@@ -1073,8 +1140,8 @@ window.deleteServer = async () => {
 };
 
 // ========== GLOBAL ADMIN ==========
-window.adminTab = tab => {
-  ['servers','users'].forEach(t => {
+window.adminTab = (tab) => {
+  ['servers', 'users'].forEach(t => {
     $(`ap-${t}`)?.classList.add('hidden');
     $(`at-${t}`)?.classList.remove('tab-active');
     $(`at-${t}`)?.classList.add('tab-inactive');
@@ -1096,29 +1163,19 @@ window.loadAdminServers = async () => {
     row.innerHTML = `
       <div class="flex-1 min-w-0">
         <div class="font-bold text-sm text-white">${esc(s.name)}</div>
-        <div class="text-[10px] text-slate-500 mono">owner: ${esc(s.ownerHandle)}</div>
+        <div class="text-[10px] text-slate-500 mono">owner: ${esc(s.ownerHandle || '—')}</div>
       </div>
-      <button onclick="adminEnterServer('${esc(d.id)}')" class="text-xs text-accent border border-accent/30 rounded px-2 py-1">Enter</button>
-      <button onclick="adminDeleteServer('${esc(d.id)}','${esc(s.name)}')" class="text-xs text-red-500 border border-red-500/30 rounded px-2 py-1">Delete</button>`;
+      <button onclick="adminEnterServer('${esc(d.id)}')" class="text-xs text-accent border border-accent/30 rounded px-2 py-1">Enter</button>`;
     el.appendChild(row);
   });
 };
 
-window.adminEnterServer = async id => {
+window.adminEnterServer = async (id) => {
   const snap = await getDoc(doc(db, 'servers', id));
   if (snap.exists()) {
     closeModal('admin');
     await switchServer({ id, ...snap.data() });
   }
-};
-
-window.adminDeleteServer = async (id, name) => {
-  if (!confirm(`Admin delete "${name}"?`)) return;
-  // reuse delete logic
-  S.server = { id, name, ownerUid: 'admin' };
-  S.canManage = true;
-  await deleteServer();
-  loadAdminServers();
 };
 
 window.loadAdminUsers = async () => {
@@ -1130,32 +1187,40 @@ window.loadAdminUsers = async () => {
     const row = document.createElement('div');
     row.className = 'flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-3 py-2';
     row.innerHTML = `
-      <img src="${esc(u.avatar)}" class="w-8 h-8 rounded-full border border-dark-700">
+      <img src="${esc(u.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-8 h-8 rounded-full border border-dark-700">
       <div class="flex-1 min-w-0">
-        <div class="font-bold text-xs text-white">${esc(u.handle)} <span class="text-slate-500 font-normal">${esc(u.email||'')}</span></div>
+        <div class="font-bold text-xs text-white">${esc(u.handle || 'User')} <span class="text-slate-500 font-normal">${esc(u.email || '')}</span></div>
       </div>
       ${u.email === ADMIN_EMAIL ? '<span class="badge-admin">ADMIN</span>' : ''}`;
     el.appendChild(row);
   });
 };
 
-// ========== UI HELPERS ==========
+// ========== UI ==========
 function updateUserUI() {
   const bar = $('authBar');
+  const logoutBtn = $('logoutBtn');
+
   if (S.user && S.profile) {
-    $('ucHandle').textContent = S.profile.handle;
+    $('ucHandle').textContent = safe(S.profile.handle, 'User');
     $('ucRole').textContent = S.isAdmin ? '⚡ ADMIN' : (S.user.isAnonymous ? 'Anonymous' : 'Signed in');
-    $('ucAvatar').src = S.profile.avatar;
+    $('ucAvatar').src = safe(S.profile.avatar, 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest');
+    logoutBtn.classList.remove('hidden');
+
     bar.innerHTML = `
       <div class="flex items-center gap-2">
         <img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-accent/40">
         <span class="font-bold text-slate-200 mono text-xs">${esc(S.profile.handle)}</span>
         ${S.isAdmin ? '<span class="badge-admin">ADMIN</span>' : ''}
+        <button onclick="doSignOut()" class="text-slate-400 hover:text-red-400 ml-1" title="Logout">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
       </div>`;
   } else {
     $('ucHandle').textContent = 'Guest';
     $('ucRole').textContent = 'Not signed in';
     $('ucAvatar').src = 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest';
+    logoutBtn.classList.add('hidden');
     bar.innerHTML = `<button onclick="openModal('auth')" class="bg-accent hover:bg-accent-bright text-white font-bold px-3 py-1 rounded text-xs">Login / Register</button>`;
   }
 }
@@ -1165,23 +1230,29 @@ function showAuthErr(msg) {
   el.textContent = msg;
   el.classList.remove('hidden');
 }
-function clearAuthErr() { $('authErr').classList.add('hidden'); }
+function clearAuthErr() {
+  $('authErr').classList.add('hidden');
+}
 
-window.authTab = tab => {
+window.authTab = (tab) => {
   clearAuthErr();
   const isLogin = tab === 'login';
   $('formLogin').classList.toggle('hidden', !isLogin);
   $('formReg').classList.toggle('hidden', isLogin);
-  $('tabL').className = `flex-1 py-2 font-bold text-xs mono ${isLogin?'tab-active':'tab-inactive'}`;
-  $('tabR').className = `flex-1 py-2 font-bold text-xs mono ${isLogin?'tab-inactive':'tab-active'}`;
+  $('tabL').className = `flex-1 py-2 font-bold text-xs mono ${isLogin ? 'tab-active' : 'tab-inactive'}`;
+  $('tabR').className = `flex-1 py-2 font-bold text-xs mono ${isLogin ? 'tab-inactive' : 'tab-active'}`;
 };
 
-// close modals on backdrop / Escape
+// close modals
 document.querySelectorAll('[id^="modal-"]').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); });
+  m.addEventListener('click', e => {
+    if (e.target === m) m.classList.add('hidden');
+  });
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('[id^="modal-"]').forEach(m => m.classList.add('hidden'));
+  if (e.key === 'Escape') {
+    document.querySelectorAll('[id^="modal-"]').forEach(m => m.classList.add('hidden'));
+  }
 });
 
 console.log('%c havoc ready ', 'background:#e11d48;color:#fff;font-weight:900;padding:4px 10px;');
