@@ -34,29 +34,36 @@
     .field{width:100%;background:#050608;border:1px solid #242b3b;border-radius:8px;padding:8px 12px;font-size:13px;color:#fff;outline:none}
     .field:focus{border-color:#0AC18E}
     .field-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:.05em;margin-bottom:4px}
-    .server-active{background:#0AC18E!important;color:#000!important;border-radius:12px!important}
+    .server-active{background:#0AC18E!important;color:#000!important;border-radius:12px!important;box-shadow:0 0 12px rgba(0,229,163,.4)}
     .btn-primary{background:#0AC18E;color:#000;font-weight:700;border-radius:8px}
     .btn-primary:hover{background:#00E5A3}
-    .glow-text{text-shadow:0 0 12px rgba(0,229,163,.6)}
+    .glow-text{text-shadow:0 0 10px rgba(0,229,163,.5)}
     .mention{background:rgba(10,193,142,.18);color:#00E5A3;padding:0 3px;border-radius:3px;font-weight:600}
     .mention-everyone{background:rgba(247,147,26,.2);color:#FFB347}
-    .ctx-menu{position:fixed;z-index:200;background:#0f1218;border:1px solid #242b3b;border-radius:8px;padding:4px;min-width:190px;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+    .ctx-menu{position:fixed;z-index:300;background:#0f1218;border:1px solid #242b3b;border-radius:8px;padding:4px;min-width:190px;box-shadow:0 10px 30px rgba(0,0,0,.7)}
     .ctx-item{padding:7px 12px;font-size:12px;border-radius:5px;cursor:pointer;display:flex;align-items:center;gap:8px}
     .ctx-item:hover{background:#1c222e}
     .role-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
-    .muted-server{opacity:.45;filter:grayscale(.6)}
-    .voice-user{font-size:11px;padding:2px 0 2px 28px;color:#b5bac1}
-    .voice-user:hover{color:#fff}
+    .muted-server{opacity:.4;filter:grayscale(.7)}
+    .voice-user{font-size:11px;padding:2px 0 2px 26px;color:#b5bac1}
+    .dm-active{background:#0AC18E!important;border-radius:12px!important}
+    .reaction-bar{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+    .reaction{background:#1c222e;border:1px solid #323c52;border-radius:12px;padding:1px 7px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:3px}
+    .reaction:hover,.reaction.mine{border-color:#0AC18E;background:rgba(10,193,142,.15)}
+    .video-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;width:100%;max-width:900px}
+    .video-tile{background:#0f1218;border-radius:12px;overflow:hidden;position:relative;aspect-ratio:16/10}
+    .video-tile video{width:100%;height:100%;object-fit:cover}
+    .video-label{position:absolute;bottom:6px;left:8px;background:rgba(0,0,0,.65);padding:2px 8px;border-radius:6px;font-size:11px}
+    .rec-pulse{animation:pulse 1s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   </style>
 </head>
 <body class="h-full flex flex-col overflow-hidden text-sm">
 
-<!-- TOP BAR -->
 <header class="h-11 bg-dark-950 border-b border-dark-700 flex items-center justify-between px-4 shrink-0 z-30">
   <div class="flex items-center gap-3">
-    <img src="https://professorj17.github.io/4everai/HAVOC.ico" class="w-7 h-7 rounded-md">
     <span class="font-extrabold tracking-widest text-bch-bright text-sm uppercase mono glow-text">havoc</span>
-    <span class="hidden md:inline text-slate-500 text-[11px] italic border-l border-dark-700 pl-3 mono">invite-only · private · professional</span>
+    <span class="hidden md:inline text-slate-500 text-[11px] italic border-l border-dark-700 pl-3 mono">invite-only · private</span>
   </div>
   <div class="flex items-center gap-2" id="authBar">
     <button onclick="openModal('auth')" class="btn-primary px-3 py-1.5 text-xs">Login / Register</button>
@@ -67,30 +74,38 @@
 
   <!-- SERVER RAIL -->
   <nav class="w-16 bg-dark-950 border-r border-dark-700 flex flex-col items-center py-3 gap-2 shrink-0 overflow-y-auto">
+    <button id="dmHomeBtn" onclick="openDMs()" title="Direct Messages"
+      class="relative w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch transition-all flex items-center justify-center overflow-hidden">
+      <img src="https://professorj17.github.io/4everai/HAVOC.ico" class="w-7 h-7 rounded-md">
+    </button>
+    <div class="w-8 h-0.5 bg-dark-700 rounded-full my-1"></div>
     <div id="serverList" class="flex flex-col items-center gap-2 w-full px-2 flex-1"></div>
     <div class="flex flex-col items-center gap-2 pb-2 w-full px-2">
-      <button onclick="openModal('joinInvite')" title="Join via Invite" class="w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch text-slate-400 hover:text-black transition-all flex items-center justify-center"><i class="fa-solid fa-ticket"></i></button>
+      <button onclick="openModal('joinInvite')" title="Join Server" class="w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch text-slate-400 hover:text-black transition-all flex items-center justify-center"><i class="fa-solid fa-ticket"></i></button>
       <button onclick="openModal('createServer')" title="Create Server" class="w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch text-slate-400 hover:text-black transition-all flex items-center justify-center text-lg font-bold"><i class="fa-solid fa-plus"></i></button>
       <button id="adminBtn" onclick="openModal('admin')" title="Global Admin" class="hidden w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-kiro/20 hover:bg-kiro text-kiro-bright hover:text-white transition-all flex items-center justify-center"><i class="fa-solid fa-shield-halved"></i></button>
     </div>
   </nav>
 
-  <!-- CHANNELS -->
+  <!-- SIDEBAR -->
   <aside class="w-60 bg-dark-900 border-r border-dark-700 flex flex-col shrink-0">
-    <div class="h-12 border-b border-dark-700 px-3 flex items-center justify-between">
-      <div class="flex items-center gap-2 min-w-0">
+    <div id="sidebarHeader" class="h-12 border-b border-dark-700 px-3 flex items-center justify-between">
+      <div class="flex items-center gap-2 min-w-0 flex-1">
         <img id="serverIconPreview" src="" class="w-6 h-6 rounded-md hidden object-cover">
         <span id="currentServerName" class="font-bold text-white text-sm truncate">Select a Server</span>
       </div>
-      <button id="serverSettingsBtn" onclick="openModal('serverSettings')" class="hidden text-slate-500 hover:text-bch-bright text-xs p-1 rounded hover:bg-dark-800"><i class="fa-solid fa-gear"></i></button>
+      <div class="flex items-center gap-1">
+        <button id="inviteBtn" onclick="openInviteToFriends()" title="Invite Friends" class="hidden text-slate-500 hover:text-bch-bright text-xs p-1.5 rounded hover:bg-dark-800"><i class="fa-solid fa-user-plus"></i></button>
+        <button id="serverSettingsBtn" onclick="openModal('serverSettings')" class="hidden text-slate-500 hover:text-bch-bright text-xs p-1.5 rounded hover:bg-dark-800"><i class="fa-solid fa-gear"></i></button>
+      </div>
     </div>
-    <div class="flex-1 overflow-y-auto px-2 py-3">
+
+    <div id="channelsView" class="flex-1 overflow-y-auto px-2 py-3">
       <div class="flex items-center justify-between px-2 mb-1.5">
         <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mono">Text Channels</span>
         <button id="addChanBtn" onclick="openModal('createChan')" class="hidden text-bch hover:text-bch-bright text-xs"><i class="fa-solid fa-plus"></i></button>
       </div>
       <div id="channelsList" class="space-y-0.5 mb-5"></div>
-
       <div class="flex items-center justify-between px-2 mb-1.5">
         <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mono">Voice Channels</span>
         <button id="addVoiceBtn" onclick="createVoiceChannel()" class="hidden text-bch hover:text-bch-bright text-xs"><i class="fa-solid fa-plus"></i></button>
@@ -98,7 +113,13 @@
       <div id="voiceList" class="space-y-0.5"></div>
     </div>
 
-    <!-- USER PANEL (Discord style) -->
+    <div id="dmView" class="hidden flex-1 overflow-y-auto px-2 py-3">
+      <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mono px-2 mb-2">Direct Messages</div>
+      <div id="dmList" class="space-y-0.5"></div>
+      <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mono px-2 mt-5 mb-2">Friends</div>
+      <div id="friendsList" class="space-y-0.5"></div>
+    </div>
+
     <div class="bg-dark-950 border-t border-dark-700 px-2 py-2">
       <div class="flex items-center gap-2">
         <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600 cursor-pointer" onclick="openModal('profile')">
@@ -106,11 +127,10 @@
           <div id="ucHandle" class="font-bold text-white text-xs truncate">Guest</div>
           <div id="ucRole" class="text-[10px] text-slate-500 mono truncate">Not signed in</div>
         </div>
-        <!-- Mic / Deafen / Settings -->
         <div class="flex items-center gap-0.5">
-          <button id="micBtn" onclick="toggleMic()" class="w-7 h-7 rounded hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="Mute / Unmute"><i class="fa-solid fa-microphone"></i></button>
+          <button id="micBtn" onclick="toggleMic()" class="w-7 h-7 rounded hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="Mute"><i class="fa-solid fa-microphone"></i></button>
           <button id="deafenBtn" onclick="toggleDeafen()" class="w-7 h-7 rounded hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="Deafen"><i class="fa-solid fa-headphones"></i></button>
-          <button onclick="openModal('profile')" class="w-7 h-7 rounded hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="User Settings"><i class="fa-solid fa-gear"></i></button>
+          <button onclick="openModal('profile')" class="w-7 h-7 rounded hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="Settings"><i class="fa-solid fa-gear"></i></button>
         </div>
       </div>
       <button id="logoutBtn" onclick="doSignOut()" class="hidden w-full mt-1.5 py-1 bg-dark-800 hover:bg-red-900/40 text-red-400 border border-dark-600 rounded text-[10px] font-bold">
@@ -132,66 +152,83 @@
       </div>
     </div>
 
+    <!-- TEXT -->
     <div id="textArea" class="flex-1 flex flex-col min-h-0">
       <div id="msgContainer" class="flex-1 overflow-y-auto p-4">
         <div id="msgFeed" class="space-y-3">
-          <div class="text-center py-16 text-slate-600 mono text-xs">Join or create a server with an invite code.</div>
+          <div class="text-center py-16 text-slate-600 mono text-xs">Select a server or open Direct Messages.</div>
         </div>
       </div>
       <div class="px-4 pb-4 pt-2 bg-dark-900/80 border-t border-dark-700 shrink-0">
         <form id="msgForm" onsubmit="sendMsg(event)" class="bg-dark-800 border border-dark-700 focus-within:border-bch rounded-xl px-3 py-2.5 flex items-center gap-2">
           <button type="button" id="imgUploadBtn" onclick="triggerImageUpload()" class="hidden text-slate-500 hover:text-bch-bright p-1.5 rounded" title="Upload image"><i class="fa-solid fa-image"></i></button>
+          <button type="button" id="audioClipBtn" onclick="toggleAudioRecord()" class="hidden text-slate-500 hover:text-bch-bright p-1.5 rounded" title="Record audio clip"><i class="fa-solid fa-microphone"></i></button>
           <input type="file" id="imgFileInput" accept="image/*" class="hidden" onchange="handleImageSelect(event)">
-          <input type="text" id="chatInput" placeholder="Login and join a server to chat…" autocomplete="off" class="flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-slate-600 min-w-0">
+          <input type="text" id="chatInput" placeholder="Select a channel to chat…" autocomplete="off" class="flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-slate-600 min-w-0" disabled>
           <button type="submit" class="btn-primary px-3 py-1.5 text-xs"><i class="fa-solid fa-paper-plane"></i></button>
         </form>
         <div id="imgPreview" class="hidden mt-2 flex items-center gap-2">
           <img id="imgPreviewSrc" class="h-16 rounded-lg border border-dark-600 object-cover">
           <button onclick="clearImagePreview()" class="text-red-400 text-xs"><i class="fa-solid fa-xmark"></i> Remove</button>
         </div>
+        <div id="audioPreview" class="hidden mt-2 flex items-center gap-2 text-xs text-bch">
+          <i class="fa-solid fa-waveform-lines"></i> <span id="audioRecStatus">Recording…</span>
+          <button onclick="stopAudioRecord(true)" class="text-red-400 ml-2">Cancel</button>
+          <button onclick="stopAudioRecord(false)" class="btn-primary px-2 py-0.5 text-[10px] ml-1">Send Clip</button>
+        </div>
       </div>
     </div>
 
-    <div id="voiceArea" class="hidden flex-1 flex flex-col items-center justify-center p-6 bg-dark-900/40">
-      <div class="text-center mb-6">
-        <div class="w-20 h-20 rounded-full bg-bch/20 border-2 border-bch/50 flex items-center justify-center mx-auto mb-3">
-          <i class="fa-solid fa-microphone text-3xl text-bch-bright"></i>
-        </div>
+    <!-- VOICE / VIDEO AREA -->
+    <div id="voiceArea" class="hidden flex-1 flex flex-col items-center justify-center p-6 bg-dark-900/40 overflow-y-auto">
+      <div class="text-center mb-4">
         <h2 id="voiceChanName" class="text-xl font-bold text-white mb-1">Voice Channel</h2>
         <p class="text-slate-400 text-sm mono" id="voiceStatus">Connecting…</p>
       </div>
+
+      <!-- Video grid -->
+      <div id="videoGrid" class="video-grid mb-6 hidden"></div>
+
+      <!-- Audio-only peers -->
       <div id="voicePeers" class="flex flex-wrap gap-4 justify-center mb-6 max-w-lg"></div>
-      <div class="flex gap-3">
+
+      <div class="flex flex-wrap gap-3 justify-center">
         <button id="muteBtn" onclick="toggleMute()" class="px-4 py-2 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-sm font-bold"><i class="fa-solid fa-microphone"></i> Mute</button>
+        <button id="camBtn" onclick="toggleCamera()" class="px-4 py-2 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-sm font-bold"><i class="fa-solid fa-video"></i> Camera</button>
         <button onclick="leaveVoice()" class="px-4 py-2 bg-red-900/50 hover:bg-red-800 border border-red-500/40 rounded-lg text-sm font-bold text-red-200"><i class="fa-solid fa-phone-slash"></i> Disconnect</button>
       </div>
     </div>
   </main>
 
-  <!-- MEMBERS + FRIENDS -->
-  <aside class="w-56 bg-dark-900 border-l border-dark-700 p-3 overflow-y-auto shrink-0 hidden xl:block">
-    <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2 mono px-1">Members</div>
-    <div id="membersList" class="space-y-1 mb-6"></div>
-    <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2 mono px-1">Friends</div>
-    <div id="friendsList" class="space-y-1"></div>
+  <!-- MEMBERS -->
+  <aside id="membersPanel" class="w-56 bg-dark-900 border-l border-dark-700 p-3 overflow-y-auto shrink-0 hidden xl:block">
+    <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2 mono px-1">Members — <span id="memberCount">0</span></div>
+    <div id="membersList" class="space-y-1"></div>
   </aside>
 </div>
 
-<!-- CONTEXT MENU -->
 <div id="ctxMenu" class="ctx-menu hidden"></div>
 
-<!-- ===================== MODALS ===================== -->
+<!-- Reaction picker -->
+<div id="reactionPicker" class="fixed z-[400] bg-dark-900 border border-dark-700 rounded-xl p-2 shadow-lg hidden flex gap-1 text-lg">
+  <button onclick="addReaction('👍')" class="hover:scale-125 transition">👍</button>
+  <button onclick="addReaction('❤️')" class="hover:scale-125 transition">❤️</button>
+  <button onclick="addReaction('😂')" class="hover:scale-125 transition">😂</button>
+  <button onclick="addReaction('🔥')" class="hover:scale-125 transition">🔥</button>
+  <button onclick="addReaction('😮')" class="hover:scale-125 transition">😮</button>
+  <button onclick="addReaction('😢')" class="hover:scale-125 transition">😢</button>
+  <button onclick="addReaction('🎉')" class="hover:scale-125 transition">🎉</button>
+  <button onclick="addReaction('💚')" class="hover:scale-125 transition">💚</button>
+</div>
 
-<!-- AUTH -->
+<!-- ===================== MODALS (same as before, condensed) ===================== -->
+
 <div id="modal-auth" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-bch/30 w-full max-w-md rounded-xl p-6 relative">
     <button onclick="closeModal('auth')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     <div class="flex items-center gap-3 mb-5">
       <img src="https://professorj17.github.io/4everai/HAVOC.ico" class="w-8 h-8 rounded-md">
-      <div>
-        <span class="font-extrabold text-bch-bright mono text-lg tracking-widest glow-text">havoc</span>
-        <div class="text-slate-500 text-xs">invite-only platform</div>
-      </div>
+      <div><span class="font-extrabold text-bch-bright mono text-lg tracking-widest glow-text">havoc</span><div class="text-slate-500 text-xs">invite-only platform</div></div>
     </div>
     <div class="flex border-b border-dark-700 mb-5">
       <button id="tabL" onclick="authTab('login')" class="flex-1 py-2 font-bold text-xs mono tab-active">LOGIN</button>
@@ -201,87 +238,63 @@
       <div><label class="field-label">Email</label><input type="email" id="lEmail" required class="field"></div>
       <div><label class="field-label">Password</label><input type="password" id="lPass" required class="field"></div>
       <div class="flex items-center justify-between">
-        <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
-          <input type="checkbox" id="rememberMe" class="rounded border-dark-600 bg-dark-800 text-bch">
-          Remember me
-        </label>
+        <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer"><input type="checkbox" id="rememberMe" class="rounded border-dark-600 bg-dark-800 text-bch"> Remember me</label>
         <button type="button" onclick="showForgot()" class="text-[11px] text-bch hover:text-bch-bright mono">Forgot password?</button>
       </div>
       <button type="submit" class="w-full py-2.5 btn-primary text-sm">SIGN IN</button>
       <button type="button" onclick="doAnon()" class="w-full py-2 bg-dark-800 hover:bg-dark-700 text-slate-400 font-bold rounded-lg text-xs border border-dark-700">CONTINUE ANONYMOUSLY</button>
     </form>
     <form id="formReg" onsubmit="doRegister(event)" class="space-y-3 hidden">
-      <div><label class="field-label">Handle / Alias</label><input type="text" id="rHandle" required placeholder="Agent_Shadow" class="field"></div>
+      <div><label class="field-label">Handle</label><input type="text" id="rHandle" required class="field"></div>
       <div><label class="field-label">Email</label><input type="email" id="rEmail" required class="field"></div>
-      <div><label class="field-label">Password (≥ 6 chars)</label><input type="password" id="rPass" required minlength="6" class="field"></div>
+      <div><label class="field-label">Password</label><input type="password" id="rPass" required minlength="6" class="field"></div>
       <button type="submit" class="w-full py-2.5 btn-primary text-sm">CREATE ACCOUNT</button>
     </form>
     <div id="formForgot" class="space-y-3 hidden">
-      <p class="text-xs text-slate-400">Enter your email and we’ll send a password reset link.</p>
+      <p class="text-xs text-slate-400">Enter your email for a reset link.</p>
       <div><label class="field-label">Email</label><input type="email" id="fEmail" required class="field"></div>
       <button onclick="doForgot()" class="w-full py-2.5 btn-primary text-sm">Send Reset Link</button>
-      <button type="button" onclick="authTab('login')" class="w-full py-2 text-xs text-slate-400 hover:text-white">← Back to Login</button>
+      <button type="button" onclick="authTab('login')" class="w-full py-2 text-xs text-slate-400">← Back</button>
     </div>
     <div id="authErr" class="mt-3 text-xs text-red-400 text-center mono hidden"></div>
     <div id="authOk" class="mt-3 text-xs text-green-400 text-center mono hidden"></div>
   </div>
 </div>
 
-<!-- PROFILE – Seed / URL / Upload -->
 <div id="modal-profile" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-dark-700 w-full max-w-sm rounded-xl p-6 relative">
     <button onclick="closeModal('profile')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-    <h2 class="font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-user-pen text-bch"></i> Edit Profile</h2>
-
+    <h2 class="font-bold text-white mb-4"><i class="fa-solid fa-user-pen text-bch"></i> Edit Profile</h2>
     <div class="flex items-center gap-4 mb-4">
       <img id="profileAvatarPreview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-16 h-16 rounded-full border-2 border-bch/40 object-cover">
-      <div class="flex-1 text-xs text-slate-400">Preview</div>
     </div>
-
-    <!-- Avatar method tabs -->
     <div class="flex gap-1 mb-3 text-[10px] mono">
       <button onclick="avatarMethod('seed')" id="am-seed" class="px-2 py-1 rounded bg-bch/20 text-bch">Seed</button>
       <button onclick="avatarMethod('url')" id="am-url" class="px-2 py-1 rounded bg-dark-800 text-slate-400">URL</button>
       <button onclick="avatarMethod('upload')" id="am-upload" class="px-2 py-1 rounded bg-dark-800 text-slate-400">Upload</button>
     </div>
-
-    <div id="avatarSeedBox">
-      <label class="field-label">Avatar Seed</label>
-      <input type="text" id="profileSeed" placeholder="any text" oninput="previewAvatar(this.value)" class="field text-xs mb-3">
-    </div>
-    <div id="avatarUrlBox" class="hidden">
-      <label class="field-label">Image URL</label>
-      <input type="url" id="profileAvatarUrl" placeholder="https://example.com/me.png" oninput="previewFromUrl(this.value)" class="field text-xs mb-3">
-    </div>
-    <div id="avatarUploadBox" class="hidden">
-      <label class="field-label">Upload Image</label>
-      <input type="file" id="avatarFileInput" accept="image/*" onchange="handleAvatarUpload(event)" class="field text-xs mb-3">
-      <p class="text-[10px] text-slate-500 mb-3">Max 3 MB. Stored in Firebase Storage.</p>
-    </div>
-
+    <div id="avatarSeedBox"><label class="field-label">Seed</label><input type="text" id="profileSeed" oninput="previewAvatar(this.value)" class="field text-xs mb-3"></div>
+    <div id="avatarUrlBox" class="hidden"><label class="field-label">Image URL</label><input type="url" id="profileAvatarUrl" oninput="previewFromUrl(this.value)" class="field text-xs mb-3"></div>
+    <div id="avatarUploadBox" class="hidden"><label class="field-label">Upload</label><input type="file" id="avatarFileInput" accept="image/*" onchange="handleAvatarUpload(event)" class="field text-xs mb-3"></div>
     <div class="space-y-3">
       <div><label class="field-label">Handle</label><input type="text" id="profileHandle" class="field"></div>
-      <div><label class="field-label">Status</label><input type="text" id="profileStatus" maxlength="40" placeholder="Online, Busy…" class="field"></div>
+      <div><label class="field-label">Status</label><input type="text" id="profileStatus" maxlength="40" class="field"></div>
       <div><label class="field-label">Bio</label><textarea id="profileBio" rows="2" maxlength="120" class="field resize-none text-xs"></textarea></div>
     </div>
     <div class="flex gap-2 mt-4">
-      <button onclick="saveProfile()" class="flex-1 py-2 btn-primary text-sm">Save Profile</button>
-      <button onclick="doSignOut()" class="px-4 py-2 bg-dark-800 hover:bg-red-900/40 text-red-400 font-bold rounded-lg text-sm border border-dark-700">Logout</button>
+      <button onclick="saveProfile()" class="flex-1 py-2 btn-primary text-sm">Save</button>
+      <button onclick="doSignOut()" class="px-4 py-2 bg-dark-800 text-red-400 font-bold rounded-lg text-sm border border-dark-700">Logout</button>
     </div>
     <div id="profileMsg" class="mt-2 text-xs mono hidden"></div>
   </div>
 </div>
 
-<!-- JOIN / CREATE / CHANNEL / SERVER SETTINGS / ADMIN – same structure as before, shortened for length -->
-<!-- (keeping the same modal HTML from previous version for join, createServer, createChan, serverSettings, chanSettings, admin) -->
-
 <div id="modal-joinInvite" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-bch/30 w-full max-w-sm rounded-xl p-6 relative">
     <button onclick="closeModal('joinInvite')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-    <h2 class="font-bold text-white mb-1 flex items-center gap-2"><i class="fa-solid fa-ticket text-bch"></i> Join via Invite</h2>
-    <p class="text-xs text-slate-500 mono mb-4">Enter the invite code shared with you.</p>
-    <input type="text" id="inviteCodeInput" placeholder="HAVOC-XXXXXX" maxlength="20" class="field uppercase tracking-widest text-center font-bold mono mb-3">
-    <button onclick="joinViaInvite()" class="w-full py-2.5 btn-primary text-sm"><i class="fa-solid fa-satellite-dish mr-1"></i> Join Server</button>
+    <h2 class="font-bold text-white mb-1"><i class="fa-solid fa-ticket text-bch"></i> Join via Invite</h2>
+    <input type="text" id="inviteCodeInput" placeholder="HAVOC-XXXXXX" maxlength="20" class="field uppercase tracking-widest text-center font-bold mono mb-3 mt-3">
+    <button onclick="joinViaInvite()" class="w-full py-2.5 btn-primary text-sm">Join Server</button>
     <div id="inviteMsg" class="mt-3 text-xs mono text-center hidden"></div>
   </div>
 </div>
@@ -289,17 +302,12 @@
 <div id="modal-createServer" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-bch/30 w-full max-w-sm rounded-xl p-6 relative">
     <button onclick="closeModal('createServer')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-    <h2 class="font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-server text-bch"></i> Create Server</h2>
+    <h2 class="font-bold text-white mb-4"><i class="fa-solid fa-server text-bch"></i> Create Server</h2>
     <div class="space-y-3">
-      <div class="flex items-center gap-3">
-        <img id="newServerIconPreview" src="https://api.dicebear.com/7.x/shapes/svg?seed=server" class="w-16 h-16 rounded-2xl object-cover border-2 border-dark-600">
-        <div class="flex-1">
-          <label class="field-label">Icon URL (optional)</label>
-          <input type="url" id="newServerIconUrl" placeholder="https://..." class="field text-xs" oninput="previewServerUrl(this.value)">
-        </div>
-      </div>
-      <div><label class="field-label">Server Name</label><input type="text" id="newServerName" maxlength="40" placeholder="My Private Node" class="field"></div>
-      <div><label class="field-label">Description (optional)</label><input type="text" id="newServerDesc" maxlength="80" class="field"></div>
+      <div><label class="field-label">Icon URL</label><input type="url" id="newServerIconUrl" class="field text-xs" oninput="previewServerUrl(this.value)"></div>
+      <img id="newServerIconPreview" src="https://api.dicebear.com/7.x/shapes/svg?seed=server" class="w-14 h-14 rounded-2xl object-cover border border-dark-600">
+      <div><label class="field-label">Server Name</label><input type="text" id="newServerName" maxlength="40" class="field"></div>
+      <div><label class="field-label">Description</label><input type="text" id="newServerDesc" maxlength="80" class="field"></div>
       <button onclick="createServer()" class="w-full py-2.5 btn-primary text-sm">Create & Become Owner</button>
     </div>
     <div id="createServerErr" class="mt-2 text-xs text-red-400 mono hidden"></div>
@@ -315,52 +323,54 @@
   </div>
 </div>
 
+<div id="modal-inviteFriends" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-bch/30 w-full max-w-md rounded-xl p-6 relative">
+    <button onclick="closeModal('inviteFriends')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    <h2 class="font-bold text-white mb-1"><i class="fa-solid fa-user-plus text-bch"></i> Invite Friends</h2>
+    <div class="bg-dark-950 border border-dark-700 rounded-lg p-3 flex items-center gap-2 mb-4 mt-3">
+      <input type="text" id="inviteShareCode" readonly class="flex-1 bg-transparent text-bch-bright font-bold mono text-sm focus:outline-none">
+      <button onclick="copyInviteCode()" class="btn-primary px-3 py-1.5 text-xs">Copy</button>
+    </div>
+    <div id="inviteFriendList" class="space-y-1 max-h-48 overflow-y-auto mb-3"></div>
+    <button onclick="createFreshInvite()" class="w-full py-2 bg-dark-800 border border-dark-600 rounded text-xs font-bold">Generate New Invite</button>
+  </div>
+</div>
+
 <div id="modal-serverSettings" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-dark-700 w-full max-w-lg rounded-xl relative flex flex-col max-h-[90vh]">
     <div class="flex items-center justify-between p-5 border-b border-dark-700">
-      <h2 class="font-extrabold text-white flex items-center gap-2"><i class="fa-solid fa-gear text-bch"></i> Server Settings</h2>
+      <h2 class="font-extrabold text-white"><i class="fa-solid fa-gear text-bch"></i> Server Settings</h2>
       <button onclick="closeModal('serverSettings')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="flex border-b border-dark-700 px-5 overflow-x-auto">
-      <button onclick="sSettingsTab('overview')" id="sst-overview" class="py-2 px-3 text-xs mono tab-active whitespace-nowrap">Overview</button>
-      <button onclick="sSettingsTab('roles')" id="sst-roles" class="py-2 px-3 text-xs mono tab-inactive whitespace-nowrap">Roles</button>
-      <button onclick="sSettingsTab('invites')" id="sst-invites" class="py-2 px-3 text-xs mono tab-inactive whitespace-nowrap">Invites</button>
-      <button onclick="sSettingsTab('members')" id="sst-members" class="py-2 px-3 text-xs mono tab-inactive whitespace-nowrap">Members</button>
-      <button onclick="sSettingsTab('danger')" id="sst-danger" class="py-2 px-3 text-xs mono tab-inactive text-red-400 whitespace-nowrap">Danger</button>
+      <button onclick="sSettingsTab('overview')" id="sst-overview" class="py-2 px-3 text-xs mono tab-active">Overview</button>
+      <button onclick="sSettingsTab('roles')" id="sst-roles" class="py-2 px-3 text-xs mono tab-inactive">Roles</button>
+      <button onclick="sSettingsTab('invites')" id="sst-invites" class="py-2 px-3 text-xs mono tab-inactive">Invites</button>
+      <button onclick="sSettingsTab('members')" id="sst-members" class="py-2 px-3 text-xs mono tab-inactive">Members</button>
+      <button onclick="sSettingsTab('danger')" id="sst-danger" class="py-2 px-3 text-xs mono tab-inactive text-red-400">Danger</button>
     </div>
     <div class="flex-1 overflow-y-auto p-5">
       <div id="ssp-overview" class="space-y-4">
-        <div>
-          <label class="field-label">Server Icon URL</label>
-          <input type="url" id="ssIconUrl" placeholder="https://example.com/icon.png" class="field text-xs mb-2" oninput="previewSsIcon(this.value)">
-          <img id="ssIconPreview" src="https://api.dicebear.com/7.x/shapes/svg?seed=server" class="w-16 h-16 rounded-2xl object-cover border border-dark-600">
-        </div>
-        <div><label class="field-label">Server Name</label><input type="text" id="ssName" class="field"></div>
+        <div><label class="field-label">Icon URL</label><input type="url" id="ssIconUrl" class="field text-xs mb-2" oninput="previewSsIcon(this.value)"><img id="ssIconPreview" src="https://api.dicebear.com/7.x/shapes/svg?seed=server" class="w-16 h-16 rounded-2xl object-cover border border-dark-600"></div>
+        <div><label class="field-label">Name</label><input type="text" id="ssName" class="field"></div>
         <div><label class="field-label">Description</label><input type="text" id="ssDesc" class="field"></div>
-        <button onclick="saveServerSettings()" class="py-2 px-4 btn-primary text-xs">Save Changes</button>
+        <button onclick="saveServerSettings()" class="py-2 px-4 btn-primary text-xs">Save</button>
       </div>
       <div id="ssp-roles" class="space-y-4 hidden">
-        <div class="flex gap-2">
-          <input type="text" id="newRoleName" placeholder="Role name" class="field flex-1 text-xs">
-          <input type="color" id="newRoleColor" value="#0AC18E" class="w-10 h-9 rounded cursor-pointer bg-transparent border-0">
-          <button onclick="createRole()" class="btn-primary px-3 text-xs">Add</button>
-        </div>
+        <div class="flex gap-2"><input type="text" id="newRoleName" placeholder="Role name" class="field flex-1 text-xs"><input type="color" id="newRoleColor" value="#0AC18E" class="w-10 h-9 rounded"><button onclick="createRole()" class="btn-primary px-3 text-xs">Add</button></div>
         <div id="rolesList" class="space-y-2 max-h-64 overflow-y-auto"></div>
       </div>
       <div id="ssp-invites" class="space-y-3 hidden">
-        <div class="flex items-center gap-2">
-          <input type="number" id="ssInviteUses" min="1" max="100" value="10" class="field w-24 text-center">
-          <button onclick="createInvite()" class="py-2 px-4 btn-primary text-xs">Generate</button>
-        </div>
+        <div class="flex gap-2"><input type="number" id="ssInviteUses" min="1" max="100" value="10" class="field w-24 text-center"><button onclick="createInvite()" class="py-2 px-4 btn-primary text-xs">Generate</button></div>
         <div id="inviteList" class="space-y-2 max-h-72 overflow-y-auto"></div>
       </div>
       <div id="ssp-members" class="hidden"><div id="serverMemberList" class="space-y-1 max-h-80 overflow-y-auto"></div></div>
       <div id="ssp-danger" class="space-y-3 hidden">
         <div class="bg-red-950/20 border border-red-500/30 rounded-lg p-4 space-y-2">
-          <button onclick="adminToggleLock()" class="w-full py-2 bg-carrot/20 text-carrot border border-carrot/40 rounded text-xs font-bold mono">Toggle Channel Lock</button>
-          <button onclick="adminPurgeChannel()" class="w-full py-2 bg-red-900/30 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">Purge Current Channel</button>
-          <button onclick="deleteCurrentChannel()" class="w-full py-2 bg-red-900/30 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">Delete Current Channel</button>
-          <button onclick="deleteServer()" class="w-full py-2 bg-red-950 text-red-200 border border-red-500/50 rounded text-xs font-bold mono">DELETE ENTIRE SERVER</button>
+          <button onclick="adminToggleLock()" class="w-full py-2 bg-carrot/20 text-carrot border border-carrot/40 rounded text-xs font-bold mono">Toggle Lock</button>
+          <button onclick="adminPurgeChannel()" class="w-full py-2 bg-red-900/30 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">Purge Channel</button>
+          <button onclick="deleteCurrentChannel()" class="w-full py-2 bg-red-900/30 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">Delete Channel</button>
+          <button onclick="deleteServer()" class="w-full py-2 bg-red-950 text-red-200 border border-red-500/50 rounded text-xs font-bold mono">DELETE SERVER</button>
         </div>
       </div>
     </div>
@@ -373,7 +383,7 @@
     <h2 class="font-bold text-white mb-4"># <span id="chanSettingsName"></span></h2>
     <div class="space-y-2">
       <button onclick="adminToggleLock()" class="w-full py-2 bg-carrot/20 text-carrot border border-carrot/40 rounded text-xs font-bold mono">Toggle Lock</button>
-      <button onclick="adminPurgeChannel()" class="w-full py-2 bg-red-900/30 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">Purge Messages</button>
+      <button onclick="adminPurgeChannel()" class="w-full py-2 bg-red-900/30 text-red-300 border border-red-500/30 rounded text-xs font-bold mono">Purge</button>
       <button onclick="deleteCurrentChannel()" class="w-full py-2 bg-red-950 text-red-200 border border-red-500/40 rounded text-xs font-bold mono">Delete Channel</button>
     </div>
   </div>
@@ -382,38 +392,22 @@
 <div id="modal-admin" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-kiro/40 w-full max-w-3xl rounded-xl relative flex flex-col max-h-[92vh]">
     <div class="flex items-center justify-between p-5 border-b border-dark-700">
-      <h2 class="font-extrabold text-kiro-bright flex items-center gap-2 mono"><i class="fa-solid fa-shield-halved"></i> GLOBAL ADMIN <span class="badge-admin">GOD</span></h2>
+      <h2 class="font-extrabold text-kiro-bright mono"><i class="fa-solid fa-shield-halved"></i> GLOBAL ADMIN <span class="badge-admin">GOD</span></h2>
       <button onclick="closeModal('admin')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="flex border-b border-dark-700 px-5">
       <button onclick="adminTab('servers')" id="at-servers" class="py-2 px-3 text-xs mono tab-active">Servers</button>
       <button onclick="adminTab('users')" id="at-users" class="py-2 px-3 text-xs mono tab-inactive">Users</button>
-      <button onclick="adminTab('blacklist')" id="at-blacklist" class="py-2 px-3 text-xs mono tab-inactive">Domain Blacklist</button>
+      <button onclick="adminTab('blacklist')" id="at-blacklist" class="py-2 px-3 text-xs mono tab-inactive">Blacklist</button>
     </div>
     <div class="flex-1 overflow-y-auto p-5">
       <div id="ap-servers"><div id="adminServerList" class="space-y-2"></div></div>
       <div id="ap-users" class="hidden"><div id="adminUserList" class="space-y-2"></div></div>
       <div id="ap-blacklist" class="hidden space-y-4">
-        <div class="flex gap-2">
-          <input type="text" id="blacklistDomainInput" placeholder="example.com" class="field flex-1 text-xs">
-          <button onclick="addBlacklistedDomain()" class="btn-primary px-4 text-xs">Add</button>
-        </div>
+        <div class="flex gap-2"><input type="text" id="blacklistDomainInput" placeholder="example.com" class="field flex-1 text-xs"><button onclick="addBlacklistedDomain()" class="btn-primary px-4 text-xs">Add</button></div>
         <div id="blacklistList" class="space-y-1 max-h-64 overflow-y-auto"></div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- DM MODAL (simple) -->
-<div id="modal-dm" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-  <div class="bg-dark-900 border border-dark-700 w-full max-w-md rounded-xl p-5 relative flex flex-col max-h-[80vh]">
-    <button onclick="closeModal('dm')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-    <h2 class="font-bold text-white mb-3">DM · <span id="dmTargetHandle"></span></h2>
-    <div id="dmFeed" class="flex-1 overflow-y-auto space-y-2 mb-3 min-h-[200px] max-h-[40vh]"></div>
-    <form onsubmit="sendDm(event)" class="flex gap-2">
-      <input type="text" id="dmInput" placeholder="Message…" class="field flex-1 text-xs">
-      <button type="submit" class="btn-primary px-3 text-xs">Send</button>
-    </form>
   </div>
 </div>
 
@@ -426,11 +420,14 @@ import {
 } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
-  collection, addDoc, getDocs, query, where, writeBatch, onSnapshot
+  collection, addDoc, getDocs, query, where, writeBatch, arrayUnion, arrayRemove, increment
 } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js';
 
 const ADMIN_EMAIL = 'moddarkrevolt@gmail.com';
+const MAX_SERVERS = 100;
+const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
+
 const app = initializeApp({
   apiKey: "AIzaSyDYXyAmDC_HF4scI21VeLlS4aM2k2RJ1Wc",
   authDomain: "mainframe-e3b13.firebaseapp.com",
@@ -456,32 +453,26 @@ function parseEmojis(t){ return t.replace(/:[a-z0-9_+-]+:/gi, m => EMOJI_MAP[m.t
 function getMutes(){ try{ return JSON.parse(localStorage.getItem('havoc_mutes')||'{}'); }catch{ return {}; } }
 function setMute(sid, type, val){ const m=getMutes(); if(!m[sid]) m[sid]={}; m[sid][type]=val; localStorage.setItem('havoc_mutes',JSON.stringify(m)); }
 function isServerMuted(sid, type){ return !!(getMutes()[sid]?.[type]); }
-
-function saveRemember(email, pass){
-  if($('rememberMe')?.checked) localStorage.setItem('havoc_remember', JSON.stringify({email,pass}));
-  else localStorage.removeItem('havoc_remember');
-}
-function loadRemember(){
-  try{
-    const d = JSON.parse(localStorage.getItem('havoc_remember')||'null');
-    if(d?.email){ $('lEmail').value=d.email; $('lPass').value=d.pass||''; $('rememberMe').checked=true; }
-  }catch{}
-}
+function saveRemember(email, pass){ if($('rememberMe')?.checked) localStorage.setItem('havoc_remember', JSON.stringify({email,pass})); else localStorage.removeItem('havoc_remember'); }
+function loadRemember(){ try{ const d=JSON.parse(localStorage.getItem('havoc_remember')||'null'); if(d?.email){ $('lEmail').value=d.email; $('lPass').value=d.pass||''; $('rememberMe').checked=true; } }catch{} }
 
 const S = {
   user:null, profile:null, isAdmin:false,
   server:null, channel:null, channelType:'text',
-  canManage:false, locked:false,
+  canManage:false, locked:false, inDMs:false,
   unsubMsgs:null, unsubMembers:null,
-  pendingImage:null, pendingAvatarFile:null,
-  roles:[], membersCache:[],
-  voiceUsers:{}, // uid -> {handle, avatar}
-  friends:[],
-  dmTarget:null,
-  micMuted:false, deafened:false
+  pendingImage:null, pendingAvatarFile:null, pendingAudio:null,
+  roles:[], membersCache:[], voiceUsers:{},
+  friends:[], myServerCount:0,
+  dmTarget:null, currentInviteCode:null,
+  micMuted:false, deafened:false, camOn:false,
+  reactionTarget:null,
+  peers: {}, // uid -> RTCPeerConnection
+  localStream: null,
+  localVideo: null
 };
 
-// ========== AUTH ==========
+// ========== AUTH (same as before) ==========
 onAuthStateChanged(auth, async user => {
   S.user = user;
   if(user){
@@ -492,36 +483,26 @@ onAuthStateChanged(auth, async user => {
         if(!S.profile.handle) S.profile.handle = user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0]||'User');
         if(!S.profile.avatar) S.profile.avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`;
       } else {
-        S.profile = {
-          uid:user.uid, email:user.email||null,
-          handle: user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0]||'User'),
-          avatar:`https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`,
-          bio:'', status:'', createdAt:Date.now()
-        };
+        S.profile = { uid:user.uid, email:user.email||null, handle: user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0]||'User'), avatar:`https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`, bio:'', status:'', createdAt:Date.now() };
         await setDoc(doc(db,'users',user.uid), S.profile);
       }
-    }catch(e){
-      S.profile = { uid:user.uid, email:user.email||null, handle: user.isAnonymous?`Anon_${user.uid.slice(0,6)}`:(user.email?.split('@')[0]||'User'), avatar:`https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`, bio:'', status:'' };
-    }
+    }catch(e){ S.profile = { uid:user.uid, email:user.email||null, handle: user.isAnonymous?`Anon_${user.uid.slice(0,6)}`:(user.email?.split('@')[0]||'User'), avatar:`https://api.dicebear.com/7.x/bottts/svg?seed=${user.uid}`, bio:'', status:'' }; }
     S.isAdmin = (user.email === ADMIN_EMAIL);
     $('adminBtn').classList.toggle('hidden', !S.isAdmin);
     $('imgUploadBtn').classList.toggle('hidden', user.isAnonymous);
+    $('audioClipBtn').classList.toggle('hidden', user.isAnonymous);
     loadFriends();
   } else {
     S.profile=null; S.isAdmin=false;
     $('adminBtn').classList.add('hidden');
     $('imgUploadBtn').classList.add('hidden');
+    $('audioClipBtn').classList.add('hidden');
   }
   updateUserUI();
   loadMyServers();
 });
 
-window.doLogin = async e => {
-  e.preventDefault(); clearAuthErr();
-  const email=$('lEmail').value.trim(), pass=$('lPass').value;
-  try{ await signInWithEmailAndPassword(auth,email,pass); saveRemember(email,pass); closeModal('auth'); }
-  catch(err){ showAuthErr(err.message); }
-};
+window.doLogin = async e => { e.preventDefault(); clearAuthErr(); const email=$('lEmail').value.trim(), pass=$('lPass').value; try{ await signInWithEmailAndPassword(auth,email,pass); saveRemember(email,pass); closeModal('auth'); }catch(err){ showAuthErr(err.message); } };
 window.doRegister = async e => {
   e.preventDefault(); clearAuthErr();
   const handle=$('rHandle').value.trim(), email=$('rEmail').value.trim().toLowerCase(), pass=$('rPass').value;
@@ -536,135 +517,135 @@ window.doRegister = async e => {
 };
 window.doAnon = async () => { clearAuthErr(); try{ await signInAnonymously(auth); closeModal('auth'); }catch(err){ showAuthErr(err.message); } };
 window.showForgot = () => { clearAuthErr(); $('formLogin').classList.add('hidden'); $('formReg').classList.add('hidden'); $('formForgot').classList.remove('hidden'); };
-window.doForgot = async () => {
-  clearAuthErr();
-  const email=$('fEmail').value.trim(); if(!email) return showAuthErr('Enter email');
-  try{ await sendPasswordResetEmail(auth,email); $('authOk').textContent='Reset link sent!'; $('authOk').classList.remove('hidden'); }
-  catch(err){ showAuthErr(err.message); }
-};
+window.doForgot = async () => { clearAuthErr(); const email=$('fEmail').value.trim(); if(!email) return showAuthErr('Enter email'); try{ await sendPasswordResetEmail(auth,email); $('authOk').textContent='Reset link sent!'; $('authOk').classList.remove('hidden'); }catch(err){ showAuthErr(err.message); } };
 window.doSignOut = async () => {
   leaveVoice(); await signOut(auth);
-  S.server=null; S.channel=null; S.profile=null;
+  S.server=null; S.channel=null; S.profile=null; S.inDMs=false;
   $('currentServerName').textContent='Select a Server';
   $('serverIconPreview').classList.add('hidden');
   $('channelsList').innerHTML=''; $('voiceList').innerHTML='';
-  $('msgFeed').innerHTML='<div class="text-center py-16 text-slate-600 mono text-xs">Join or create a server.</div>';
-  $('membersList').innerHTML=''; $('friendsList').innerHTML='';
-  $('serverSettingsBtn').classList.add('hidden');
+  $('msgFeed').innerHTML='<div class="text-center py-16 text-slate-600 mono text-xs">Select a server or open Direct Messages.</div>';
+  $('membersList').innerHTML=''; $('friendsList').innerHTML=''; $('dmList').innerHTML='';
+  $('serverSettingsBtn').classList.add('hidden'); $('inviteBtn').classList.add('hidden');
   $('addChanBtn').classList.add('hidden'); $('addVoiceBtn').classList.add('hidden');
   $('chanAdminBtn').classList.add('hidden');
-  closeModal('profile'); updateUserUI();
+  showChannelsView(); closeModal('profile'); updateUserUI();
 };
 
-// ========== AVATAR METHODS ==========
+// ========== DM HOME ==========
+window.openDMs = () => {
+  S.inDMs = true; S.server = null; S.channel = null; leaveVoice();
+  $('dmHomeBtn').classList.add('dm-active');
+  document.querySelectorAll('#serverList button').forEach(b => b.classList.remove('server-active'));
+  $('currentServerName').textContent = 'Direct Messages';
+  $('serverIconPreview').classList.add('hidden');
+  $('serverSettingsBtn').classList.add('hidden'); $('inviteBtn').classList.add('hidden');
+  $('addChanBtn').classList.add('hidden'); $('addVoiceBtn').classList.add('hidden');
+  $('chanAdminBtn').classList.add('hidden'); $('membersPanel').classList.add('hidden');
+  showDMView();
+  $('chanIcon').className = 'fa-solid fa-at text-slate-500 text-xs';
+  $('chanHeader').textContent = 'Friends & DMs';
+  $('chatInput').disabled = true;
+  $('chatInput').placeholder = 'Select a friend to message…';
+  $('msgFeed').innerHTML = '<div class="text-center py-16 text-slate-600 mono text-xs">Select a friend on the left to start a conversation.</div>';
+  loadFriends(); renderDMList();
+};
+function showDMView(){ $('channelsView').classList.add('hidden'); $('dmView').classList.remove('hidden'); }
+function showChannelsView(){ $('dmView').classList.add('hidden'); $('channelsView').classList.remove('hidden'); $('membersPanel').classList.remove('hidden'); $('dmHomeBtn').classList.remove('dm-active'); }
+
+// ========== AVATAR / PROFILE ==========
 window.avatarMethod = (m) => {
   ['seed','url','upload'].forEach(x => {
     $(`am-${x}`).className = `px-2 py-1 rounded ${x===m?'bg-bch/20 text-bch':'bg-dark-800 text-slate-400'}`;
     $(`avatar${x.charAt(0).toUpperCase()+x.slice(1)}Box`).classList.toggle('hidden', x!==m);
   });
 };
-window.previewAvatar = seed => {
-  if(S.pendingAvatarFile) return;
-  $('profileAvatarPreview').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed||'Guest')}`;
-};
-window.previewFromUrl = url => {
-  if(url && url.startsWith('http')) $('profileAvatarPreview').src = url;
-};
+window.previewAvatar = seed => { if(S.pendingAvatarFile) return; $('profileAvatarPreview').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed||'Guest')}`; };
+window.previewFromUrl = url => { if(url&&url.startsWith('http')) $('profileAvatarPreview').src=url; };
 window.handleAvatarUpload = e => {
-  const f = e.target.files[0]; if(!f) return;
-  if(f.size > 3*1024*1024) return alert('Max 3 MB');
-  S.pendingAvatarFile = f;
-  const reader = new FileReader();
-  reader.onload = ev => { $('profileAvatarPreview').src = ev.target.result; };
-  reader.readAsDataURL(f);
+  const f=e.target.files[0]; if(!f) return;
+  if(f.size>3*1024*1024) return alert('Max 3 MB');
+  S.pendingAvatarFile=f;
+  const reader=new FileReader(); reader.onload=ev=>{ $('profileAvatarPreview').src=ev.target.result; }; reader.readAsDataURL(f);
 };
-
 window.saveProfile = async () => {
   if(!S.user) return showProfileMsg('Login required', true);
-  const handle = $('profileHandle').value.trim();
-  const bio = $('profileBio').value.trim();
-  const status = $('profileStatus').value.trim();
+  const handle=$('profileHandle').value.trim(), bio=$('profileBio').value.trim(), status=$('profileStatus').value.trim();
   if(!handle) return showProfileMsg('Handle required', true);
-
   let avatar = S.profile.avatar;
-
-  try {
-    // Priority: Upload > URL > Seed
-    if(S.pendingAvatarFile){
-      avatar = await uploadImage(S.pendingAvatarFile, `avatars/${S.user.uid}_${Date.now()}`);
-      S.pendingAvatarFile = null;
-    } else if($('profileAvatarUrl')?.value?.trim()){
-      avatar = $('profileAvatarUrl').value.trim();
-    } else {
-      const seed = $('profileSeed').value.trim() || S.user.uid;
-      avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed)}`;
-    }
-
-    await updateDoc(doc(db,'users',S.user.uid), { handle, bio, status, avatar });
-    S.profile = { ...S.profile, handle, bio, status, avatar };
-    updateUserUI();
-    showProfileMsg('✓ Saved', false);
-  } catch(err) {
-    console.error(err);
-    showProfileMsg('Save failed: ' + err.message, true);
-  }
+  try{
+    if(S.pendingAvatarFile){ avatar=await uploadImage(S.pendingAvatarFile,`avatars/${S.user.uid}_${Date.now()}`); S.pendingAvatarFile=null; }
+    else if($('profileAvatarUrl')?.value?.trim()) avatar=$('profileAvatarUrl').value.trim();
+    else { const seed=$('profileSeed').value.trim()||S.user.uid; avatar=`https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(seed)}`; }
+    await updateDoc(doc(db,'users',S.user.uid),{handle,bio,status,avatar});
+    S.profile={...S.profile,handle,bio,status,avatar}; updateUserUI(); showProfileMsg('✓ Saved', false);
+  }catch(err){ showProfileMsg('Save failed: '+err.message, true); }
 };
-function showProfileMsg(msg, isErr){
-  const el=$('profileMsg'); el.textContent=msg;
-  el.className=`mt-2 text-xs mono ${isErr?'text-red-400':'text-green-400'}`;
-  el.classList.remove('hidden');
-}
+function showProfileMsg(msg,isErr){ const el=$('profileMsg'); el.textContent=msg; el.className=`mt-2 text-xs mono ${isErr?'text-red-400':'text-green-400'}`; el.classList.remove('hidden'); }
 
-// ========== IMAGE HELPERS ==========
-async function uploadImage(file, path){
-  try {
-    const r = ref(storage, path);
-    await uploadBytes(r, file);
-    return await getDownloadURL(r);
-  } catch(err) {
-    console.error('Upload error', err);
-    throw new Error('Upload failed – check Firebase Storage rules');
-  }
-}
-window.previewServerUrl = url => {
-  if(url && url.startsWith('http')) $('newServerIconPreview').src = url;
-};
-window.previewSsIcon = url => {
-  if(url && url.startsWith('http')) $('ssIconPreview').src = url;
-};
-
-window.triggerImageUpload = () => {
-  if(!S.user||S.user.isAnonymous) return alert('Only registered users can upload');
-  $('imgFileInput').click();
-};
+async function uploadImage(file, path){ const r=ref(storage,path); await uploadBytes(r,file); return await getDownloadURL(r); }
+window.previewServerUrl = url => { if(url&&url.startsWith('http')) $('newServerIconPreview').src=url; };
+window.previewSsIcon = url => { if(url&&url.startsWith('http')) $('ssIconPreview').src=url; };
+window.triggerImageUpload = () => { if(!S.user||S.user.isAnonymous) return alert('Registered users only'); $('imgFileInput').click(); };
 window.handleImageSelect = e => {
   const f=e.target.files[0]; if(!f) return;
   if(f.size>5*1024*1024) return alert('Max 5 MB');
   S.pendingImage=f;
-  const reader=new FileReader();
-  reader.onload=ev=>{ $('imgPreviewSrc').src=ev.target.result; $('imgPreview').classList.remove('hidden'); };
-  reader.readAsDataURL(f);
+  const reader=new FileReader(); reader.onload=ev=>{ $('imgPreviewSrc').src=ev.target.result; $('imgPreview').classList.remove('hidden'); }; reader.readAsDataURL(f);
 };
 window.clearImagePreview = () => { S.pendingImage=null; $('imgFileInput').value=''; $('imgPreview').classList.add('hidden'); };
+
+// ========== AUDIO CLIPS ==========
+let mediaRecorder = null, audioChunks = [];
+window.toggleAudioRecord = async () => {
+  if(mediaRecorder && mediaRecorder.state === 'recording'){ stopAudioRecord(false); return; }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      if(S._cancelAudio){ S._cancelAudio=false; return; }
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      if(blob.size < 500) return;
+      try{
+        const url = await uploadImage(blob, `audio/${S.user.uid}_${Date.now()}.webm`);
+        S.pendingAudio = url;
+        await actuallySendMessage('', null, url);
+        S.pendingAudio = null;
+      }catch(err){ alert('Audio upload failed: '+err.message); }
+    };
+    mediaRecorder.start();
+    $('audioPreview').classList.remove('hidden');
+    $('audioRecStatus').textContent = 'Recording… click Send when done';
+    $('audioClipBtn').classList.add('text-red-400','rec-pulse');
+  }catch(err){ alert('Microphone access denied'); }
+};
+window.stopAudioRecord = (cancel) => {
+  S._cancelAudio = cancel;
+  if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  $('audioPreview').classList.add('hidden');
+  $('audioClipBtn').classList.remove('text-red-400','rec-pulse');
+};
 
 // ========== MIC / DEAFEN ==========
 window.toggleMic = () => {
   S.micMuted = !S.micMuted;
-  const btn = $('micBtn');
-  btn.innerHTML = S.micMuted ? '<i class="fa-solid fa-microphone-slash text-red-400"></i>' : '<i class="fa-solid fa-microphone"></i>';
-  if(localStream) localStream.getAudioTracks().forEach(t => t.enabled = !S.micMuted && !S.deafened);
+  $('micBtn').innerHTML = S.micMuted ? '<i class="fa-solid fa-microphone-slash text-red-400"></i>' : '<i class="fa-solid fa-microphone"></i>';
+  if(S.localStream) S.localStream.getAudioTracks().forEach(t => t.enabled = !S.micMuted && !S.deafened);
 };
 window.toggleDeafen = () => {
   S.deafened = !S.deafened;
-  const btn = $('deafenBtn');
-  btn.innerHTML = S.deafened ? '<i class="fa-solid fa-headphones text-red-400"></i>' : '<i class="fa-solid fa-headphones"></i>';
-  if(localStream) localStream.getAudioTracks().forEach(t => t.enabled = !S.micMuted && !S.deafened);
-  // In a full implementation we would also mute incoming audio
+  $('deafenBtn').innerHTML = S.deafened ? '<i class="fa-solid fa-headphones text-red-400"></i>' : '<i class="fa-solid fa-headphones"></i>';
+  if(S.localStream) S.localStream.getAudioTracks().forEach(t => t.enabled = !S.micMuted && !S.deafened);
+  // mute all remote audio
+  document.querySelectorAll('audio[data-remote]').forEach(a => a.muted = S.deafened);
 };
 
 // ========== SERVERS ==========
 async function loadMyServers(){
-  if(!S.user){ $('serverList').innerHTML=''; return; }
+  if(!S.user){ $('serverList').innerHTML=''; S.myServerCount=0; return; }
   try{
     const snap=await getDocs(collection(db,'servers'));
     const mine=[];
@@ -672,6 +653,7 @@ async function loadMyServers(){
       const m=await getDoc(doc(db,'servers',d.id,'members',S.user.uid));
       if(m.exists()||S.isAdmin) mine.push({id:d.id,...d.data()});
     }
+    S.myServerCount = mine.length;
     renderServerRail(mine);
   }catch(e){ console.error(e); }
 }
@@ -700,56 +682,43 @@ function showServerContext(e, server){
   menu.style.left=e.clientX+'px'; menu.style.top=e.clientY+'px'; menu.classList.remove('hidden');
 }
 window.toggleMuteServer=(id,type)=>{ setMute(id,type,!isServerMuted(id,type)); hideCtx(); loadMyServers(); };
-function hideCtx(){ $('ctxMenu').classList.add('hidden'); }
-document.addEventListener('click', hideCtx);
+function hideCtx(){ $('ctxMenu').classList.add('hidden'); $('reactionPicker').classList.add('hidden'); }
+document.addEventListener('click', e => { if(!e.target.closest('#ctxMenu') && !e.target.closest('#reactionPicker')) hideCtx(); });
 
 window.createServer = async () => {
   if(!S.user){ closeModal('createServer'); openModal('auth'); return; }
-  if(!S.profile?.handle){
-    S.profile=S.profile||{};
-    S.profile.handle=S.user.isAnonymous?`Anon_${S.user.uid.slice(0,6)}`:(S.user.email?.split('@')[0]||'User');
-    S.profile.avatar=S.profile.avatar||`https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`;
-  }
-  const name=$('newServerName').value.trim();
-  const desc=$('newServerDesc').value.trim();
-  const iconUrl=$('newServerIconUrl').value.trim()||null;
+  if(!S.isAdmin && S.myServerCount >= MAX_SERVERS){ $('createServerErr').textContent=`Max ${MAX_SERVERS} servers.`; $('createServerErr').classList.remove('hidden'); return; }
+  if(!S.profile?.handle){ S.profile=S.profile||{}; S.profile.handle=S.user.isAnonymous?`Anon_${S.user.uid.slice(0,6)}`:(S.user.email?.split('@')[0]||'User'); S.profile.avatar=S.profile.avatar||`https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`; }
+  const name=$('newServerName').value.trim(), desc=$('newServerDesc').value.trim(), iconUrl=$('newServerIconUrl').value.trim()||null;
   if(!name){ $('createServerErr').textContent='Name required'; $('createServerErr').classList.remove('hidden'); return; }
   $('createServerErr').classList.add('hidden');
   try{
     const ref=doc(collection(db,'servers'));
     const serverData={ name, desc:desc||'', ownerUid:S.user.uid, ownerHandle:safe(S.profile.handle,'Owner'), iconUrl, createdAt:Date.now() };
     await setDoc(ref, serverData);
-    await setDoc(doc(db,'servers',ref.id,'members',S.user.uid),{
-      role:'owner', handle:safe(S.profile.handle,'Owner'),
-      avatar:safe(S.profile.avatar,`https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`),
-      uid:S.user.uid, joinedAt:Date.now(), roles:[]
-    });
+    await setDoc(doc(db,'servers',ref.id,'members',S.user.uid),{ role:'owner', handle:safe(S.profile.handle,'Owner'), avatar:safe(S.profile.avatar,`https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`), uid:S.user.uid, joinedAt:Date.now(), roles:[] });
     await setDoc(doc(db,'servers',ref.id,'channels','general'),{name:'general',type:'text',createdAt:Date.now()});
     await setDoc(doc(db,'servers',ref.id,'channels','General'),{name:'General',type:'voice',createdAt:Date.now()});
     await setDoc(doc(db,'servers',ref.id,'roles','everyone'),{name:'@everyone',color:'#99aab5',position:0});
     const code=`HAVOC-${rand()}`;
     await setDoc(doc(db,'invites',code),{code,serverId:ref.id,serverName:name,createdBy:S.user.uid,createdByHandle:safe(S.profile.handle,'Owner'),maxUses:10,uses:0,active:true,createdAt:Date.now()});
-    closeModal('createServer');
-    $('newServerName').value=''; $('newServerDesc').value=''; $('newServerIconUrl').value='';
-    await loadMyServers();
-    await switchServer({id:ref.id,...serverData});
+    closeModal('createServer'); $('newServerName').value=''; $('newServerDesc').value=''; $('newServerIconUrl').value='';
+    await loadMyServers(); await switchServer({id:ref.id,...serverData});
   }catch(err){ console.error(err); $('createServerErr').textContent=err.message; $('createServerErr').classList.remove('hidden'); }
 };
 
 async function switchServer(s){
-  leaveVoice();
-  S.server=s;
+  leaveVoice(); S.inDMs=false; S.server=s;
   S.canManage=(s.ownerUid===S.user?.uid)||S.isAdmin;
+  showChannelsView();
   $('currentServerName').textContent=safe(s.name,'Server');
   if(s.iconUrl){ $('serverIconPreview').src=s.iconUrl; $('serverIconPreview').classList.remove('hidden'); }
   else $('serverIconPreview').classList.add('hidden');
   $('serverSettingsBtn').classList.toggle('hidden',!S.canManage);
+  $('inviteBtn').classList.remove('hidden');
   $('addChanBtn').classList.toggle('hidden',!S.canManage);
   $('addVoiceBtn').classList.toggle('hidden',!S.canManage);
-  await loadMyServers();
-  await loadChannels(s.id);
-  await loadRoles(s.id);
-  listenMembers(s.id);
+  await loadMyServers(); await loadChannels(s.id); await loadRoles(s.id); listenMembers(s.id);
   const first=S_channels.find(c=>c.type==='text')||{id:'general',name:'general',type:'text'};
   switchChannel(first);
 }
@@ -758,8 +727,7 @@ let S_channels=[];
 async function loadChannels(serverId){
   try{
     const snap=await getDocs(collection(db,'servers',serverId,'channels'));
-    S_channels=[];
-    snap.forEach(d=>S_channels.push({id:d.id,...d.data()}));
+    S_channels=[]; snap.forEach(d=>S_channels.push({id:d.id,...d.data()}));
     if(!S_channels.find(c=>c.id==='general')) S_channels.push({id:'general',name:'general',type:'text'});
     renderChannels();
   }catch(e){}
@@ -781,11 +749,7 @@ function renderChannels(){
     btn.innerHTML=`<i class="fa-solid fa-volume-high text-[10px] text-slate-600"></i><span class="truncate">${esc(c.name||c.id)}</span>`;
     btn.onclick=()=>joinVoice(c);
     wrap.appendChild(btn);
-
-    // Voice users under the channel
-    const usersDiv=document.createElement('div');
-    usersDiv.id=`voice-users-${c.id}`;
-    usersDiv.className='space-y-0.5';
+    const usersDiv=document.createElement('div'); usersDiv.id=`voice-users-${c.id}`; usersDiv.className='space-y-0.5';
     if(S.channel===c.id && S.channelType==='voice'){
       Object.values(S.voiceUsers).forEach(u=>{
         const row=document.createElement('div');
@@ -794,23 +758,18 @@ function renderChannels(){
         usersDiv.appendChild(row);
       });
     }
-    wrap.appendChild(usersDiv);
-    voiceList.appendChild(wrap);
+    wrap.appendChild(usersDiv); voiceList.appendChild(wrap);
   });
 }
 function switchChannel(c){
-  leaveVoice();
-  S.channel=c.id; S.channelType='text';
+  leaveVoice(); S.channel=c.id; S.channelType='text';
   $('chanIcon').className='fa-solid fa-hashtag text-slate-500 text-xs';
-  $('chanHeader').textContent=c.name||c.id;
-  $('chanSettingsName').textContent=c.name||c.id;
-  $('textArea').classList.remove('hidden');
-  $('voiceArea').classList.add('hidden');
+  $('chanHeader').textContent=c.name||c.id; $('chanSettingsName').textContent=c.name||c.id;
+  $('textArea').classList.remove('hidden'); $('voiceArea').classList.add('hidden');
   $('chatInput').disabled=!S.user;
   $('chatInput').placeholder=S.user?`Message #${c.name||c.id}`:'Login to post…';
   $('chanAdminBtn').classList.toggle('hidden',!S.canManage);
-  renderChannels();
-  listenMessages(S.server.id,c.id);
+  renderChannels(); listenMessages(S.server.id,c.id);
 }
 window.createChan=async()=>{
   if(!S.canManage||!S.server) return;
@@ -828,109 +787,69 @@ window.createVoiceChannel=async()=>{
   await loadChannels(S.server.id);
 };
 
-// ========== ROLES ==========
-async function loadRoles(serverId){
-  try{
-    const snap=await getDocs(collection(db,'servers',serverId,'roles'));
-    S.roles=[]; snap.forEach(d=>S.roles.push({id:d.id,...d.data()}));
-    S.roles.sort((a,b)=>(b.position||0)-(a.position||0));
-  }catch(e){ S.roles=[]; }
-}
-window.createRole=async()=>{
-  if(!S.canManage||!S.server) return;
-  const name=$('newRoleName').value.trim(), color=$('newRoleColor').value;
-  if(!name) return;
-  const id=name.toLowerCase().replace(/[^a-z0-9\-]/g,'-').slice(0,20)||rand(5);
-  await setDoc(doc(db,'servers',S.server.id,'roles',id),{name,color,position:Date.now()});
-  $('newRoleName').value=''; await loadRoles(S.server.id); renderRolesList();
-};
-async function renderRolesList(){
-  const el=$('rolesList'); el.innerHTML='';
-  S.roles.forEach(r=>{
+// ========== INVITE FRIENDS ==========
+window.openInviteToFriends = async () => {
+  if(!S.server||!S.user) return;
+  const code=`HAVOC-${rand()}`;
+  await setDoc(doc(db,'invites',code),{code,serverId:S.server.id,serverName:safe(S.server.name,'Server'),createdBy:S.user.uid,createdByHandle:safe(S.profile?.handle,'User'),maxUses:25,uses:0,active:true,createdAt:Date.now()});
+  S.currentInviteCode=code; $('inviteShareCode').value=code;
+  const el=$('inviteFriendList'); el.innerHTML='';
+  if(!S.friends.length) el.innerHTML='<p class="text-xs text-slate-500 mono">No friends yet.</p>';
+  else S.friends.forEach(f=>{
     const row=document.createElement('div');
-    row.className='flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2';
-    row.innerHTML=`<span class="role-dot" style="background:${esc(r.color)}"></span>
-      <span class="text-xs font-bold flex-1" style="color:${esc(r.color)}">${esc(r.name)}</span>
-      ${r.id!=='everyone'?`<button onclick="deleteRole('${esc(r.id)}')" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>`:''}`;
+    row.className='flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
+    row.innerHTML=`<img src="${esc(f.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-7 h-7 rounded-full"><span class="text-xs text-slate-300 flex-1 truncate">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
     el.appendChild(row);
   });
-}
-window.deleteRole=async id=>{ if(!confirm('Delete role?')) return; await deleteDoc(doc(db,'servers',S.server.id,'roles',id)); await loadRoles(S.server.id); renderRolesList(); };
-function getMemberColor(member){
-  if(!member?.roles?.length||!S.roles.length) return null;
-  for(const role of S.roles) if(member.roles.includes(role.id)) return role.color;
-  return null;
-}
+  openModal('inviteFriends');
+};
+window.copyInviteCode=()=>{ navigator.clipboard.writeText($('inviteShareCode').value); alert('Copied!'); };
+window.createFreshInvite=async()=>{ if(!S.server) return; const code=`HAVOC-${rand()}`; await setDoc(doc(db,'invites',code),{code,serverId:S.server.id,serverName:safe(S.server.name,'Server'),createdBy:S.user.uid,createdByHandle:safe(S.profile?.handle,'User'),maxUses:25,uses:0,active:true,createdAt:Date.now()}); S.currentInviteCode=code; $('inviteShareCode').value=code; };
+window.sendInviteToFriend=async(uid,handle)=>{
+  if(!S.currentInviteCode) return;
+  const dmId=[S.user.uid,uid].sort().join('_');
+  await addDoc(collection(db,'dms',dmId,'messages'),{ from:S.user.uid, content:`You've been invited to **${S.server.name}**!\nCode: \`${S.currentInviteCode}\``, ts:Date.now() });
+  alert(`Invite sent to ${handle}`);
+};
 
-// ========== INVITES ==========
+// ========== ROLES ==========
+async function loadRoles(serverId){ try{ const snap=await getDocs(collection(db,'servers',serverId,'roles')); S.roles=[]; snap.forEach(d=>S.roles.push({id:d.id,...d.data()})); S.roles.sort((a,b)=>(b.position||0)-(a.position||0)); }catch(e){ S.roles=[]; } }
+window.createRole=async()=>{ if(!S.canManage||!S.server) return; const name=$('newRoleName').value.trim(), color=$('newRoleColor').value; if(!name) return; const id=name.toLowerCase().replace(/[^a-z0-9\-]/g,'-').slice(0,20)||rand(5); await setDoc(doc(db,'servers',S.server.id,'roles',id),{name,color,position:Date.now()}); $('newRoleName').value=''; await loadRoles(S.server.id); renderRolesList(); };
+async function renderRolesList(){ const el=$('rolesList'); el.innerHTML=''; S.roles.forEach(r=>{ const row=document.createElement('div'); row.className='flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2'; row.innerHTML=`<span class="role-dot" style="background:${esc(r.color)}"></span><span class="text-xs font-bold flex-1" style="color:${esc(r.color)}">${esc(r.name)}</span>${r.id!=='everyone'?`<button onclick="deleteRole('${esc(r.id)}')" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>`:''}`; el.appendChild(row); }); }
+window.deleteRole=async id=>{ if(!confirm('Delete role?')) return; await deleteDoc(doc(db,'servers',S.server.id,'roles',id)); await loadRoles(S.server.id); renderRolesList(); };
+function getMemberColor(member){ if(!member?.roles?.length||!S.roles.length) return null; for(const role of S.roles) if(member.roles.includes(role.id)) return role.color; return null; }
+
+// ========== JOIN ==========
 window.joinViaInvite=async()=>{
   if(!S.user){ closeModal('joinInvite'); openModal('auth'); return; }
-  const code=$('inviteCodeInput').value.trim().toUpperCase();
-  if(!code) return showInviteMsg('Enter a code',true);
+  if(!S.isAdmin && S.myServerCount>=MAX_SERVERS) return showInviteMsg(`Max ${MAX_SERVERS} servers.`,true);
+  const code=$('inviteCodeInput').value.trim().toUpperCase(); if(!code) return showInviteMsg('Enter a code',true);
   try{
     const snap=await getDoc(doc(db,'invites',code));
     if(!snap.exists()||!snap.data().active) return showInviteMsg('Invalid or expired',true);
-    const inv=snap.data();
-    if(inv.uses>=inv.maxUses) return showInviteMsg('Max uses reached',true);
+    const inv=snap.data(); if(inv.uses>=inv.maxUses) return showInviteMsg('Max uses reached',true);
     const mSnap=await getDoc(doc(db,'servers',inv.serverId,'members',S.user.uid));
-    if(!mSnap.exists()){
-      await setDoc(doc(db,'servers',inv.serverId,'members',S.user.uid),{
-        role:'member',handle:safe(S.profile?.handle,'Member'),
-        avatar:safe(S.profile?.avatar,`https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`),
-        uid:S.user.uid,joinedAt:Date.now(),roles:[]
-      });
-      await updateDoc(doc(db,'invites',code),{uses:(inv.uses||0)+1});
-    }
+    if(!mSnap.exists()){ await setDoc(doc(db,'servers',inv.serverId,'members',S.user.uid),{ role:'member',handle:safe(S.profile?.handle,'Member'),avatar:safe(S.profile?.avatar,`https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`),uid:S.user.uid,joinedAt:Date.now(),roles:[] }); await updateDoc(doc(db,'invites',code),{uses:(inv.uses||0)+1}); }
     showInviteMsg(`Joined "${inv.serverName}"!`,false);
     const sSnap=await getDoc(doc(db,'servers',inv.serverId));
     if(sSnap.exists()) setTimeout(async()=>{ closeModal('joinInvite'); await loadMyServers(); await switchServer({id:inv.serverId,...sSnap.data()}); },800);
   }catch(err){ showInviteMsg(err.message,true); }
 };
 function showInviteMsg(t,err){ const el=$('inviteMsg'); el.textContent=t; el.className=`mt-3 text-xs mono text-center ${err?'text-red-400':'text-green-400'}`; el.classList.remove('hidden'); }
-window.createInvite=async()=>{
-  if(!S.canManage||!S.server) return;
-  const maxUses=parseInt($('ssInviteUses').value)||10;
-  const code=`HAVOC-${rand()}`;
-  await setDoc(doc(db,'invites',code),{code,serverId:S.server.id,serverName:safe(S.server.name,'Server'),createdBy:S.user.uid,createdByHandle:safe(S.profile?.handle,'Owner'),maxUses,uses:0,active:true,createdAt:Date.now()});
-  renderInviteList();
-};
-async function renderInviteList(){
-  if(!S.server) return;
-  const snap=await getDocs(query(collection(db,'invites'),where('serverId','==',S.server.id)));
-  const el=$('inviteList'); el.innerHTML='';
-  if(snap.empty){ el.innerHTML='<p class="text-xs text-slate-500 mono">No invites yet.</p>'; return; }
-  snap.forEach(d=>{
-    const inv=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2';
-    row.innerHTML=`<span class="mono text-bch-bright font-bold text-xs flex-1">${esc(inv.code)}</span>
-      <span class="text-[10px] text-slate-500 mono">${inv.uses||0}/${inv.maxUses||0}</span>
-      <button onclick="navigator.clipboard.writeText('${esc(inv.code)}')" class="text-slate-500 hover:text-white text-xs"><i class="fa-solid fa-copy"></i></button>
-      ${inv.active?`<button onclick="revokeInvite('${esc(inv.code)}')" class="text-red-500 text-xs"><i class="fa-solid fa-ban"></i></button>`:''}`;
-    el.appendChild(row);
-  });
-}
+window.createInvite=async()=>{ if(!S.canManage||!S.server) return; const maxUses=parseInt($('ssInviteUses').value)||10; const code=`HAVOC-${rand()}`; await setDoc(doc(db,'invites',code),{code,serverId:S.server.id,serverName:safe(S.server.name,'Server'),createdBy:S.user.uid,createdByHandle:safe(S.profile?.handle,'Owner'),maxUses,uses:0,active:true,createdAt:Date.now()}); renderInviteList(); };
+async function renderInviteList(){ if(!S.server) return; const snap=await getDocs(query(collection(db,'invites'),where('serverId','==',S.server.id))); const el=$('inviteList'); el.innerHTML=''; if(snap.empty){ el.innerHTML='<p class="text-xs text-slate-500 mono">No invites yet.</p>'; return; } snap.forEach(d=>{ const inv=d.data(); const row=document.createElement('div'); row.className='flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2'; row.innerHTML=`<span class="mono text-bch-bright font-bold text-xs flex-1">${esc(inv.code)}</span><span class="text-[10px] text-slate-500 mono">${inv.uses||0}/${inv.maxUses||0}</span><button onclick="navigator.clipboard.writeText('${esc(inv.code)}')" class="text-slate-500 hover:text-white text-xs"><i class="fa-solid fa-copy"></i></button>${inv.active?`<button onclick="revokeInvite('${esc(inv.code)}')" class="text-red-500 text-xs"><i class="fa-solid fa-ban"></i></button>`:''}`; el.appendChild(row); }); }
 window.revokeInvite=async code=>{ if(!confirm(`Revoke ${code}?`)) return; await updateDoc(doc(db,'invites',code),{active:false}); renderInviteList(); };
 
-// ========== MESSAGES ==========
-function parseMentions(text){
-  text=text.replace(/@everyone/gi,'<span class="mention mention-everyone">@everyone</span>');
-  text=text.replace(/@here/gi,'<span class="mention mention-everyone">@here</span>');
-  text=text.replace(/@([a-zA-Z0-9_]+)/g,(m,name)=>`<span class="mention">@${esc(name)}</span>`);
-  return text;
-}
+// ========== MESSAGES + REACTIONS ==========
+function parseMentions(text){ text=text.replace(/@everyone/gi,'<span class="mention mention-everyone">@everyone</span>'); text=text.replace(/@here/gi,'<span class="mention mention-everyone">@here</span>'); text=text.replace(/@([a-zA-Z0-9_]+)/g,(m,name)=>`<span class="mention">@${esc(name)}</span>`); return text; }
+
 function listenMessages(serverId,channelId){
   if(S.unsubMsgs) S.unsubMsgs();
   const ref=collection(db,'servers',serverId,'channels',channelId,'messages');
-  const load=async()=>{
-    try{
-      const snap=await getDocs(ref);
-      const msgs=[]; snap.forEach(d=>msgs.push({id:d.id,...d.data()}));
-      msgs.sort((a,b)=>(a.ts||0)-(b.ts||0)); renderMsgs(msgs);
-    }catch(e){}
-  };
+  const load=async()=>{ try{ const snap=await getDocs(ref); const msgs=[]; snap.forEach(d=>msgs.push({id:d.id,...d.data()})); msgs.sort((a,b)=>(a.ts||0)-(b.ts||0)); renderMsgs(msgs); }catch(e){} };
   load(); const iv=setInterval(load,2500); S.unsubMsgs=()=>clearInterval(iv);
 }
+
 function renderMsgs(msgs){
   const feed=$('msgFeed'); feed.innerHTML='';
   if(!msgs.length){ feed.innerHTML='<div class="text-center py-12 text-slate-600 mono text-xs">No messages yet.</div>'; return; }
@@ -941,67 +860,133 @@ function renderMsgs(msgs){
     const nameStyle=color?`style="color:${color}"`:'';
     let contentHtml=parseMentions(esc(parseEmojis(m.content||'')));
     if(m.imageUrl) contentHtml+=`<div class="mt-2"><img src="${esc(m.imageUrl)}" class="max-w-xs max-h-64 rounded-lg border border-dark-600 cursor-pointer" onclick="window.open('${esc(m.imageUrl)}')"></div>`;
+    if(m.audioUrl) contentHtml+=`<div class="mt-2"><audio controls src="${esc(m.audioUrl)}" class="max-w-xs h-8"></audio></div>`;
+
+    // reactions
+    let reactHtml = '';
+    if(m.reactions){
+      const entries = Object.entries(m.reactions);
+      if(entries.length){
+        reactHtml = '<div class="reaction-bar">'+entries.map(([emoji, users])=>{
+          const count = Array.isArray(users)?users.length:0;
+          const mine = Array.isArray(users)&&users.includes(S.user?.uid);
+          return `<span class="reaction ${mine?'mine':''}" onclick="toggleReaction('${esc(m.id)}','${emoji}')">${emoji} ${count}</span>`;
+        }).join('')+'</div>';
+      }
+    }
+
     const mentionsMe=(m.content||'').toLowerCase().includes('@'+(S.profile?.handle||'').toLowerCase())||/@(everyone|here)/i.test(m.content||'');
     const div=document.createElement('div');
-    div.className=`flex items-start gap-3 hover:bg-dark-800/40 px-2 py-2 rounded-lg group ${mentionsMe&&!isServerMuted(S.server?.id,'notif')?'bg-bch/5 border-l-2 border-bch':''}`;
+    div.className=`flex items-start gap-3 hover:bg-dark-800/40 px-2 py-2 rounded-lg group relative ${mentionsMe&&!isServerMuted(S.server?.id,'notif')?'bg-bch/5 border-l-2 border-bch':''}`;
     div.innerHTML=`
-      <img src="${esc(m.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-9 h-9 rounded-full border ${isOwner?'border-carrot/60':'border-dark-600'} shrink-0 cursor-pointer" 
+      <img src="${esc(m.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-9 h-9 rounded-full border ${isOwner?'border-carrot/60':'border-dark-600'} shrink-0 cursor-pointer"
            oncontextmenu="showUserContext(event,'${esc(m.uid)}','${esc(m.handle)}','${esc(m.avatar||'')}')">
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5">
           <span class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-100'}" ${nameStyle}>${esc(m.handle||'User')}</span>
           ${isOwner?'<span class="badge-owner">OWNER</span>':''}
           <span class="text-[10px] text-slate-600 mono">${shortTime(m.ts)}</span>
+          <button onclick="showReactionPicker(event,'${esc(m.id)}')" class="hidden group-hover:inline text-slate-500 hover:text-bch text-[11px] ml-1" title="Add reaction"><i class="fa-regular fa-face-smile"></i></button>
           ${S.canManage?`<button onclick="deleteMsg('${esc(m.id)}')" class="hidden group-hover:inline text-red-500 text-[10px] ml-auto"><i class="fa-solid fa-trash"></i></button>`:''}
         </div>
         <div class="text-xs text-slate-200 mt-0.5 break-words leading-relaxed">${contentHtml}</div>
+        ${reactHtml}
       </div>`;
     feed.appendChild(div);
   });
   const c=$('msgContainer'); c.scrollTop=c.scrollHeight;
 }
-window.sendMsg=async e=>{
+
+window.showReactionPicker = (e, msgId) => {
+  e.stopPropagation();
+  S.reactionTarget = msgId;
+  const p = $('reactionPicker');
+  p.style.left = Math.min(e.clientX, window.innerWidth-220)+'px';
+  p.style.top = (e.clientY-50)+'px';
+  p.classList.remove('hidden');
+};
+
+window.addReaction = async (emoji) => {
+  if(!S.reactionTarget || !S.user || !S.server) return;
+  $('reactionPicker').classList.add('hidden');
+  const ref = doc(db,'servers',S.server.id,'channels',S.channel,'messages',S.reactionTarget);
+  try{
+    const snap = await getDoc(ref);
+    if(!snap.exists()) return;
+    const data = snap.data();
+    const reactions = data.reactions || {};
+    if(!reactions[emoji]) reactions[emoji] = [];
+    if(!reactions[emoji].includes(S.user.uid)) reactions[emoji].push(S.user.uid);
+    await updateDoc(ref, { reactions });
+  }catch(err){ console.error(err); }
+};
+
+window.toggleReaction = async (msgId, emoji) => {
+  if(!S.user || !S.server) return;
+  const ref = doc(db,'servers',S.server.id,'channels',S.channel,'messages',msgId);
+  try{
+    const snap = await getDoc(ref);
+    if(!snap.exists()) return;
+    const data = snap.data();
+    const reactions = data.reactions || {};
+    if(!reactions[emoji]) reactions[emoji] = [];
+    const idx = reactions[emoji].indexOf(S.user.uid);
+    if(idx >= 0) reactions[emoji].splice(idx,1);
+    else reactions[emoji].push(S.user.uid);
+    if(reactions[emoji].length === 0) delete reactions[emoji];
+    await updateDoc(ref, { reactions });
+  }catch(err){ console.error(err); }
+};
+
+async function actuallySendMessage(content, imageUrl, audioUrl){
+  await addDoc(collection(db,'servers',S.server.id,'channels',S.channel,'messages'),{
+    uid:S.user.uid, handle:safe(S.profile?.handle,'User'),
+    avatar:safe(S.profile?.avatar,`https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`),
+    content: content||'', imageUrl: imageUrl||null, audioUrl: audioUrl||null,
+    reactions: {}, ts: Date.now()
+  });
+}
+
+window.sendMsg = async e => {
   e.preventDefault();
   const input=$('chatInput'); const content=input.value.trim();
-  if((!content&&!S.pendingImage)||!S.user||!S.server||S.channelType!=='text') return;
+  if((!content&&!S.pendingImage&&!S.pendingAudio)||!S.user) return;
+
+  if(S.inDMs && S.dmTarget){
+    input.value='';
+    const dmId=[S.user.uid,S.dmTarget.uid].sort().join('_');
+    await addDoc(collection(db,'dms',dmId,'messages'),{ from:S.user.uid, content, ts:Date.now() });
+    loadDms(S.dmTarget.uid); return;
+  }
+  if(!S.server||S.channelType!=='text') return;
   if(S.locked&&!S.canManage) return alert('Channel is locked');
   input.value='';
   let imageUrl=null;
   try{
     if(S.pendingImage){ imageUrl=await uploadImage(S.pendingImage,`messages/${S.server.id}/${S.channel}/${Date.now()}`); clearImagePreview(); }
-    await addDoc(collection(db,'servers',S.server.id,'channels',S.channel,'messages'),{
-      uid:S.user.uid, handle:safe(S.profile?.handle,'User'),
-      avatar:safe(S.profile?.avatar,`https://api.dicebear.com/7.x/bottts/svg?seed=${S.user.uid}`),
-      content:content||'', imageUrl:imageUrl||null, ts:Date.now()
-    });
+    await actuallySendMessage(content, imageUrl, null);
   }catch(err){ alert('Send failed: '+err.message); }
 };
 window.deleteMsg=async id=>{ if(!S.canManage) return; if(!confirm('Delete?')) return; await deleteDoc(doc(db,'servers',S.server.id,'channels',S.channel,'messages',id)); };
 
-// ========== MEMBERS + RIGHT-CLICK ==========
+// ========== MEMBERS ==========
 function listenMembers(serverId){
   if(S.unsubMembers) S.unsubMembers();
   const load=async()=>{
     try{
       const snap=await getDocs(collection(db,'servers',serverId,'members'));
-      S.membersCache=[];
-      const list=$('membersList'); list.innerHTML='';
+      S.membersCache=[]; const list=$('membersList'); list.innerHTML=''; let count=0;
       snap.forEach(d=>{
-        const m=d.data(); S.membersCache.push(m);
-        const isOwner=m.role==='owner';
-        const color=getMemberColor(m)||(isOwner?'#F7931A':null);
+        const m=d.data(); S.membersCache.push(m); count++;
+        const isOwner=m.role==='owner'; const color=getMemberColor(m)||(isOwner?'#F7931A':null);
         const nameStyle=color?`style="color:${color}"`:'';
         const div=document.createElement('div');
         div.className='flex items-center gap-2 px-1.5 py-1.5 rounded hover:bg-dark-800 cursor-pointer';
         div.oncontextmenu=e=>{ e.preventDefault(); showUserContext(e,m.uid,m.handle,m.avatar); };
-        div.innerHTML=`
-          <img src="${esc(m.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-7 h-7 rounded-full border border-dark-600">
-          <div class="min-w-0">
-            <div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(m.handle||'User')}</div>
-            <div class="text-[9px] text-slate-500">${isOwner?'Owner':(m.status||'Member')}</div>
-          </div>`;
+        div.innerHTML=`<img src="${esc(m.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-7 h-7 rounded-full border border-dark-600"><div class="min-w-0"><div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(m.handle||'User')}</div><div class="text-[9px] text-slate-500">${isOwner?'Owner':(m.status||'Member')}</div></div>`;
         list.appendChild(div);
       });
+      $('memberCount').textContent=count;
     }catch(e){}
   };
   load(); const iv=setInterval(load,8000); S.unsubMembers=()=>clearInterval(iv);
@@ -1009,98 +994,28 @@ function listenMembers(serverId){
 
 window.showUserContext = (e, uid, handle, avatar) => {
   e.preventDefault(); e.stopPropagation();
-  if(uid === S.user?.uid) return;
-  const menu = $('ctxMenu');
-  const isFriend = S.friends.some(f => f.uid === uid);
-  menu.innerHTML = `
-    <div class="ctx-item" onclick="openDm('${esc(uid)}','${esc(handle)}','${esc(avatar||'')}');hideCtx()"><i class="fa-solid fa-message w-4"></i> Message</div>
-    <div class="ctx-item" onclick="${isFriend?`removeFriend('${esc(uid)}')`:`addFriend('${esc(uid)}','${esc(handle)}','${esc(avatar||'')}')`};hideCtx()">
-      <i class="fa-solid fa-user-${isFriend?'minus':'plus'} w-4"></i> ${isFriend?'Remove Friend':'Add Friend'}
-    </div>
-    <div class="ctx-item text-red-400" onclick="blockUser('${esc(uid)}');hideCtx()"><i class="fa-solid fa-ban w-4"></i> Block</div>
-  `;
-  menu.style.left = Math.min(e.clientX, window.innerWidth-200)+'px';
-  menu.style.top = Math.min(e.clientY, window.innerHeight-150)+'px';
+  if(uid===S.user?.uid) return;
+  const menu=$('ctxMenu'); const isFriend=S.friends.some(f=>f.uid===uid);
+  menu.innerHTML=`
+    <div class="ctx-item" onclick="startDM('${esc(uid)}','${esc(handle)}','${esc(avatar||'')}');hideCtx()"><i class="fa-solid fa-message w-4"></i> Message</div>
+    <div class="ctx-item" onclick="${isFriend?`removeFriend('${esc(uid)}')`:`addFriend('${esc(uid)}','${esc(handle)}','${esc(avatar||'')}')`};hideCtx()"><i class="fa-solid fa-user-${isFriend?'minus':'plus'} w-4"></i> ${isFriend?'Remove Friend':'Add Friend'}</div>
+    <div class="ctx-item text-red-400" onclick="blockUser('${esc(uid)}');hideCtx()"><i class="fa-solid fa-ban w-4"></i> Block</div>`;
+  menu.style.left=Math.min(e.clientX,window.innerWidth-200)+'px';
+  menu.style.top=Math.min(e.clientY,window.innerHeight-150)+'px';
   menu.classList.remove('hidden');
 };
 
 // ========== FRIENDS + DMS ==========
-async function loadFriends(){
-  if(!S.user) return;
-  try{
-    const snap = await getDocs(collection(db,'users',S.user.uid,'friends'));
-    S.friends = [];
-    snap.forEach(d => S.friends.push({uid:d.id, ...d.data()}));
-    renderFriends();
-  }catch(e){}
-}
-function renderFriends(){
-  const el = $('friendsList'); el.innerHTML='';
-  if(!S.friends.length){ el.innerHTML='<p class="text-[10px] text-slate-600 px-1">No friends yet</p>'; return; }
-  S.friends.forEach(f=>{
-    const div=document.createElement('div');
-    div.className='flex items-center gap-2 px-1.5 py-1 rounded hover:bg-dark-800 cursor-pointer';
-    div.onclick=()=>openDm(f.uid, f.handle, f.avatar);
-    div.innerHTML=`<img src="${esc(f.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-6 h-6 rounded-full">
-      <span class="text-xs text-slate-300 truncate">${esc(f.handle)}</span>`;
-    el.appendChild(div);
-  });
-}
-window.addFriend = async (uid, handle, avatar) => {
-  if(!S.user || uid===S.user.uid) return;
-  await setDoc(doc(db,'users',S.user.uid,'friends',uid), { handle, avatar, addedAt:Date.now() });
-  // optional: also add reverse for mutual
-  await setDoc(doc(db,'users',uid,'friends',S.user.uid), { handle:S.profile.handle, avatar:S.profile.avatar, addedAt:Date.now() });
-  loadFriends();
-};
-window.removeFriend = async uid => {
-  await deleteDoc(doc(db,'users',S.user.uid,'friends',uid));
-  loadFriends();
-};
-window.blockUser = async uid => {
-  if(!confirm('Block this user?')) return;
-  await setDoc(doc(db,'users',S.user.uid,'blocked',uid), { blockedAt:Date.now() });
-  await removeFriend(uid);
-  alert('User blocked');
-};
+async function loadFriends(){ if(!S.user) return; try{ const snap=await getDocs(collection(db,'users',S.user.uid,'friends')); S.friends=[]; snap.forEach(d=>S.friends.push({uid:d.id,...d.data()})); renderFriends(); renderDMList(); }catch(e){} }
+function renderFriends(){ const el=$('friendsList'); if(!el) return; el.innerHTML=''; if(!S.friends.length){ el.innerHTML='<p class="text-[10px] text-slate-600 px-2">No friends yet</p>'; return; } S.friends.forEach(f=>{ const div=document.createElement('div'); div.className='flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800 cursor-pointer'; div.onclick=()=>startDM(f.uid,f.handle,f.avatar); div.innerHTML=`<img src="${esc(f.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-7 h-7 rounded-full"><span class="text-xs text-slate-300 truncate">${esc(f.handle)}</span>`; el.appendChild(div); }); }
+function renderDMList(){ const el=$('dmList'); if(!el) return; el.innerHTML=''; S.friends.forEach(f=>{ const div=document.createElement('div'); div.className=`flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800 cursor-pointer ${S.dmTarget?.uid===f.uid?'bg-dark-800 text-bch-bright':''}`; div.onclick=()=>startDM(f.uid,f.handle,f.avatar); div.innerHTML=`<img src="${esc(f.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-8 h-8 rounded-full"><span class="text-xs truncate">${esc(f.handle)}</span>`; el.appendChild(div); }); }
+window.addFriend=async(uid,handle,avatar)=>{ if(!S.user||uid===S.user.uid) return; await setDoc(doc(db,'users',S.user.uid,'friends',uid),{handle,avatar,addedAt:Date.now()}); await setDoc(doc(db,'users',uid,'friends',S.user.uid),{handle:S.profile.handle,avatar:S.profile.avatar,addedAt:Date.now()}); loadFriends(); };
+window.removeFriend=async uid=>{ await deleteDoc(doc(db,'users',S.user.uid,'friends',uid)); loadFriends(); };
+window.blockUser=async uid=>{ if(!confirm('Block this user?')) return; await setDoc(doc(db,'users',S.user.uid,'blocked',uid),{blockedAt:Date.now()}); await removeFriend(uid); alert('Blocked'); };
+window.startDM=(uid,handle,avatar)=>{ S.dmTarget={uid,handle,avatar}; S.inDMs=true; openDMs(); $('chanIcon').className='fa-solid fa-at text-bch-bright text-xs'; $('chanHeader').textContent=handle; $('chatInput').disabled=false; $('chatInput').placeholder=`Message @${handle}`; loadDms(uid); renderDMList(); };
+async function loadDms(targetUid){ const dmId=[S.user.uid,targetUid].sort().join('_'); const snap=await getDocs(collection(db,'dms',dmId,'messages')); const msgs=[]; snap.forEach(d=>msgs.push({id:d.id,...d.data()})); msgs.sort((a,b)=>(a.ts||0)-(b.ts||0)); const feed=$('msgFeed'); feed.innerHTML=''; if(!msgs.length){ feed.innerHTML=`<div class="text-center py-12 text-slate-600 mono text-xs">Beginning of conversation with ${esc(S.dmTarget.handle)}.</div>`; return; } msgs.forEach(m=>{ const mine=m.from===S.user.uid; const div=document.createElement('div'); div.className=`flex ${mine?'justify-end':'justify-start'}`; div.innerHTML=`<div class="max-w-[70%] px-3 py-2 rounded-xl text-xs ${mine?'bg-bch/20 text-bch-bright':'bg-dark-800 text-slate-200'}">${esc(m.content)}<div class="text-[9px] text-slate-500 mt-1 ${mine?'text-right':''}">${shortTime(m.ts)}</div></div>`; feed.appendChild(div); }); const c=$('msgContainer'); c.scrollTop=c.scrollHeight; }
 
-window.openDm = (uid, handle, avatar) => {
-  S.dmTarget = { uid, handle, avatar };
-  $('dmTargetHandle').textContent = handle;
-  openModal('dm');
-  loadDms(uid);
-};
-async function loadDms(targetUid){
-  const dmId = [S.user.uid, targetUid].sort().join('_');
-  const snap = await getDocs(collection(db,'dms',dmId,'messages'));
-  const msgs = [];
-  snap.forEach(d => msgs.push({id:d.id, ...d.data()}));
-  msgs.sort((a,b)=>(a.ts||0)-(b.ts||0));
-  const feed = $('dmFeed'); feed.innerHTML='';
-  msgs.forEach(m=>{
-    const mine = m.from === S.user.uid;
-    const div=document.createElement('div');
-    div.className=`text-xs ${mine?'text-right':''}`;
-    div.innerHTML=`<span class="inline-block px-2 py-1 rounded ${mine?'bg-bch/20 text-bch-bright':'bg-dark-800 text-slate-300'}">${esc(m.content)}</span>
-      <div class="text-[9px] text-slate-600 mt-0.5">${shortTime(m.ts)}</div>`;
-    feed.appendChild(div);
-  });
-  feed.scrollTop = feed.scrollHeight;
-}
-window.sendDm = async e => {
-  e.preventDefault();
-  const content = $('dmInput').value.trim();
-  if(!content || !S.dmTarget) return;
-  $('dmInput').value='';
-  const dmId = [S.user.uid, S.dmTarget.uid].sort().join('_');
-  await addDoc(collection(db,'dms',dmId,'messages'), {
-    from: S.user.uid, content, ts: Date.now()
-  });
-  loadDms(S.dmTarget.uid);
-};
-
-// ========== VOICE ==========
-let localStream=null, voiceMuted=false;
+// ========== FULL VOICE + VIDEO (WebRTC mesh) ==========
 async function joinVoice(c){
   if(!S.user||!S.server) return;
   leaveVoice();
@@ -1108,216 +1023,207 @@ async function joinVoice(c){
   $('chanIcon').className='fa-solid fa-volume-high text-bch-bright text-xs';
   $('chanHeader').textContent=c.name||c.id;
   $('voiceChanName').textContent=c.name||c.id;
-  $('textArea').classList.add('hidden');
-  $('voiceArea').classList.remove('hidden');
-  $('voiceStatus').textContent='Requesting microphone…';
+  $('textArea').classList.add('hidden'); $('voiceArea').classList.remove('hidden');
+  $('voiceStatus').textContent='Requesting media…';
   renderChannels();
+
   try{
-    localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
-    $('voiceStatus').textContent='Connected';
-    const room=gun.get(`havoc/voice/${S.server.id}/${c.id}`);
-    // publish self
-    room.get(S.user.uid).put({handle:safe(S.profile?.handle,'User'),avatar:safe(S.profile?.avatar,''),ts:Date.now()});
-    S.voiceUsers[S.user.uid] = {handle:S.profile?.handle, avatar:S.profile?.avatar};
-    // listen for others
-    room.map().on((data, key)=>{
-      if(!data || key===S.user.uid) return;
-      if(Date.now()-(data.ts||0) > 20000) return; // stale
-      S.voiceUsers[key] = {handle:data.handle, avatar:data.avatar};
-      renderChannels(); // refresh the under-channel list
+    S.localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
+    $('voiceStatus').textContent='Connected — waiting for peers';
+
+    const roomKey = `havoc/voice/${S.server.id}/${c.id}`;
+    const room = gun.get(roomKey);
+
+    // publish presence
+    room.get(S.user.uid).put({ handle:safe(S.profile?.handle,'User'), avatar:safe(S.profile?.avatar,''), ts:Date.now(), hasVideo:false });
+    S.voiceUsers[S.user.uid] = { handle:S.profile?.handle, avatar:S.profile?.avatar };
+
+    // signaling via Gun
+    room.map().on(async (data, key) => {
+      if(!data || key === S.user.uid) return;
+      if(Date.now() - (data.ts||0) > 25000) return;
+
+      S.voiceUsers[key] = { handle:data.handle, avatar:data.avatar };
+      renderChannels();
+
+      // create peer if needed
+      if(!S.peers[key]){
+        await createPeer(key, data, true);
+      }
     });
-    window._voiceKeep=setInterval(()=>{
-      room.get(S.user.uid).put({handle:safe(S.profile?.handle,'User'),avatar:safe(S.profile?.avatar,''),ts:Date.now()});
-    },8000);
+
+    // listen for offers/answers/candidates on a per-peer path
+    gun.get(roomKey + '/signal').map().on(async (sig, id) => {
+      if(!sig || sig.to !== S.user.uid) return;
+      const from = sig.from;
+      if(sig.type === 'offer'){
+        if(!S.peers[from]) await createPeer(from, {}, false);
+        const pc = S.peers[from];
+        await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        gun.get(roomKey + '/signal').get(rand(8)).put({ type:'answer', from:S.user.uid, to:from, sdp:pc.localDescription });
+      } else if(sig.type === 'answer'){
+        const pc = S.peers[from];
+        if(pc) await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
+      } else if(sig.type === 'ice'){
+        const pc = S.peers[from];
+        if(pc && sig.candidate) try{ await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)); }catch(e){}
+      }
+    });
+
+    window._voiceKeep = setInterval(()=>{
+      room.get(S.user.uid).put({ handle:safe(S.profile?.handle,'User'), avatar:safe(S.profile?.avatar,''), ts:Date.now(), hasVideo:S.camOn });
+    }, 6000);
+
     renderChannels();
-  }catch(err){ $('voiceStatus').textContent='Microphone access denied'; }
+  }catch(err){
+    console.error(err);
+    $('voiceStatus').textContent = 'Media access denied';
+  }
 }
-window.toggleMute=()=>{
-  if(!localStream) return;
-  voiceMuted=!voiceMuted;
-  localStream.getAudioTracks().forEach(t=>t.enabled=!voiceMuted);
-  const btn=$('muteBtn');
-  btn.innerHTML=voiceMuted?'<i class="fa-solid fa-microphone-slash"></i> Unmute':'<i class="fa-solid fa-microphone"></i> Mute';
-  btn.classList.toggle('bg-red-900/50',voiceMuted);
+
+async function createPeer(remoteUid, meta, initiator){
+  if(S.peers[remoteUid]) return S.peers[remoteUid];
+  const pc = new RTCPeerConnection(ICE);
+  S.peers[remoteUid] = pc;
+
+  if(S.localStream){
+    S.localStream.getTracks().forEach(t => pc.addTrack(t, S.localStream));
+  }
+
+  pc.ontrack = (ev) => {
+    const stream = ev.streams[0];
+    // audio
+    let audio = document.querySelector(`audio[data-uid="${remoteUid}"]`);
+    if(!audio){
+      audio = document.createElement('audio');
+      audio.dataset.uid = remoteUid;
+      audio.dataset.remote = '1';
+      audio.autoplay = true;
+      audio.muted = S.deafened;
+      document.body.appendChild(audio);
+    }
+    audio.srcObject = stream;
+
+    // video tile
+    const hasVideo = stream.getVideoTracks().length > 0;
+    if(hasVideo){
+      $('videoGrid').classList.remove('hidden');
+      let tile = document.getElementById(`tile-${remoteUid}`);
+      if(!tile){
+        tile = document.createElement('div');
+        tile.id = `tile-${remoteUid}`;
+        tile.className = 'video-tile';
+        tile.innerHTML = `<video autoplay playsinline></video><div class="video-label">${esc(meta.handle||remoteUid.slice(0,6))}</div>`;
+        $('videoGrid').appendChild(tile);
+      }
+      tile.querySelector('video').srcObject = stream;
+    }
+  };
+
+  pc.onicecandidate = (ev) => {
+    if(ev.candidate){
+      gun.get(`havoc/voice/${S.server.id}/${S.channel}/signal`).get(rand(8)).put({
+        type:'ice', from:S.user.uid, to:remoteUid, candidate:ev.candidate
+      });
+    }
+  };
+
+  if(initiator){
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    gun.get(`havoc/voice/${S.server.id}/${S.channel}/signal`).get(rand(8)).put({
+      type:'offer', from:S.user.uid, to:remoteUid, sdp:pc.localDescription
+    });
+  }
+  return pc;
+}
+
+window.toggleCamera = async () => {
+  if(!S.localStream) return;
+  if(!S.camOn){
+    try{
+      const videoStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+      const videoTrack = videoStream.getVideoTracks()[0];
+      S.localStream.addTrack(videoTrack);
+      // add to all peers
+      Object.values(S.peers).forEach(pc => {
+        pc.addTrack(videoTrack, S.localStream);
+      });
+      // local preview
+      $('videoGrid').classList.remove('hidden');
+      let tile = document.getElementById('tile-local');
+      if(!tile){
+        tile = document.createElement('div');
+        tile.id = 'tile-local';
+        tile.className = 'video-tile';
+        tile.innerHTML = `<video autoplay playsinline muted></video><div class="video-label">You</div>`;
+        $('videoGrid').prepend(tile);
+      }
+      tile.querySelector('video').srcObject = S.localStream;
+      S.camOn = true;
+      $('camBtn').innerHTML = '<i class="fa-solid fa-video text-bch-bright"></i> Camera On';
+    }catch(err){ alert('Camera access denied'); }
+  } else {
+    S.localStream.getVideoTracks().forEach(t => { t.stop(); S.localStream.removeTrack(t); });
+    const tile = document.getElementById('tile-local');
+    if(tile) tile.remove();
+    S.camOn = false;
+    $('camBtn').innerHTML = '<i class="fa-solid fa-video"></i> Camera';
+  }
 };
-window.leaveVoice=()=>{
+
+window.toggleMute = () => {
+  if(!S.localStream) return;
+  voiceMuted = !voiceMuted; // keep legacy name for button
+  S.micMuted = voiceMuted;
+  S.localStream.getAudioTracks().forEach(t => t.enabled = !voiceMuted);
+  const btn=$('muteBtn');
+  btn.innerHTML = voiceMuted ? '<i class="fa-solid fa-microphone-slash"></i> Unmute' : '<i class="fa-solid fa-microphone"></i> Mute';
+  btn.classList.toggle('bg-red-900/50', voiceMuted);
+  $('micBtn').innerHTML = voiceMuted ? '<i class="fa-solid fa-microphone-slash text-red-400"></i>' : '<i class="fa-solid fa-microphone"></i>';
+};
+
+window.leaveVoice = () => {
   if(window._voiceKeep) clearInterval(window._voiceKeep);
-  if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
-  voiceMuted=false;
-  S.voiceUsers={};
-  $('voiceArea').classList.add('hidden');
-  $('textArea').classList.remove('hidden');
+  Object.values(S.peers).forEach(pc => pc.close());
+  S.peers = {};
+  if(S.localStream){ S.localStream.getTracks().forEach(t=>t.stop()); S.localStream=null; }
+  document.querySelectorAll('audio[data-remote]').forEach(a=>a.remove());
+  $('videoGrid').innerHTML=''; $('videoGrid').classList.add('hidden');
+  voiceMuted=false; S.micMuted=false; S.camOn=false; S.voiceUsers={};
+  $('voiceArea').classList.add('hidden'); $('textArea').classList.remove('hidden');
   renderChannels();
 };
 
-// ========== SETTINGS ==========
+// ========== SETTINGS / MODALS / ADMIN (same patterns) ==========
 window.openModal=id=>{
-  if(id==='serverSettings'&&S.canManage){
-    $('ssName').value=safe(S.server?.name,'');
-    $('ssDesc').value=safe(S.server?.desc,'');
-    $('ssIconUrl').value=safe(S.server?.iconUrl,'');
-    $('ssIconPreview').src=S.server?.iconUrl||'https://api.dicebear.com/7.x/shapes/svg?seed=server';
-    sSettingsTab('overview');
-  }
+  if(id==='serverSettings'&&S.canManage){ $('ssName').value=safe(S.server?.name,''); $('ssDesc').value=safe(S.server?.desc,''); $('ssIconUrl').value=safe(S.server?.iconUrl,''); $('ssIconPreview').src=S.server?.iconUrl||'https://api.dicebear.com/7.x/shapes/svg?seed=server'; sSettingsTab('overview'); }
   if(id==='admin'&&S.isAdmin) adminTab('servers');
-  if(id==='profile'&&S.profile){
-    $('profileHandle').value=safe(S.profile.handle,'');
-    $('profileBio').value=safe(S.profile.bio,'');
-    $('profileStatus').value=safe(S.profile.status,'');
-    $('profileAvatarPreview').src=safe(S.profile.avatar,'https://api.dicebear.com/7.x/bottts/svg?seed=Guest');
-    S.pendingAvatarFile=null;
-    avatarMethod('seed');
-  }
+  if(id==='profile'&&S.profile){ $('profileHandle').value=safe(S.profile.handle,''); $('profileBio').value=safe(S.profile.bio,''); $('profileStatus').value=safe(S.profile.status,''); $('profileAvatarPreview').src=safe(S.profile.avatar,'https://api.dicebear.com/7.x/bottts/svg?seed=Guest'); S.pendingAvatarFile=null; avatarMethod('seed'); }
   if(id==='auth') loadRemember();
   if(id==='createServer'&&!S.user){ openModal('auth'); return; }
   $(`modal-${id}`)?.classList.remove('hidden');
 };
 window.closeModal=id=>$(`modal-${id}`)?.classList.add('hidden');
-
-window.sSettingsTab=tab=>{
-  ['overview','roles','invites','members','danger'].forEach(t=>{
-    $(`ssp-${t}`)?.classList.add('hidden');
-    $(`sst-${t}`)?.classList.remove('tab-active'); $(`sst-${t}`)?.classList.add('tab-inactive');
-  });
-  $(`ssp-${tab}`)?.classList.remove('hidden');
-  $(`sst-${tab}`)?.classList.add('tab-active'); $(`sst-${tab}`)?.classList.remove('tab-inactive');
-  if(tab==='invites') renderInviteList();
-  if(tab==='members') renderServerMembers();
-  if(tab==='roles'){ loadRoles(S.server.id).then(renderRolesList); }
-};
-
-window.saveServerSettings=async()=>{
-  if(!S.canManage) return;
-  const name=$('ssName').value.trim(), desc=$('ssDesc').value.trim();
-  const iconUrl=$('ssIconUrl').value.trim()||null;
-  if(!name) return;
-  await updateDoc(doc(db,'servers',S.server.id),{name,desc,iconUrl});
-  S.server={...S.server,name,desc,iconUrl};
-  $('currentServerName').textContent=name;
-  if(iconUrl){ $('serverIconPreview').src=iconUrl; $('serverIconPreview').classList.remove('hidden'); }
-  else $('serverIconPreview').classList.add('hidden');
-  await loadMyServers();
-  alert('Server settings saved');
-};
-
-async function renderServerMembers(){
-  const snap=await getDocs(collection(db,'servers',S.server.id,'members'));
-  const el=$('serverMemberList'); el.innerHTML='';
-  snap.forEach(d=>{
-    const m=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
-    row.innerHTML=`<img src="${esc(m.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-7 h-7 rounded-full border border-dark-600">
-      <div class="flex-1 min-w-0"><div class="font-bold text-xs text-slate-200 truncate">${esc(m.handle||'User')}</div>
-      <div class="text-[10px] text-slate-500 mono">${esc(m.role||'member')}</div></div>
-      ${m.role!=='owner'?`<button onclick="kickMember('${esc(m.uid)}','${esc(m.handle)}')" class="text-amber-500 text-xs"><i class="fa-solid fa-right-from-bracket"></i></button>`:'<span class="badge-owner">OWNER</span>'}`;
-    el.appendChild(row);
-  });
-}
+window.sSettingsTab=tab=>{ ['overview','roles','invites','members','danger'].forEach(t=>{ $(`ssp-${t}`)?.classList.add('hidden'); $(`sst-${t}`)?.classList.remove('tab-active'); $(`sst-${t}`)?.classList.add('tab-inactive'); }); $(`ssp-${tab}`)?.classList.remove('hidden'); $(`sst-${tab}`)?.classList.add('tab-active'); $(`sst-${tab}`)?.classList.remove('tab-inactive'); if(tab==='invites') renderInviteList(); if(tab==='members') renderServerMembers(); if(tab==='roles'){ loadRoles(S.server.id).then(renderRolesList); } };
+window.saveServerSettings=async()=>{ if(!S.canManage) return; const name=$('ssName').value.trim(), desc=$('ssDesc').value.trim(), iconUrl=$('ssIconUrl').value.trim()||null; if(!name) return; await updateDoc(doc(db,'servers',S.server.id),{name,desc,iconUrl}); S.server={...S.server,name,desc,iconUrl}; $('currentServerName').textContent=name; if(iconUrl){ $('serverIconPreview').src=iconUrl; $('serverIconPreview').classList.remove('hidden'); } else $('serverIconPreview').classList.add('hidden'); await loadMyServers(); };
+async function renderServerMembers(){ const snap=await getDocs(collection(db,'servers',S.server.id,'members')); const el=$('serverMemberList'); el.innerHTML=''; snap.forEach(d=>{ const m=d.data(); const row=document.createElement('div'); row.className='flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800'; row.innerHTML=`<img src="${esc(m.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-7 h-7 rounded-full border border-dark-600"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-slate-200 truncate">${esc(m.handle||'User')}</div><div class="text-[10px] text-slate-500 mono">${esc(m.role||'member')}</div></div>${m.role!=='owner'?`<button onclick="kickMember('${esc(m.uid)}','${esc(m.handle)}')" class="text-amber-500 text-xs"><i class="fa-solid fa-right-from-bracket"></i></button>`:'<span class="badge-owner">OWNER</span>'}`; el.appendChild(row); }); }
 window.kickMember=async(uid,handle)=>{ if(!S.canManage) return; if(!confirm(`Kick ${handle}?`)) return; await deleteDoc(doc(db,'servers',S.server.id,'members',uid)); renderServerMembers(); };
-
 window.adminToggleLock=()=>{ S.locked=!S.locked; $('lockBadge').classList.toggle('hidden',!S.locked); closeModal('chanSettings'); closeModal('serverSettings'); };
-window.adminPurgeChannel=async()=>{
-  if(!S.canManage||!S.server||S.channelType!=='text') return;
-  if(!confirm('Delete ALL messages?')) return;
-  const snap=await getDocs(collection(db,'servers',S.server.id,'channels',S.channel,'messages'));
-  const batch=writeBatch(db); snap.forEach(d=>batch.delete(d.ref)); await batch.commit();
-  closeModal('chanSettings'); closeModal('serverSettings');
-};
-window.deleteCurrentChannel=async()=>{
-  if(!S.canManage||!S.server) return;
-  if(S.channel==='general') return alert('Cannot delete #general');
-  if(!confirm(`Delete #${S.channel}?`)) return;
-  await adminPurgeChannel();
-  await deleteDoc(doc(db,'servers',S.server.id,'channels',S.channel));
-  await loadChannels(S.server.id); switchChannel({id:'general',name:'general',type:'text'});
-  closeModal('chanSettings'); closeModal('serverSettings');
-};
-window.deleteServer=async()=>{
-  if(!S.canManage||!S.server) return;
-  if(!confirm(`PERMANENTLY delete "${S.server.name}"?`)) return;
-  if(!confirm('Are you absolutely sure?')) return;
-  const sid=S.server.id;
-  try{
-    const chans=await getDocs(collection(db,'servers',sid,'channels'));
-    for(const ch of chans.docs){
-      const msgs=await getDocs(collection(db,'servers',sid,'channels',ch.id,'messages'));
-      const b=writeBatch(db); msgs.forEach(m=>b.delete(m.ref)); await b.commit();
-      await deleteDoc(ch.ref);
-    }
-    const members=await getDocs(collection(db,'servers',sid,'members'));
-    const mb=writeBatch(db); members.forEach(m=>mb.delete(m.ref)); await mb.commit();
-    await deleteDoc(doc(db,'servers',sid));
-  }catch(e){ console.error(e); }
-  S.server=null; $('currentServerName').textContent='Select a Server';
-  $('serverIconPreview').classList.add('hidden');
-  $('channelsList').innerHTML=''; $('voiceList').innerHTML='';
-  closeModal('serverSettings'); await loadMyServers();
-};
+window.adminPurgeChannel=async()=>{ if(!S.canManage||!S.server||S.channelType!=='text') return; if(!confirm('Delete ALL messages?')) return; const snap=await getDocs(collection(db,'servers',S.server.id,'channels',S.channel,'messages')); const batch=writeBatch(db); snap.forEach(d=>batch.delete(d.ref)); await batch.commit(); closeModal('chanSettings'); closeModal('serverSettings'); };
+window.deleteCurrentChannel=async()=>{ if(!S.canManage||!S.server) return; if(S.channel==='general') return alert('Cannot delete #general'); if(!confirm(`Delete #${S.channel}?`)) return; await adminPurgeChannel(); await deleteDoc(doc(db,'servers',S.server.id,'channels',S.channel)); await loadChannels(S.server.id); switchChannel({id:'general',name:'general',type:'text'}); closeModal('chanSettings'); closeModal('serverSettings'); };
+window.deleteServer=async()=>{ if(!S.canManage||!S.server) return; if(!confirm(`PERMANENTLY delete "${S.server.name}"?`)) return; if(!confirm('Are you sure?')) return; const sid=S.server.id; try{ const chans=await getDocs(collection(db,'servers',sid,'channels')); for(const ch of chans.docs){ const msgs=await getDocs(collection(db,'servers',sid,'channels',ch.id,'messages')); const b=writeBatch(db); msgs.forEach(m=>b.delete(m.ref)); await b.commit(); await deleteDoc(ch.ref); } const members=await getDocs(collection(db,'servers',sid,'members')); const mb=writeBatch(db); members.forEach(m=>mb.delete(m.ref)); await mb.commit(); await deleteDoc(doc(db,'servers',sid)); }catch(e){ console.error(e); } S.server=null; $('currentServerName').textContent='Select a Server'; $('serverIconPreview').classList.add('hidden'); $('channelsList').innerHTML=''; $('voiceList').innerHTML=''; closeModal('serverSettings'); await loadMyServers(); };
 
-// ========== ADMIN ==========
-window.adminTab=tab=>{
-  ['servers','users','blacklist'].forEach(t=>{
-    $(`ap-${t}`)?.classList.add('hidden');
-    $(`at-${t}`)?.classList.remove('tab-active'); $(`at-${t}`)?.classList.add('tab-inactive');
-  });
-  $(`ap-${tab}`)?.classList.remove('hidden');
-  $(`at-${tab}`)?.classList.add('tab-active');
-  if(tab==='servers') loadAdminServers();
-  if(tab==='users') loadAdminUsers();
-  if(tab==='blacklist') loadBlacklist();
-};
-window.loadAdminServers=async()=>{
-  const snap=await getDocs(collection(db,'servers'));
-  const el=$('adminServerList'); el.innerHTML='';
-  snap.forEach(d=>{
-    const s=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-4 py-3';
-    row.innerHTML=`${s.iconUrl?`<img src="${esc(s.iconUrl)}" class="w-10 h-10 rounded-xl object-cover">`:'<div class="w-10 h-10 rounded-xl bg-dark-700"></div>'}
-      <div class="flex-1 min-w-0"><div class="font-bold text-sm text-white">${esc(s.name)}</div>
-      <div class="text-[10px] text-slate-500 mono">owner: ${esc(s.ownerHandle||'—')}</div></div>
-      <button onclick="adminEnterServer('${esc(d.id)}')" class="text-xs text-bch border border-bch/40 rounded px-2 py-1">Enter</button>`;
-    el.appendChild(row);
-  });
-};
+window.adminTab=tab=>{ ['servers','users','blacklist'].forEach(t=>{ $(`ap-${t}`)?.classList.add('hidden'); $(`at-${t}`)?.classList.remove('tab-active'); $(`at-${t}`)?.classList.add('tab-inactive'); }); $(`ap-${tab}`)?.classList.remove('hidden'); $(`at-${tab}`)?.classList.add('tab-active'); if(tab==='servers') loadAdminServers(); if(tab==='users') loadAdminUsers(); if(tab==='blacklist') loadBlacklist(); };
+window.loadAdminServers=async()=>{ const snap=await getDocs(collection(db,'servers')); const el=$('adminServerList'); el.innerHTML=''; snap.forEach(d=>{ const s=d.data(); const row=document.createElement('div'); row.className='flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-4 py-3'; row.innerHTML=`${s.iconUrl?`<img src="${esc(s.iconUrl)}" class="w-10 h-10 rounded-xl object-cover">`:'<div class="w-10 h-10 rounded-xl bg-dark-700"></div>'}<div class="flex-1 min-w-0"><div class="font-bold text-sm text-white">${esc(s.name)}</div><div class="text-[10px] text-slate-500 mono">owner: ${esc(s.ownerHandle||'—')}</div></div><button onclick="adminEnterServer('${esc(d.id)}')" class="text-xs text-bch border border-bch/40 rounded px-2 py-1">Enter</button>`; el.appendChild(row); }); };
 window.adminEnterServer=async id=>{ const snap=await getDoc(doc(db,'servers',id)); if(snap.exists()){ closeModal('admin'); await switchServer({id,...snap.data()}); } };
-window.loadAdminUsers=async()=>{
-  const snap=await getDocs(collection(db,'users'));
-  const el=$('adminUserList'); el.innerHTML='';
-  snap.forEach(d=>{
-    const u=d.data();
-    const row=document.createElement('div');
-    row.className='flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-3 py-2';
-    row.innerHTML=`<img src="${esc(u.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-8 h-8 rounded-full border border-dark-700">
-      <div class="flex-1 min-w-0"><div class="font-bold text-xs text-white">${esc(u.handle||'User')} <span class="text-slate-500 font-normal">${esc(u.email||'')}</span></div></div>
-      ${u.email===ADMIN_EMAIL?'<span class="badge-admin">ADMIN</span>':''}`;
-    el.appendChild(row);
-  });
-};
-window.loadBlacklist=async()=>{
-  const snap=await getDocs(collection(db,'blacklistedDomains'));
-  const el=$('blacklistList'); el.innerHTML='';
-  if(snap.empty){ el.innerHTML='<p class="text-xs text-slate-500 mono">No domains blacklisted.</p>'; return; }
-  snap.forEach(d=>{
-    const row=document.createElement('div');
-    row.className='flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2';
-    row.innerHTML=`<span class="mono text-carrot text-xs flex-1">@${esc(d.id)}</span>
-      <button onclick="removeBlacklistedDomain('${esc(d.id)}')" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>`;
-    el.appendChild(row);
-  });
-};
-window.addBlacklistedDomain=async()=>{
-  let domain=$('blacklistDomainInput').value.trim().toLowerCase();
-  if(!domain) return;
-  if(domain.startsWith('@')) domain=domain.slice(1);
-  if(!domain.includes('.')) return alert('Enter a valid domain');
-  await setDoc(doc(db,'blacklistedDomains',domain),{domain,addedBy:S.user.uid,addedAt:Date.now()});
-  $('blacklistDomainInput').value=''; loadBlacklist();
-};
+window.loadAdminUsers=async()=>{ const snap=await getDocs(collection(db,'users')); const el=$('adminUserList'); el.innerHTML=''; snap.forEach(d=>{ const u=d.data(); const row=document.createElement('div'); row.className='flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-3 py-2'; row.innerHTML=`<img src="${esc(u.avatar||'https://api.dicebear.com/7.x/bottts/svg?seed=x')}" class="w-8 h-8 rounded-full border border-dark-700"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-white">${esc(u.handle||'User')} <span class="text-slate-500 font-normal">${esc(u.email||'')}</span></div></div>${u.email===ADMIN_EMAIL?'<span class="badge-admin">ADMIN</span>':''}`; el.appendChild(row); }); };
+window.loadBlacklist=async()=>{ const snap=await getDocs(collection(db,'blacklistedDomains')); const el=$('blacklistList'); el.innerHTML=''; if(snap.empty){ el.innerHTML='<p class="text-xs text-slate-500 mono">No domains blacklisted.</p>'; return; } snap.forEach(d=>{ const row=document.createElement('div'); row.className='flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2'; row.innerHTML=`<span class="mono text-carrot text-xs flex-1">@${esc(d.id)}</span><button onclick="removeBlacklistedDomain('${esc(d.id)}')" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>`; el.appendChild(row); }); };
+window.addBlacklistedDomain=async()=>{ let domain=$('blacklistDomainInput').value.trim().toLowerCase(); if(!domain) return; if(domain.startsWith('@')) domain=domain.slice(1); if(!domain.includes('.')) return alert('Enter a valid domain'); await setDoc(doc(db,'blacklistedDomains',domain),{domain,addedBy:S.user.uid,addedAt:Date.now()}); $('blacklistDomainInput').value=''; loadBlacklist(); };
 window.removeBlacklistedDomain=async domain=>{ if(!confirm(`Remove @${domain}?`)) return; await deleteDoc(doc(db,'blacklistedDomains',domain)); loadBlacklist(); };
 
-// ========== UI ==========
 function updateUserUI(){
   const bar=$('authBar'), logoutBtn=$('logoutBtn');
   if(S.user&&S.profile){
@@ -1325,12 +1231,7 @@ function updateUserUI(){
     $('ucRole').textContent=S.isAdmin?'⚡ ADMIN':(S.user.isAnonymous?'Anonymous':(S.profile.status||'Signed in'));
     $('ucAvatar').src=safe(S.profile.avatar,'https://api.dicebear.com/7.x/bottts/svg?seed=Guest');
     logoutBtn.classList.remove('hidden');
-    bar.innerHTML=`<div class="flex items-center gap-2">
-      <img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-bch/40">
-      <span class="font-bold text-slate-200 mono text-xs">${esc(S.profile.handle)}</span>
-      ${S.isAdmin?'<span class="badge-admin">ADMIN</span>':''}
-      <button onclick="doSignOut()" class="text-slate-400 hover:text-red-400 ml-1" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
-    </div>`;
+    bar.innerHTML=`<div class="flex items-center gap-2"><img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-bch/40"><span class="font-bold text-slate-200 mono text-xs">${esc(S.profile.handle)}</span>${S.isAdmin?'<span class="badge-admin">ADMIN</span>':''}<button onclick="doSignOut()" class="text-slate-400 hover:text-red-400 ml-1" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button></div>`;
   } else {
     $('ucHandle').textContent='Guest'; $('ucRole').textContent='Not signed in';
     $('ucAvatar').src='https://api.dicebear.com/7.x/bottts/svg?seed=Guest';
@@ -1340,24 +1241,13 @@ function updateUserUI(){
 }
 function showAuthErr(msg){ const el=$('authErr'); el.textContent=msg; el.classList.remove('hidden'); $('authOk').classList.add('hidden'); }
 function clearAuthErr(){ $('authErr').classList.add('hidden'); $('authOk').classList.add('hidden'); }
-window.authTab=tab=>{
-  clearAuthErr(); $('formForgot').classList.add('hidden');
-  const isLogin=tab==='login';
-  $('formLogin').classList.toggle('hidden',!isLogin);
-  $('formReg').classList.toggle('hidden',isLogin);
-  $('tabL').className=`flex-1 py-2 font-bold text-xs mono ${isLogin?'tab-active':'tab-inactive'}`;
-  $('tabR').className=`flex-1 py-2 font-bold text-xs mono ${isLogin?'tab-inactive':'tab-active'}`;
-};
+window.authTab=tab=>{ clearAuthErr(); $('formForgot').classList.add('hidden'); const isLogin=tab==='login'; $('formLogin').classList.toggle('hidden',!isLogin); $('formReg').classList.toggle('hidden',isLogin); $('tabL').className=`flex-1 py-2 font-bold text-xs mono ${isLogin?'tab-active':'tab-inactive'}`; $('tabR').className=`flex-1 py-2 font-bold text-xs mono ${isLogin?'tab-inactive':'tab-active'}`; };
 
-document.querySelectorAll('[id^="modal-"]').forEach(m=>{
-  m.addEventListener('click',e=>{ if(e.target===m) m.classList.add('hidden'); });
-});
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){ document.querySelectorAll('[id^="modal-"]').forEach(m=>m.classList.add('hidden')); hideCtx(); }
-});
+document.querySelectorAll('[id^="modal-"]').forEach(m=>{ m.addEventListener('click',e=>{ if(e.target===m) m.classList.add('hidden'); }); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ document.querySelectorAll('[id^="modal-"]').forEach(m=>m.classList.add('hidden')); hideCtx(); } });
 document.addEventListener('DOMContentLoaded', loadRemember);
 
-console.log('%c havoc ready ', 'background:#0AC18E;color:#000;font-weight:900;padding:4px 10px;');
+console.log('%c havoc full ', 'background:#0AC18E;color:#000;font-weight:900;padding:4px 10px;');
 </script>
 </body>
 </html>
