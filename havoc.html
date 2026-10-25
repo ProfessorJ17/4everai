@@ -121,14 +121,32 @@
                class="w-full bg-dark-950 border border-dark-700 rounded-md px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-bch"
                oninput="filterDMs(this.value)">
       </div>
+      <div class="flex gap-1 px-2 pt-2 border-b border-dark-700">
+        <button onclick="dmTab('friends')" id="dmt-friends" class="px-2 py-1 text-[10px] mono tab-active">Friends</button>
+        <button onclick="dmTab('pending')" id="dmt-pending" class="px-2 py-1 text-[10px] mono tab-inactive">Pending <span id="pendingBadge" class="hidden ml-1 bg-bch text-black text-[9px] px-1 rounded-full font-bold">0</span></button>
+        <button onclick="dmTab('dms')" id="dmt-dms" class="px-2 py-1 text-[10px] mono tab-inactive">DMs</button>
+      </div>
       <div class="flex-1 overflow-y-auto px-2 py-2">
-        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mono px-2 mb-1">Friends</div>
-        <div id="friendsList" class="space-y-0.5 mb-4"></div>
-        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mono px-2 mb-1 flex items-center justify-between">
-          <span>Direct Messages</span>
-          <button onclick="promptNewDM()" class="text-bch hover:text-bch-bright text-xs"><i class="fa-solid fa-plus"></i></button>
+        <div id="dmTabFriends">
+          <div class="flex items-center justify-between px-2 mb-1">
+            <span class="text-[10px] font-bold text-slate-500 uppercase mono">All Friends</span>
+            <button onclick="openAddFriendModal()" class="text-[10px] btn-primary px-2 py-0.5">Add Friend</button>
+          </div>
+          <div id="friendsList" class="space-y-0.5"></div>
         </div>
-        <div id="dmList" class="space-y-0.5"></div>
+        <div id="dmTabPending" class="hidden">
+          <div class="text-[10px] font-bold text-slate-500 uppercase mono px-2 mb-1">Incoming Requests</div>
+          <div id="incomingRequests" class="space-y-0.5 mb-4"></div>
+          <div class="text-[10px] font-bold text-slate-500 uppercase mono px-2 mb-1">Outgoing</div>
+          <div id="outgoingRequests" class="space-y-0.5"></div>
+        </div>
+        <div id="dmTabDms" class="hidden">
+          <div class="text-[10px] font-bold text-slate-500 uppercase mono px-2 mb-1 flex items-center justify-between">
+            <span>Direct Messages</span>
+            <button onclick="promptNewDM()" class="text-bch hover:text-bch-bright text-xs"><i class="fa-solid fa-plus"></i></button>
+          </div>
+          <div id="dmList" class="space-y-0.5"></div>
+        </div>
       </div>
     </div>
 
@@ -235,6 +253,46 @@
   <button onclick="addReaction('😢')" class="hover:scale-125 transition">😢</button>
   <button onclick="addReaction('🎉')" class="hover:scale-125 transition">🎉</button>
   <button onclick="addReaction('💚')" class="hover:scale-125 transition">💚</button>
+</div>
+
+
+<!-- GIF PICKER -->
+<div id="modal-gif" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-bch/30 w-full max-w-lg rounded-xl relative flex flex-col max-h-[85vh]">
+    <div class="flex items-center justify-between p-4 border-b border-dark-700">
+      <h2 class="font-bold text-white"><span class="text-bch">GIF</span> Picker</h2>
+      <button onclick="closeModal('gif')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="p-3 border-b border-dark-700 space-y-2">
+      <label class="field-label">Paste GIF URL</label>
+      <div class="flex gap-2">
+        <input type="url" id="gifUrlInput" placeholder="https://... .gif" class="field flex-1 text-xs">
+        <button onclick="useGifUrl()" class="btn-primary px-3 text-xs shrink-0">Use</button>
+      </div>
+      <p class="text-[10px] text-slate-500">GIFs you use are added to the community bank</p>
+    </div>
+    <div class="flex-1 overflow-y-auto p-3">
+      <div class="text-[10px] font-bold text-slate-500 uppercase mono mb-2">Popular GIFs</div>
+      <div id="gifGrid" class="grid grid-cols-3 gap-2"></div>
+      <div class="flex items-center justify-between mt-3">
+        <button onclick="gifPage(-1)" id="gifPrev" class="text-xs text-slate-400 hover:text-white px-2 py-1 rounded border border-dark-700">← Prev</button>
+        <span id="gifPageInfo" class="text-[10px] text-slate-500 mono">1</span>
+        <button onclick="gifPage(1)" id="gifNext" class="text-xs text-slate-400 hover:text-white px-2 py-1 rounded border border-dark-700">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD FRIEND MODAL -->
+<div id="modal-addFriend" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-bch/30 w-full max-w-sm rounded-xl p-5 relative">
+    <button onclick="closeModal('addFriend')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    <h2 class="font-bold text-white mb-1"><i class="fa-solid fa-user-plus text-bch"></i> Add Friend</h2>
+    <p class="text-xs text-slate-400 mb-3">Enter their exact handle</p>
+    <input type="text" id="addFriendHandle" placeholder="Handle" class="field mb-3">
+    <button onclick="sendFriendRequestByHandle()" class="w-full py-2.5 btn-primary text-sm">Send Friend Request</button>
+    <div id="addFriendMsg" class="mt-2 text-xs mono hidden"></div>
+  </div>
 </div>
 
 <!-- AUTH -->
@@ -543,7 +601,7 @@ const S = {
   unsubMsgs:null, unsubMembers:null,
   pendingImage:null, pendingImageUrl:null, pendingAudio:null,
   roles:[], membersCache:[], voiceUsers:{},
-  friends:[], myServerCount:0,
+  friends:[], incoming:[], outgoing:[], myServerCount:0, gifPage:0, gifCache:[],
   dmTarget:null, currentInviteCode:null,
   micMuted:false, deafened:false, camOn:false,
   reactionTarget:null,
@@ -771,13 +829,80 @@ window.triggerImageUpload = () => {
   $('imgPreview').classList.remove('hidden');
 };
 window.clearImagePreview = () => { S.pendingImageUrl=null; S.pendingImage=null; $('imgPreview').classList.add('hidden'); };
-window.openGifPicker = () => {
+S.gifPage = 0;
+S.gifCache = [];
+window.openGifPicker = async () => {
   if(!S.user||S.user.isAnonymous) return alert('Registered users only');
-  const url = prompt('Paste GIF URL (https://... .gif):');
-  if(!url || !url.startsWith('http')) return;
+  $('gifUrlInput').value = '';
+  S.gifPage = 0;
+  openModal('gif');
+  await loadGifBank();
+};
+window.useGifUrl = async () => {
+  const url = ($('gifUrlInput').value||'').trim();
+  if(!url || !url.startsWith('http')) return alert('Valid URL required');
+  await registerGif(url);
   S.pendingImageUrl = url;
   $('imgPreviewSrc').src = url;
   $('imgPreview').classList.remove('hidden');
+  closeModal('gif');
+};
+async function registerGif(url){
+  // Upsert into shared bank, increment uses
+  try{
+    const id = btoa(url).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+    const ref = doc(db, 'gifBank', id);
+    const snap = await getDoc(ref);
+    if(snap.exists()){
+      await updateDoc(ref, { uses: (snap.data().uses||0)+1, lastUsed: Date.now() });
+    } else {
+      await setDoc(ref, { url, uses: 1, addedBy: S.user.uid, createdAt: Date.now(), lastUsed: Date.now() });
+    }
+  }catch(e){ console.warn('registerGif', e); }
+}
+async function loadGifBank(){
+  try{
+    const snap = await getDocs(collection(db, 'gifBank'));
+    S.gifCache = [];
+    snap.forEach(d => S.gifCache.push({id:d.id, ...d.data()}));
+    S.gifCache.sort((a,b) => (b.uses||0) - (a.uses||0));
+    renderGifPage();
+  }catch(e){
+    $('gifGrid').innerHTML = '<p class="text-xs text-slate-500 col-span-3">No GIFs yet — paste a URL above</p>';
+  }
+}
+function renderGifPage(){
+  const per = 50;
+  const start = S.gifPage * per;
+  const slice = S.gifCache.slice(start, start + per);
+  const grid = $('gifGrid');
+  grid.innerHTML = '';
+  if(!slice.length){
+    grid.innerHTML = '<p class="text-xs text-slate-500 col-span-3">No GIFs yet — paste a URL above to add one</p>';
+  } else {
+    slice.forEach(g => {
+      const btn = document.createElement('button');
+      btn.className = 'relative rounded-lg overflow-hidden border border-dark-700 hover:border-bch aspect-square bg-dark-950';
+      btn.title = `${g.uses||0} uses`;
+      btn.innerHTML = `<img src="${esc(g.url)}" class="w-full h-full object-cover" loading="lazy"><span class="absolute bottom-0 right-0 text-[8px] bg-black/70 px-1 text-slate-300">${g.uses||0}</span>`;
+      btn.onclick = async () => {
+        await registerGif(g.url);
+        S.pendingImageUrl = g.url;
+        $('imgPreviewSrc').src = g.url;
+        $('imgPreview').classList.remove('hidden');
+        closeModal('gif');
+      };
+      grid.appendChild(btn);
+    });
+  }
+  const total = Math.max(1, Math.ceil(S.gifCache.length / per));
+  $('gifPageInfo').textContent = `${S.gifPage+1} / ${total}`;
+  $('gifPrev').disabled = S.gifPage <= 0;
+  $('gifNext').disabled = S.gifPage >= total - 1;
+}
+window.gifPage = (dir) => {
+  S.gifPage = Math.max(0, S.gifPage + dir);
+  renderGifPage();
 };
 
 // ========== AUDIO CLIPS ==========
@@ -1264,7 +1389,7 @@ window.sendMsg = async e => {
   input.value = '';
   let imageUrl = null;
   try{
-    if(S.pendingImageUrl){ imageUrl = S.pendingImageUrl; clearImagePreview(); }
+    if(S.pendingImageUrl){ imageUrl = S.pendingImageUrl; if(imageUrl.match(/\.gif(\?|$)/i) || imageUrl.includes('giphy') || imageUrl.includes('tenor')) await registerGif(imageUrl); clearImagePreview(); }
     else if(S.pendingImage){ imageUrl = await uploadImage(S.pendingImage, `messages/${S.server.id}/${S.channel}/${Date.now()}`); clearImagePreview(); }
     await actuallySendMessage(content, imageUrl, null);
   }catch(err){ alert('Send failed: '+err.message); }
@@ -1303,9 +1428,18 @@ window.showUserContext = (e, uid, handle, avatar) => {
   if(uid === S.user?.uid) return;
   const menu = $('ctxMenu');
   const isFriend = S.friends.some(f => f.uid === uid);
+  const pendingOut = (S.outgoing||[]).some(r => r.toUid === uid);
+  let friendAction = '';
+  if(isFriend){
+    friendAction = `<div class="ctx-item" onclick="removeFriend('${esc(uid)}');hideCtx()"><i class="fa-solid fa-user-minus w-4"></i> Remove Friend</div>`;
+  } else if(pendingOut){
+    friendAction = `<div class="ctx-item text-slate-500"><i class="fa-solid fa-clock w-4"></i> Request Pending</div>`;
+  } else {
+    friendAction = `<div class="ctx-item" onclick="sendFriendRequest('${esc(uid)}','${esc(handle)}','${esc(avatar||'')}');hideCtx()"><i class="fa-solid fa-user-plus w-4"></i> Add Friend</div>`;
+  }
   menu.innerHTML = `
     <div class="ctx-item" onclick="startDM('${esc(uid)}','${esc(handle)}','${esc(avatar||'')}');hideCtx()"><i class="fa-solid fa-message w-4"></i> Message</div>
-    <div class="ctx-item" onclick="${isFriend?`removeFriend('${esc(uid)}')`:`addFriend('${esc(uid)}','${esc(handle)}','${esc(avatar||'')}')`};hideCtx()"><i class="fa-solid fa-user-${isFriend?'minus':'plus'} w-4"></i> ${isFriend?'Remove Friend':'Add Friend'}</div>
+    ${friendAction}
     <div class="ctx-item text-red-400" onclick="blockUser('${esc(uid)}');hideCtx()"><i class="fa-solid fa-ban w-4"></i> Block</div>`;
   menu.style.left = Math.min(e.clientX, window.innerWidth-200)+'px';
   menu.style.top = Math.min(e.clientY, window.innerHeight-150)+'px';
@@ -1319,21 +1453,72 @@ async function loadFriends(){
     const snap = await getDocs(collection(db,'users',S.user.uid,'friends'));
     S.friends = [];
     snap.forEach(d => S.friends.push({uid:d.id, ...d.data()}));
+    // Incoming requests
+    const inc = await getDocs(collection(db,'users',S.user.uid,'friendRequests'));
+    S.incoming = [];
+    inc.forEach(d => S.incoming.push({fromUid:d.id, ...d.data()}));
+    // Outgoing
+    const out = await getDocs(collection(db,'users',S.user.uid,'outgoingRequests'));
+    S.outgoing = [];
+    out.forEach(d => S.outgoing.push({toUid:d.id, ...d.data()}));
     renderFriends();
+    renderPending();
     renderDMList();
-  }catch(e){}
+    updatePendingBadge();
+  }catch(e){ console.warn('loadFriends', e); }
 }
+function updatePendingBadge(){
+  const n = (S.incoming||[]).length;
+  const badge = $('pendingBadge');
+  if(!badge) return;
+  if(n > 0){ badge.textContent = n; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+}
+window.dmTab = (tab) => {
+  ['friends','pending','dms'].forEach(t => {
+    $(`dmTab${t.charAt(0).toUpperCase()+t.slice(1)}`)?.classList.add('hidden');
+    $(`dmt-${t}`)?.classList.remove('tab-active');
+    $(`dmt-${t}`)?.classList.add('tab-inactive');
+  });
+  const map = { friends:'dmTabFriends', pending:'dmTabPending', dms:'dmTabDms' };
+  $(map[tab])?.classList.remove('hidden');
+  $(`dmt-${tab}`)?.classList.add('tab-active');
+  $(`dmt-${tab}`)?.classList.remove('tab-inactive');
+};
 function renderFriends(){
   const el = $('friendsList'); if(!el) return;
   el.innerHTML = '';
-  if(!S.friends.length){ el.innerHTML = '<p class="text-[10px] text-slate-600 px-2">No friends yet</p>'; return; }
+  if(!S.friends.length){ el.innerHTML = '<p class="text-[10px] text-slate-600 px-2">No friends yet. Right-click someone or use Add Friend.</p>'; return; }
   S.friends.forEach(f => {
     const div = document.createElement('div');
     div.className = 'dm-item';
     div.dataset.name = (f.handle||'').toLowerCase();
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
-    div.innerHTML = `<img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full"><span class="text-xs text-slate-300 truncate">${esc(f.handle)}</span>`;
+    div.oncontextmenu = e => showUserContext(e, f.uid, f.handle, f.avatar);
+    div.innerHTML = `<img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full"><div class="min-w-0 flex-1"><div class="text-xs text-slate-300 truncate">${esc(f.handle)}</div></div><button onclick="event.stopPropagation();startDM('${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')" class="text-slate-500 hover:text-bch text-xs"><i class="fa-solid fa-message"></i></button>`;
     el.appendChild(div);
+  });
+}
+function renderPending(){
+  const inc = $('incomingRequests'); const out = $('outgoingRequests');
+  if(!inc || !out) return;
+  inc.innerHTML = ''; out.innerHTML = '';
+  if(!(S.incoming||[]).length) inc.innerHTML = '<p class="text-[10px] text-slate-600 px-2">No incoming requests</p>';
+  (S.incoming||[]).forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'dm-item flex-col items-stretch gap-1';
+    div.innerHTML = `<div class="flex items-center gap-2"><img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full"><span class="text-xs text-slate-200 flex-1 truncate">${esc(r.handle||'User')}</span></div>
+      <div class="flex gap-1 pl-10"><button onclick="acceptFriendRequest('${esc(r.fromUid)}','${esc(r.handle||'')}','${esc(r.avatar||'')}')" class="btn-primary text-[10px] px-2 py-1">Accept</button>
+      <button onclick="declineFriendRequest('${esc(r.fromUid)}')" class="text-[10px] px-2 py-1 bg-dark-800 border border-dark-600 rounded text-red-400">Decline</button></div>`;
+    inc.appendChild(div);
+  });
+  if(!(S.outgoing||[]).length) out.innerHTML = '<p class="text-[10px] text-slate-600 px-2">No outgoing requests</p>';
+  (S.outgoing||[]).forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'dm-item';
+    div.innerHTML = `<img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full"><span class="text-xs text-slate-400 truncate flex-1">${esc(r.handle||'User')}</span><span class="text-[9px] text-slate-600 mono">Pending</span>
+      <button onclick="cancelFriendRequest('${esc(r.toUid)}')" class="text-[10px] text-red-400">Cancel</button>`;
+    out.appendChild(div);
   });
 }
 function renderDMList(){
@@ -1348,14 +1533,83 @@ function renderDMList(){
     el.appendChild(div);
   });
 }
-window.addFriend = async (uid, handle, avatar) => {
+window.openAddFriendModal = () => { $('addFriendHandle').value=''; $('addFriendMsg').classList.add('hidden'); openModal('addFriend'); };
+window.sendFriendRequestByHandle = async () => {
+  const handle = ($('addFriendHandle').value||'').trim();
+  if(!handle) return;
+  try{
+    const key = handle.toLowerCase();
+    const uname = await getDoc(doc(db,'usernames', key));
+    if(!uname.exists()){ showAddFriendMsg('User not found', true); return; }
+    const uid = uname.data().uid;
+    if(uid === S.user.uid){ showAddFriendMsg('That\'s you', true); return; }
+    const uSnap = await getDoc(doc(db,'users', uid));
+    const avatar = uSnap.exists() ? (uSnap.data().avatar||'') : '';
+    await sendFriendRequest(uid, handle, avatar);
+    showAddFriendMsg('Friend request sent!', false);
+  }catch(e){ showAddFriendMsg(e.message, true); }
+};
+function showAddFriendMsg(msg, err){
+  const el = $('addFriendMsg'); el.textContent = msg;
+  el.className = `mt-2 text-xs mono ${err?'text-red-400':'text-green-400'}`;
+  el.classList.remove('hidden');
+}
+window.sendFriendRequest = async (uid, handle, avatar) => {
   if(!S.user || uid === S.user.uid) return;
-  await setDoc(doc(db,'users',S.user.uid,'friends',uid), { handle, avatar, addedAt:Date.now() });
-  await setDoc(doc(db,'users',uid,'friends',S.user.uid), { handle:S.profile.handle, avatar:S.profile.avatar, addedAt:Date.now() });
+  if(S.friends.some(f => f.uid === uid)) return alert('Already friends');
+  // Incoming for them
+  await setDoc(doc(db,'users', uid, 'friendRequests', S.user.uid), {
+    handle: safe(S.profile?.handle,'User'),
+    avatar: safe(S.profile?.avatar,''),
+    fromUid: S.user.uid,
+    ts: Date.now()
+  });
+  // Outgoing for us
+  await setDoc(doc(db,'users', S.user.uid, 'outgoingRequests', uid), {
+    handle, avatar, toUid: uid, ts: Date.now()
+  });
+  await loadFriends();
+  alert('Friend request sent to ' + handle);
+};
+window.acceptFriendRequest = async (fromUid, handle, avatar) => {
+  if(!S.user) return;
+  // Add each other as friends
+  await setDoc(doc(db,'users', S.user.uid, 'friends', fromUid), {
+    handle, avatar, addedAt: Date.now()
+  });
+  await setDoc(doc(db,'users', fromUid, 'friends', S.user.uid), {
+    handle: safe(S.profile?.handle,'User'),
+    avatar: safe(S.profile?.avatar,''),
+    addedAt: Date.now()
+  });
+  // Clean requests
+  await deleteDoc(doc(db,'users', S.user.uid, 'friendRequests', fromUid));
+  await deleteDoc(doc(db,'users', fromUid, 'outgoingRequests', S.user.uid));
+  await loadFriends();
+};
+window.declineFriendRequest = async (fromUid) => {
+  await deleteDoc(doc(db,'users', S.user.uid, 'friendRequests', fromUid));
+  await deleteDoc(doc(db,'users', fromUid, 'outgoingRequests', S.user.uid));
+  await loadFriends();
+};
+window.cancelFriendRequest = async (toUid) => {
+  await deleteDoc(doc(db,'users', S.user.uid, 'outgoingRequests', toUid));
+  await deleteDoc(doc(db,'users', toUid, 'friendRequests', S.user.uid));
+  await loadFriends();
+};
+window.removeFriend = async uid => {
+  if(!confirm('Remove friend?')) return;
+  await deleteDoc(doc(db,'users',S.user.uid,'friends',uid));
+  await deleteDoc(doc(db,'users',uid,'friends',S.user.uid));
   loadFriends();
 };
-window.removeFriend = async uid => { await deleteDoc(doc(db,'users',S.user.uid,'friends',uid)); loadFriends(); };
-window.blockUser = async uid => { if(!confirm('Block this user?')) return; await setDoc(doc(db,'users',S.user.uid,'blocked',uid), {blockedAt:Date.now()}); await removeFriend(uid); alert('Blocked'); };
+window.blockUser = async uid => {
+  if(!confirm('Block this user?')) return;
+  await setDoc(doc(db,'users',S.user.uid,'blocked',uid), {blockedAt:Date.now()});
+  await removeFriend(uid);
+  await cancelFriendRequest(uid).catch(()=>{});
+  alert('Blocked');
+};
 window.startDM = (uid, handle, avatar) => {
   S.dmTarget = { uid, handle, avatar };
   S.inDMs = true;
