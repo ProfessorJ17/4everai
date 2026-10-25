@@ -58,6 +58,17 @@
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
     .dm-item{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;cursor:pointer}
     .dm-item:hover,.dm-item.active{background:#1c222e}
+
+    .status-online{background:#23a55a!important}
+    .status-idle{background:#f0b232!important}
+    .status-dnd{background:#f23f43!important}
+    .status-offline,.status-invisible{background:#80848e!important}
+
+    #userPopup{font-family:'Plus Jakarta Sans',sans-serif}
+    #upNote:focus{border-color:#0AC18E}
+
+    .member-status-dot{width:10px;height:10px;border-radius:50%;border:2px solid #090b0e;position:absolute;bottom:0;right:0}
+
   </style>
 </head>
 <body class="h-full flex flex-col overflow-hidden text-sm">
@@ -152,10 +163,13 @@
 
     <div class="bg-dark-950 border-t border-dark-700 px-2 py-2">
       <div class="flex items-center gap-2">
-        <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600 cursor-pointer" onclick="openModal('profile')">
+        <div class="relative cursor-pointer" onclick="openModal('profile')">
+          <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600">
+          <span id="ucStatusDot" class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-slate-500 border-2 border-dark-950"></span>
+        </div>
         <div class="min-w-0 flex-1">
           <div id="ucHandle" class="font-bold text-white text-xs truncate">Guest</div>
-          <div id="ucRole" class="text-[10px] text-slate-500 mono truncate">Not signed in</div>
+          <button id="ucRole" onclick="event.stopPropagation();openStatusMenu(event)" class="text-[10px] text-slate-500 mono truncate hover:text-bch text-left">Not signed in</button>
         </div>
         <div class="flex items-center gap-0.5">
           <button id="micBtn" onclick="toggleMic()" class="w-7 h-7 rounded hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="Mute"><i class="fa-solid fa-microphone"></i></button>
@@ -241,6 +255,50 @@
       </div>
     </div>
   </aside>
+</div>
+
+
+<div id="statusMenu" class="ctx-menu hidden" style="min-width:200px">
+  <div class="ctx-item" onclick="setMyStatus('online')"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span> Online</div>
+  <div class="ctx-item" onclick="setMyStatus('idle')"><span class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></span> Idle</div>
+  <div class="ctx-item" onclick="setMyStatus('dnd')"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Do Not Disturb</div>
+  <div class="ctx-item" onclick="setMyStatus('invisible')"><span class="w-2.5 h-2.5 rounded-full bg-slate-500 inline-block"></span> Invisible</div>
+</div>
+
+
+<!-- USER PROFILE POPUP (Discord-style) -->
+<div id="userPopup" class="fixed z-[350] hidden w-72 rounded-xl overflow-hidden shadow-2xl border border-dark-600" style="background:#111214">
+  <div id="upBanner" class="h-14 bg-gradient-to-r from-bch/40 to-kiro/40 relative">
+    <div class="absolute -bottom-8 left-4">
+      <div class="relative">
+        <img id="upAvatar" src="" class="w-16 h-16 rounded-full border-4 border-[#111214] object-cover bg-dark-800">
+        <span id="upDot" class="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#111214] status-online"></span>
+      </div>
+    </div>
+  </div>
+  <div class="pt-10 px-4 pb-3">
+    <div id="upHandle" class="font-bold text-white text-base leading-tight"></div>
+    <div id="upStatusLine" class="text-xs text-slate-400 mono mt-0.5"></div>
+    <div class="mt-3 bg-[#1e1f22] rounded-lg p-3 space-y-2">
+      <div>
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">About Me</div>
+        <div id="upBio" class="text-xs text-slate-300 whitespace-pre-wrap break-words">—</div>
+      </div>
+      <div id="upMutualWrap" class="hidden">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Member Since</div>
+        <div id="upJoined" class="text-xs text-slate-400"></div>
+      </div>
+      <div>
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Note</div>
+        <textarea id="upNote" rows="2" placeholder="Click to add a note" class="w-full bg-[#111214] border border-dark-600 rounded px-2 py-1.5 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none focus:border-bch"></textarea>
+      </div>
+    </div>
+    <div class="mt-3 flex gap-2">
+      <button id="upMsgBtn" class="flex-1 py-1.5 bg-[#1e1f22] hover:bg-dark-700 rounded text-xs font-bold text-slate-200 border border-dark-600">Message</button>
+      <button id="upFriendBtn" class="py-1.5 px-3 bg-[#1e1f22] hover:bg-dark-700 rounded text-xs border border-dark-600 text-bch-bright"><i class="fa-solid fa-user-plus"></i></button>
+      <button id="upMoreBtn" class="py-1.5 px-3 bg-[#1e1f22] hover:bg-dark-700 rounded text-xs border border-dark-600 text-slate-400"><i class="fa-solid fa-ellipsis"></i></button>
+    </div>
+  </div>
 </div>
 
 <div id="ctxMenu" class="ctx-menu hidden"></div>
@@ -629,6 +687,10 @@ onAuthStateChanged(auth, async user => {
     $('imgUploadBtn').classList.toggle('hidden', user.isAnonymous);
     $('gifBtn') && $('gifBtn').classList.toggle('hidden', user.isAnonymous);
     $('audioClipBtn').classList.toggle('hidden', user.isAnonymous);
+    S.myStatus = (S.profile && S.profile.status) ? S.profile.status : 'online';
+    if(S.myStatus === 'invisible') S.myStatus = 'online'; // reset invisible on fresh login optional
+    updateStatusDot();
+    startPresenceHeartbeat();
     loadFriends();
   } else {
     S.profile=null; S.isAdmin=false;
@@ -989,7 +1051,116 @@ function showServerContext(e, server){
   menu.style.left = e.clientX+'px'; menu.style.top = e.clientY+'px'; menu.classList.remove('hidden');
 }
 window.toggleMuteServer = (id,type) => { setMute(id,type,!isServerMuted(id,type)); hideCtx(); loadMyServers(); };
-function hideCtx(){ $('ctxMenu').classList.add('hidden'); $('reactionPicker').classList.add('hidden'); }
+
+// ===== DISCORD-STYLE USER PROFILE POPUP =====
+S.popupUid = null;
+window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
+  if(!uid || uid === 'undefined') return;
+  e && e.stopPropagation && e.stopPropagation();
+  // Don't open for self on same card interactions optionally - still allow
+  const popup = $('userPopup');
+  // Position near click
+  const x = e ? e.clientX : 100;
+  const y = e ? e.clientY : 100;
+  popup.style.left = Math.min(x + 8, window.innerWidth - 300) + 'px';
+  popup.style.top = Math.min(Math.max(8, y - 40), window.innerHeight - 420) + 'px';
+  popup.classList.remove('hidden');
+  S.popupUid = uid;
+
+  // Defaults while loading
+  $('upHandle').textContent = fallbackHandle || 'Loading…';
+  $('upAvatar').src = fallbackAvatar || userAvatar(uid);
+  $('upBio').textContent = '…';
+  $('upStatusLine').textContent = '';
+  $('upJoined').textContent = '';
+  $('upNote').value = '';
+
+  let handle = fallbackHandle || 'User';
+  let avatar = fallbackAvatar || userAvatar(uid);
+  let bio = '';
+  let status = 'offline';
+  let createdAt = null;
+
+  try{
+    const snap = await getDoc(doc(db,'users', uid));
+    if(snap.exists()){
+      const u = snap.data();
+      handle = u.handle || handle;
+      avatar = u.avatar || avatar;
+      bio = u.bio || '';
+      status = computePresence(u);
+      createdAt = u.createdAt || null;
+      // NEVER show email
+    }
+  }catch(err){ console.warn(err); }
+
+  $('upHandle').textContent = handle;
+  $('upAvatar').src = avatar;
+  $('upBio').textContent = bio || 'No bio set.';
+  const stLabel = {online:'Online',idle:'Idle',dnd:'Do Not Disturb',offline:'Offline',invisible:'Offline'}[status] || 'Offline';
+  $('upStatusLine').textContent = stLabel;
+  const dot = $('upDot');
+  dot.className = 'absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#111214] ' +
+    (status==='online'?'status-online':status==='idle'?'status-idle':status==='dnd'?'status-dnd':'status-offline');
+  if(createdAt){
+    $('upJoined').textContent = new Date(createdAt).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+    $('upMutualWrap').classList.remove('hidden');
+  } else {
+    $('upMutualWrap').classList.add('hidden');
+  }
+
+  // Load private note (only you see this)
+  if(S.user){
+    try{
+      const nSnap = await getDoc(doc(db,'users', S.user.uid, 'notes', uid));
+      $('upNote').value = nSnap.exists() ? (nSnap.data().text || '') : '';
+    }catch(e){ $('upNote').value = ''; }
+  }
+
+  // Buttons
+  const isSelf = S.user && uid === S.user.uid;
+  const isFriend = (S.friends||[]).some(f => f.uid === uid);
+  $('upMsgBtn').onclick = () => { hideUserPopup(); if(!isSelf) startDM(uid, handle, avatar); else openModal('profile'); };
+  $('upMsgBtn').textContent = isSelf ? 'Edit Profile' : `Message @${handle}`;
+  if(isSelf){
+    $('upFriendBtn').style.display = 'none';
+  } else {
+    $('upFriendBtn').style.display = '';
+    $('upFriendBtn').innerHTML = isFriend ? '<i class="fa-solid fa-user-minus"></i>' : '<i class="fa-solid fa-user-plus"></i>';
+    $('upFriendBtn').onclick = () => {
+      if(isFriend) removeFriend(uid);
+      else sendFriendRequest(uid, handle, avatar);
+      hideUserPopup();
+    };
+  }
+  $('upMoreBtn').onclick = (ev) => {
+    hideUserPopup();
+    showUserContext(ev, uid, handle, avatar);
+  };
+};
+window.hideUserPopup = () => { $('userPopup')?.classList.add('hidden'); S.popupUid = null; };
+// Save note on blur
+document.addEventListener('DOMContentLoaded', () => {
+  const note = $('upNote');
+  if(note){
+    note.addEventListener('blur', async () => {
+      if(!S.user || !S.popupUid) return;
+      const text = note.value.trim();
+      try{
+        await setDoc(doc(db,'users', S.user.uid, 'notes', S.popupUid), { text, updatedAt: Date.now() });
+      }catch(e){ console.warn('note save', e); }
+    });
+  }
+});
+// Click outside closes popup
+document.addEventListener('click', (e) => {
+  const popup = $('userPopup');
+  if(popup && !popup.classList.contains('hidden') && !e.target.closest('#userPopup') && !e.target.closest('[data-profile-uid]')){
+    hideUserPopup();
+  }
+});
+
+function hideCtx(){ $('ctxMenu').classList.add('hidden'); $('reactionPicker').classList.add('hidden'); $('statusMenu')?.classList.add('hidden'); }
 document.addEventListener('click', e => { if(!e.target.closest('#ctxMenu') && !e.target.closest('#reactionPicker')) hideCtx(); });
 
 window.createServer = async () => {
@@ -1308,7 +1479,8 @@ function renderMsgs(msgs){
     const div = document.createElement('div');
     div.className = `flex items-start gap-3 hover:bg-dark-800/40 px-2 py-2 rounded-lg group relative ${mentionsMe&&!isServerMuted(S.server?.id,'notif')?'bg-bch/5 border-l-2 border-bch':''}`;
     div.innerHTML = `
-      <img src="${esc(m.avatar||userAvatar('x'))}" class="w-9 h-9 rounded-full border ${isOwner?'border-carrot/60':'border-dark-600'} shrink-0 cursor-pointer"
+      <img src="${esc(m.avatar||userAvatar('x'))}" class="w-9 h-9 rounded-full border ${isOwner?'border-carrot/60':'border-dark-600'} shrink-0 cursor-pointer" data-profile-uid="${esc(m.uid)}"
+           onclick="showUserProfile(event,'${esc(m.uid)}','${esc(m.handle)}','${esc(m.avatar||'')}')"
            oncontextmenu="showUserContext(event,'${esc(m.uid)}','${esc(m.handle)}','${esc(m.avatar||'')}')">
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5">
@@ -1405,23 +1577,51 @@ function listenMembers(serverId){
       S.membersCache = [];
       const list = $('membersList'); list.innerHTML = '';
       let count = 0;
-      snap.forEach(d => {
-        const m = d.data(); S.membersCache.push(m); count++;
+      const members = [];
+      snap.forEach(d => { const m = {uid:d.id, ...d.data()}; members.push(m); S.membersCache.push(m); });
+      // Live profile + presence for each member
+      for(const m of members){
+        count++;
+        let handle = m.handle || 'User';
+        let avatar = m.avatar || userAvatar(m.uid||'x');
+        let presence = 'offline';
+        try{
+          const uSnap = await getDoc(doc(db,'users', m.uid));
+          if(uSnap.exists()){
+            const u = uSnap.data();
+            if(u.handle) handle = u.handle;
+            if(u.avatar) avatar = u.avatar;
+            presence = computePresence(u);
+          }
+        }catch(e){}
         const isOwner = m.role === 'owner';
         const color = getMemberColor(m) || (isOwner ? '#F7931A' : null);
         const nameStyle = color ? `style="color:${color}"` : '';
+        const dotClass = presence === 'online' ? 'status-online' : presence === 'idle' ? 'status-idle' : presence === 'dnd' ? 'status-dnd' : 'status-offline';
+        const statusLabel = presence === 'online' ? 'Online' : presence === 'idle' ? 'Idle' : presence === 'dnd' ? 'Do Not Disturb' : 'Offline';
         const div = document.createElement('div');
         div.className = 'flex items-center gap-2 px-1.5 py-1.5 rounded hover:bg-dark-800 cursor-pointer';
-        div.oncontextmenu = e => { e.preventDefault(); showUserContext(e, m.uid, m.handle, m.avatar); };
-        div.innerHTML = `<img src="${esc(m.avatar||userAvatar('x'))}" class="w-7 h-7 rounded-full border border-dark-600"><div class="min-w-0"><div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(m.handle||'User')}</div><div class="text-[9px] text-slate-500">${isOwner?'Owner':(m.status||'Member')}</div></div>`;
+        div.onclick = e => { showUserProfile(e, m.uid, handle, avatar); };
+        div.oncontextmenu = e => { e.preventDefault(); showUserContext(e, m.uid, handle, avatar); };
+        div.innerHTML = `<div class="relative shrink-0"><img src="${esc(avatar)}" class="w-7 h-7 rounded-full border border-dark-600"><span class="member-status-dot ${dotClass}"></span></div>
+          <div class="min-w-0"><div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(handle)}</div>
+          <div class="text-[9px] text-slate-500">${isOwner?'Owner':statusLabel}</div></div>`;
         list.appendChild(div);
-      });
+      }
       $('memberCount').textContent = count;
-    }catch(e){}
+    }catch(e){ console.warn(e); }
   };
   load();
-  const iv = setInterval(load, 8000);
+  const iv = setInterval(load, 10000);
   S.unsubMembers = () => clearInterval(iv);
+}
+function computePresence(u){
+  if(!u) return 'offline';
+  const st = u.status || 'online';
+  if(st === 'invisible') return 'offline';
+  const last = u.lastSeen || 0;
+  if(Date.now() - last > 90000) return 'offline'; // 90s timeout
+  return st; // online | idle | dnd
 }
 window.showUserContext = (e, uid, handle, avatar) => {
   e.preventDefault(); e.stopPropagation();
@@ -1495,7 +1695,7 @@ function renderFriends(){
     div.dataset.name = (f.handle||'').toLowerCase();
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
     div.oncontextmenu = e => showUserContext(e, f.uid, f.handle, f.avatar);
-    div.innerHTML = `<img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full"><div class="min-w-0 flex-1"><div class="text-xs text-slate-300 truncate">${esc(f.handle)}</div></div><button onclick="event.stopPropagation();startDM('${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')" class="text-slate-500 hover:text-bch text-xs"><i class="fa-solid fa-message"></i></button>`;
+    div.innerHTML = `<img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full cursor-pointer" data-profile-uid="${esc(f.uid)}" onclick="event.stopPropagation();showUserProfile(event,'${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')"><div class="min-w-0 flex-1"><div class="text-xs text-slate-300 truncate">${esc(f.handle)}</div></div><button onclick="event.stopPropagation();startDM('${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')" class="text-slate-500 hover:text-bch text-xs"><i class="fa-solid fa-message"></i></button>`;
     el.appendChild(div);
   });
 }
@@ -1839,13 +2039,19 @@ window.saveServerSettings = async () => {
 async function renderServerMembers(){
   const snap = await getDocs(collection(db,'servers',S.server.id,'members'));
   const el = $('serverMemberList'); el.innerHTML = '';
-  snap.forEach(d => {
-    const m = d.data();
+  for(const d of snap.docs){
+    const m = {uid:d.id, ...d.data()};
+    let handle = m.handle || 'User';
+    let avatar = m.avatar || userAvatar(m.uid);
+    try{
+      const u = await getDoc(doc(db,'users', m.uid));
+      if(u.exists()){ if(u.data().handle) handle = u.data().handle; if(u.data().avatar) avatar = u.data().avatar; }
+    }catch(e){}
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
-    row.innerHTML = `<img src="${esc(m.avatar||userAvatar('x'))}" class="w-7 h-7 rounded-full border border-dark-600"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-slate-200 truncate">${esc(m.handle||'User')}</div><div class="text-[10px] text-slate-500 mono">${esc(m.role||'member')}</div></div>${m.role!=='owner'?`<button onclick="kickMember('${esc(m.uid)}','${esc(m.handle)}')" class="text-amber-500 text-xs"><i class="fa-solid fa-right-from-bracket"></i></button>`:'<span class="badge-owner">OWNER</span>'}`;
+    row.innerHTML = `<img src="${esc(avatar)}" class="w-7 h-7 rounded-full border border-dark-600"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-slate-200 truncate">${esc(handle)}</div><div class="text-[10px] text-slate-500 mono">${esc(m.role||'member')}</div></div>${m.role!=='owner'?`<button onclick="kickMember('${esc(m.uid)}','${esc(handle)}')" class="text-amber-500 text-xs"><i class="fa-solid fa-right-from-bracket"></i></button>`:'<span class="badge-owner">OWNER</span>'}`;
     el.appendChild(row);
-  });
+  }
 }
 window.kickMember = async (uid, handle) => { if(!S.canManage) return; if(!confirm(`Kick ${handle}?`)) return; await deleteDoc(doc(db,'servers',S.server.id,'members',uid)); renderServerMembers(); };
 window.adminToggleLock = () => { S.locked = !S.locked; $('lockBadge').classList.toggle('hidden', !S.locked); closeModal('chanSettings'); closeModal('serverSettings'); };
@@ -1983,11 +2189,64 @@ window.addBlacklistedDomain = async () => {
 };
 window.removeBlacklistedDomain = async domain => { if(!confirm(`Remove @${domain}?`)) return; await deleteDoc(doc(db,'blacklistedDomains',domain)); loadBlacklist(); };
 
+
+// ===== PRESENCE / STATUS =====
+S.myStatus = 'online';
+window.openStatusMenu = (e) => {
+  if(!S.user) return;
+  const menu = $('statusMenu');
+  menu.style.left = Math.min(e.clientX, window.innerWidth-220)+'px';
+  menu.style.top = (e.clientY - 140)+'px';
+  menu.classList.remove('hidden');
+};
+window.setMyStatus = async (status) => {
+  if(!S.user) return;
+  S.myStatus = status;
+  hideCtx();
+  $('statusMenu').classList.add('hidden');
+  updateStatusDot();
+  try{
+    await updateDoc(doc(db,'users',S.user.uid), { status, lastSeen: Date.now() });
+    if(S.profile) S.profile.status = status;
+    updateUserUI();
+  }catch(e){ console.warn(e); }
+};
+function updateStatusDot(){
+  const dot = $('ucStatusDot');
+  if(!dot) return;
+  const st = S.myStatus || 'offline';
+  dot.className = 'absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-dark-950 ' +
+    (st==='online'?'status-online':st==='idle'?'status-idle':st==='dnd'?'status-dnd':'status-offline');
+}
+function startPresenceHeartbeat(){
+  if(window._presenceIv) clearInterval(window._presenceIv);
+  if(!S.user) return;
+  const beat = async () => {
+    try{
+      await updateDoc(doc(db,'users',S.user.uid), {
+        lastSeen: Date.now(),
+        status: S.myStatus || 'online'
+      });
+    }catch(e){}
+  };
+  beat();
+  window._presenceIv = setInterval(beat, 30000);
+  window.addEventListener('beforeunload', () => {
+    // best-effort offline
+    try{
+      navigator.sendBeacon && navigator.sendBeacon(''); // placeholder
+      // can't easily async write on unload; lastSeen will expire
+    }catch(e){}
+  });
+}
+
 function updateUserUI(){
   const bar = $('authBar'), logoutBtn = $('logoutBtn');
   if(S.user && S.profile){
     $('ucHandle').textContent = safe(S.profile.handle,'User');
-    $('ucRole').textContent = S.isAdmin ? '⚡ ADMIN' : (S.user.isAnonymous ? 'Anonymous' : (S.profile.status || 'Signed in'));
+    const stLabel = {online:'Online',idle:'Idle',dnd:'Do Not Disturb',invisible:'Invisible'}[S.myStatus] || 'Online';
+    $('ucRole').textContent = S.isAdmin ? ('⚡ ADMIN · ' + stLabel) : (S.user.isAnonymous ? 'Anonymous' : stLabel);
+    updateStatusDot();
     $('ucAvatar').src = safe(S.profile.avatar, userAvatar('Guest'));
     logoutBtn.classList.remove('hidden');
     bar.innerHTML = `<div class="flex items-center gap-2"><img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-bch/40"><span class="font-bold text-slate-200 mono text-xs">${esc(S.profile.handle)}</span>${S.isAdmin?'<span class="badge-admin">ADMIN</span>':''}<button onclick="doSignOut()" class="text-slate-400 hover:text-red-400 ml-1" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button></div>`;
