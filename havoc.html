@@ -70,7 +70,6 @@
     #upNote:focus{border-color:#0AC18E}
 
     .member-status-dot{width:10px;height:10px;border-radius:50%;border:2px solid #090b0e;position:absolute;bottom:0;right:0}
-
   </style>
 </head>
 <body class="h-full flex flex-col overflow-hidden text-sm">
@@ -782,18 +781,25 @@ onAuthStateChanged(auth, async user => {
         S.profile = snap.data();
         if(!S.profile.handle) S.profile.handle = user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0]||'User');
         if(!S.profile.avatar) S.profile.avatar = userAvatar(user.uid);
+        // Ensure createdAt always exists (set to now if missing)
+        if(!S.profile.createdAt){
+          S.profile.createdAt = Date.now();
+          try{ await updateDoc(doc(db,'users',user.uid), { createdAt: S.profile.createdAt }); }catch(e){}
+        }
       } else {
         S.profile = { uid:user.uid, email:user.email||null, handle: user.isAnonymous ? `Anon_${user.uid.slice(0,6)}` : (user.email?.split('@')[0]||'User'), avatar:userAvatar(user.uid), bio:'', status:'', createdAt:Date.now() };
         await setDoc(doc(db,'users',user.uid), S.profile);
       }
-    }catch(e){ S.profile = { uid:user.uid, email:user.email||null, handle: user.isAnonymous?`Anon_${user.uid.slice(0,6)}`:(user.email?.split('@')[0]||'User'), avatar:userAvatar(user.uid), bio:'', status:'' }; }
+    }catch(e){ 
+      S.profile = { uid:user.uid, email:user.email||null, handle: user.isAnonymous?`Anon_${user.uid.slice(0,6)}`:(user.email?.split('@')[0]||'User'), avatar:userAvatar(user.uid), bio:'', status:'', createdAt:Date.now() }; 
+    }
     S.isAdmin = (user.email === ADMIN_EMAIL);
     $('adminBtn').classList.toggle('hidden', !S.isAdmin);
     $('imgUploadBtn').classList.toggle('hidden', user.isAnonymous);
     $('gifBtn') && $('gifBtn').classList.toggle('hidden', user.isAnonymous);
     $('audioClipBtn').classList.toggle('hidden', user.isAnonymous);
     S.myStatus = (S.profile && S.profile.status) ? S.profile.status : 'online';
-    if(S.myStatus === 'invisible') S.myStatus = 'online'; // reset invisible on fresh login optional
+    if(S.myStatus === 'invisible') S.myStatus = 'online';
     updateStatusDot();
     startPresenceHeartbeat();
     loadFriends();
@@ -850,7 +856,6 @@ window.doSignOut = async () => {
 
 // ========== DM ==========
 window.openDMs = () => {
-  // Stop server message listeners so they cannot overwrite the feed
   if(S.unsubMsgs){ try{ S.unsubMsgs(); }catch(e){} S.unsubMsgs = null; }
   if(S.unsubMembers){ try{ S.unsubMembers(); }catch(e){} S.unsubMembers = null; }
   leaveVoice();
@@ -876,7 +881,6 @@ window.openDMs = () => {
   $('msgFeed').innerHTML = '<div class="text-center py-16 text-slate-600 mono text-xs">Select a friend to start chatting.<br><span class="text-slate-700">Friends appear on the left.</span></div>';
   $('membersContent').classList.add('hidden');
   $('dmProfileContent').classList.add('hidden');
-  // Ensure members panel shows friends context not server members
   if($('memberCount')) $('memberCount').textContent = '0';
   if($('membersList')) $('membersList').innerHTML = '';
   loadFriends(); renderDMList();
@@ -920,7 +924,6 @@ window.saveProfile = async () => {
   if(handle.length < 2 || handle.length > 24) return showProfileMsg('Handle must be 2-24 chars', true);
   if(!/^[a-zA-Z0-9_]+$/.test(handle)) return showProfileMsg('Handle: letters, numbers, _ only', true);
 
-  // Username uniqueness – no one can steal your name
   const handleKey = handle.toLowerCase();
   try {
     const taken = await getDoc(doc(db,'usernames', handleKey));
@@ -939,16 +942,16 @@ window.saveProfile = async () => {
   }
 
   try {
-    // release old username mapping if changed
     const oldHandle = (S.profile.handle||'').toLowerCase();
     if(oldHandle && oldHandle !== handleKey){
       try{ await deleteDoc(doc(db,'usernames', oldHandle)); }catch(e){}
     }
     await setDoc(doc(db,'usernames', handleKey), { uid:S.user.uid, handle, updatedAt:Date.now() });
-    await updateDoc(doc(db,'users',S.user.uid), { handle, bio, status, avatar });
-    S.profile = { ...S.profile, handle, bio, status, avatar };
+    const updates = { handle, bio, status, avatar };
+    if(!S.profile.createdAt) updates.createdAt = Date.now();
+    await updateDoc(doc(db,'users',S.user.uid), updates);
+    S.profile = { ...S.profile, ...updates };
 
-    // Propagate new handle + avatar to every server member doc so members list updates
     try {
       const serversSnap = await getDocs(collection(db,'servers'));
       for(const s of serversSnap.docs){
@@ -960,7 +963,7 @@ window.saveProfile = async () => {
       }
     } catch(propErr){ console.warn('propagate', propErr); }
 
-    S.profileCache = {}; // refresh names on messages
+    S.profileCache = {};
     updateUserUI();
     if(S.server) listenMembers(S.server.id);
     if(S.server && S.channel) listenMessages(S.server.id, S.channel);
@@ -1031,7 +1034,6 @@ window.useGifUrl = async () => {
   closeModal('gif');
 };
 async function registerGif(url){
-  // Upsert into shared bank, increment uses
   try{
     const id = btoa(url).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
     const ref = doc(db, 'gifBank', id);
@@ -1178,9 +1180,7 @@ S.popupUid = null;
 window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   if(!uid || uid === 'undefined') return;
   e && e.stopPropagation && e.stopPropagation();
-  // Don't open for self on same card interactions optionally - still allow
   const popup = $('userPopup');
-  // Position near click
   const x = e ? e.clientX : 100;
   const y = e ? e.clientY : 100;
   popup.style.left = Math.min(x + 8, window.innerWidth - 300) + 'px';
@@ -1188,13 +1188,14 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   popup.classList.remove('hidden');
   S.popupUid = uid;
 
-  // Defaults while loading
+  // Safe defaults (never crash)
   $('upHandle').textContent = fallbackHandle || 'Loading…';
   $('upAvatar').src = fallbackAvatar || userAvatar(uid);
   $('upBio').textContent = '…';
   $('upStatusLine').textContent = '';
-  $('upJoined').textContent = '';
+  $('upCreated').textContent = '—';
   $('upNote').value = '';
+  $('upServerJoinWrap')?.classList.add('hidden');
 
   let handle = fallbackHandle || 'User';
   let avatar = fallbackAvatar || userAvatar(uid);
@@ -1211,9 +1212,20 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
       bio = u.bio || '';
       status = computePresence(u);
       createdAt = u.createdAt || null;
-      // NEVER show email
     }
-  }catch(err){ console.warn(err); }
+  }catch(err){ 
+    // Missing or insufficient permissions – fall back gracefully
+    console.warn('Profile fetch failed (permissions or network):', err.message);
+  }
+
+  // Also try members cache for extra data
+  if(S.server){
+    const mem = (S.membersCache||[]).find(x => x.uid === uid);
+    if(mem){
+      if(!handle || handle === 'User') handle = mem.handle || handle;
+      if(!avatar || avatar.includes('Guest')) avatar = mem.avatar || avatar;
+    }
+  }
 
   $('upHandle').textContent = handle;
   $('upAvatar').src = avatar;
@@ -1223,12 +1235,15 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   const dot = $('upDot');
   dot.className = 'absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#111214] ' +
     (status==='online'?'status-online':status==='idle'?'status-idle':status==='dnd'?'status-dnd':'status-offline');
+
+  // Account Created – if missing, show today
   if(createdAt){
     $('upCreated').textContent = new Date(createdAt).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
   } else {
-    $('upCreated').textContent = '—';
+    $('upCreated').textContent = new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
   }
-  // Server join date from members cache or passed meta
+
+  // Server join date
   let serverJoined = 0;
   if(S.server){
     const mem = (S.membersCache||[]).find(x => x.uid === uid);
@@ -1241,7 +1256,7 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
     $('upServerJoinWrap')?.classList.add('hidden');
   }
 
-  // Load private note (only you see this)
+  // Private note
   if(S.user){
     try{
       const nSnap = await getDoc(doc(db,'users', S.user.uid, 'notes', uid));
@@ -1271,6 +1286,7 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   };
 };
 window.hideUserPopup = () => { $('userPopup')?.classList.add('hidden'); S.popupUid = null; };
+
 // Save note on blur
 document.addEventListener('DOMContentLoaded', () => {
   const note = $('upNote');
@@ -1573,7 +1589,6 @@ function listenMessages(serverId, channelId){
   if(S.unsubMsgs) S.unsubMsgs();
   const ref = collection(db,'servers',serverId,'channels',channelId,'messages');
   const load = async () => {
-    // Never paint server messages while in DM view
     if(S.inDMs || !S.server || S.server.id !== serverId || S.channel !== channelId) return;
     try{
       const snap = await getDocs(ref);
@@ -1600,7 +1615,6 @@ function listenMessages(serverId, channelId){
   const iv = setInterval(load, 2500);
   S.unsubMsgs = () => clearInterval(iv);
 }
-// Live profile cache for message authors (handle/avatar always current)
 S.profileCache = S.profileCache || {};
 async function resolveProfiles(uids){
   const missing = [...new Set(uids.filter(u => u && !S.profileCache[u]))];
@@ -1621,7 +1635,6 @@ async function resolveProfiles(uids){
 async function renderMsgs(msgs){
   const feed = $('msgFeed'); feed.innerHTML = '';
   if(!msgs.length){ feed.innerHTML = '<div class="text-center py-12 text-slate-600 mono text-xs">No messages yet.</div>'; return; }
-  // Resolve current usernames/avatars for all authors
   await resolveProfiles(msgs.map(m => m.uid));
   msgs.forEach(m => {
     const live = S.profileCache[m.uid] || {};
@@ -1701,7 +1714,6 @@ function renderEmojiPicker(query){
   const freqLabel = $('emojiFreqLabel');
   if(!grid) return;
 
-  // Frequently used (only when no search)
   const freq = getFrequentEmojis(16);
   if(!q && freq.length){
     freqLabel?.classList.remove('hidden');
@@ -1713,7 +1725,6 @@ function renderEmojiPicker(query){
     freqRow.innerHTML = '';
   }
 
-  // Filter list by shortcode name or emoji itself
   let list = EMOJI_LIST;
   if(q){
     const matched = new Set();
@@ -1846,7 +1857,7 @@ function listenMembers(serverId){
           const statusLabel = m.presence === 'online' ? 'Online' : m.presence === 'idle' ? 'Idle' : m.presence === 'dnd' ? 'Do Not Disturb' : 'Offline';
           const div = document.createElement('div');
           div.className = 'flex items-center gap-2 px-1.5 py-1.5 rounded hover:bg-dark-800 cursor-pointer';
-          div.onclick = e => { showUserProfile(e, m.uid, m.handle, m.avatar, m); };
+          div.onclick = e => { showUserProfile(e, m.uid, m.handle, m.avatar); };
           div.oncontextmenu = e => { e.preventDefault(); showUserContext(e, m.uid, m.handle, m.avatar); };
           div.innerHTML = `<div class="relative shrink-0"><img src="${esc(m.avatar)}" class="w-7 h-7 rounded-full border border-dark-600"><span class="member-status-dot ${dotClass}"></span></div>
             <div class="min-w-0"><div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(m.handle)}${isNewMember(m.uid)?' <i class="fa-solid fa-seedling new-member-leaf" title="New member"></i>':''}</div>
@@ -1869,8 +1880,8 @@ function computePresence(u){
   const st = u.status || 'online';
   if(st === 'invisible') return 'offline';
   const last = u.lastSeen || 0;
-  if(Date.now() - last > 90000) return 'offline'; // 90s timeout
-  return st; // online | idle | dnd
+  if(Date.now() - last > 90000) return 'offline';
+  return st;
 }
 window.showUserContext = (e, uid, handle, avatar) => {
   e.preventDefault(); e.stopPropagation();
@@ -1902,11 +1913,9 @@ async function loadFriends(){
     const snap = await getDocs(collection(db,'users',S.user.uid,'friends'));
     S.friends = [];
     snap.forEach(d => S.friends.push({uid:d.id, ...d.data()}));
-    // Incoming requests
     const inc = await getDocs(collection(db,'users',S.user.uid,'friendRequests'));
     S.incoming = [];
     inc.forEach(d => S.incoming.push({fromUid:d.id, ...d.data()}));
-    // Outgoing
     const out = await getDocs(collection(db,'users',S.user.uid,'outgoingRequests'));
     S.outgoing = [];
     out.forEach(d => S.outgoing.push({toUid:d.id, ...d.data()}));
@@ -2006,14 +2015,12 @@ function showAddFriendMsg(msg, err){
 window.sendFriendRequest = async (uid, handle, avatar) => {
   if(!S.user || uid === S.user.uid) return;
   if(S.friends.some(f => f.uid === uid)) return alert('Already friends');
-  // Incoming for them
   await setDoc(doc(db,'users', uid, 'friendRequests', S.user.uid), {
     handle: safe(S.profile?.handle,'User'),
     avatar: safe(S.profile?.avatar,''),
     fromUid: S.user.uid,
     ts: Date.now()
   });
-  // Outgoing for us
   await setDoc(doc(db,'users', S.user.uid, 'outgoingRequests', uid), {
     handle, avatar, toUid: uid, ts: Date.now()
   });
@@ -2022,7 +2029,6 @@ window.sendFriendRequest = async (uid, handle, avatar) => {
 };
 window.acceptFriendRequest = async (fromUid, handle, avatar) => {
   if(!S.user) return;
-  // Add each other as friends
   await setDoc(doc(db,'users', S.user.uid, 'friends', fromUid), {
     handle, avatar, addedAt: Date.now()
   });
@@ -2031,7 +2037,6 @@ window.acceptFriendRequest = async (fromUid, handle, avatar) => {
     avatar: safe(S.profile?.avatar,''),
     addedAt: Date.now()
   });
-  // Clean requests
   await deleteDoc(doc(db,'users', S.user.uid, 'friendRequests', fromUid));
   await deleteDoc(doc(db,'users', fromUid, 'outgoingRequests', S.user.uid));
   await loadFriends();
@@ -2481,10 +2486,8 @@ function startPresenceHeartbeat(){
   beat();
   window._presenceIv = setInterval(beat, 30000);
   window.addEventListener('beforeunload', () => {
-    // best-effort offline
     try{
-      navigator.sendBeacon && navigator.sendBeacon(''); // placeholder
-      // can't easily async write on unload; lastSeen will expire
+      navigator.sendBeacon && navigator.sendBeacon('');
     }catch(e){}
   });
 }
@@ -2671,7 +2674,6 @@ function getAudioCtx(){
   return S.audioCtx;
 }
 
-/** Soft professional “bloop” tones */
 function playTone(freq, duration, type='sine', gain=0.08, delay=0){
   if(S.soundsMuted) return;
   try{
@@ -2692,16 +2694,13 @@ function playTone(freq, duration, type='sine', gain=0.08, delay=0){
 
 function playNotifSound(kind){
   if(S.soundsMuted) return;
-  // kind: message | mention | dm | everyone
   if(kind === 'mention' || kind === 'everyone'){
-    // higher, clearer double-chime
     playTone(880, 0.12, 'sine', 0.1, 0);
     playTone(1174, 0.18, 'sine', 0.08, 0.1);
   } else if(kind === 'dm'){
     playTone(660, 0.1, 'triangle', 0.09, 0);
     playTone(880, 0.14, 'triangle', 0.07, 0.08);
   } else {
-    // soft message bloop
     playTone(520, 0.08, 'sine', 0.06, 0);
     playTone(780, 0.1, 'sine', 0.05, 0.06);
   }
@@ -2733,12 +2732,8 @@ function getChanNotifMode(){
   return localStorage.getItem(`havoc_notif_${S.server.id}_${S.channel}`) || 'all';
 }
 
-/** Called when a new message arrives that isn't from us */
 function handleIncomingMessageNotif(m){
   if(!m || !S.user || m.uid === S.user.uid) return;
-  if(document.hasFocus() && !document.hidden) {
-    // still play subtle sound for mentions even when focused (Discord does)
-  }
   const content = (m.content || '').toLowerCase();
   const myHandle = (S.profile?.handle || '').toLowerCase();
   const isEveryone = /@everyone\b/i.test(m.content||'');
@@ -2754,7 +2749,6 @@ function handleIncomingMessageNotif(m){
 
   if(isEveryone || isHere || isMention){
     playNotifSound('mention');
-    // browser notification if permitted and tab hidden
     if(document.hidden && Notification.permission === 'granted'){
       new Notification(m.handle || 'havoc', { body: (m.content||'').slice(0,80), silent: true });
     }
@@ -2763,7 +2757,6 @@ function handleIncomingMessageNotif(m){
   }
 }
 
-// Request notification permission once on first interaction
 document.addEventListener('click', () => {
   if(typeof Notification !== 'undefined' && Notification.permission === 'default'){
     Notification.requestPermission().catch(()=>{});
@@ -2771,9 +2764,7 @@ document.addEventListener('click', () => {
   try{ getAudioCtx(); }catch(e){}
 }, { once: true });
 
-// Hook: track last seen message ids so we only notify on NEW ones
 S._seenMsgIds = new Set();
-const _origRenderMsgs = typeof renderMsgs === 'function' ? renderMsgs : null;
 
 
 // ===== SCREEN SHARE =====
