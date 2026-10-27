@@ -3553,7 +3553,7 @@ function listenMembers(serverId){
           // Don't apply avatarStyle transforms in members list to prevent scaling issues
           div.innerHTML = `
             <div class="relative shrink-0 avatar-ring-wrapper">
-              <img src="${esc(m.avatar)}" class="w-7 h-7 rounded-full border border-dark-600 relative z-10">
+              <img src="${esc(m.avatar)}" class="w-9 h-9 rounded-full border border-dark-600 relative z-10">
               ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
               <span class="member-status-dot ${dotClass} z-20"></span>
             </div>
