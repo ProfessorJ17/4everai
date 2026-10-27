@@ -51,14 +51,21 @@
     .reaction{background:#1c222e;border:1px solid #323c52;border-radius:12px;padding:1px 7px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:3px}
     .reaction:hover,.reaction.mine{border-color:#0AC18E;background:rgba(10,193,142,.15)}
     .video-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;width:100%;max-width:900px}
-    .video-tile{background:#0f1218;border-radius:12px;overflow:hidden;position:relative;aspect-ratio:16/10}
+    .video-tile{background:#0f1218;border-radius:12px;overflow:hidden;position:relative;aspect-ratio:16/10;transition:box-shadow 0.2s}
+    .video-tile.speaking{box-shadow: 0 0 0 2px #0AC18E}
     .video-tile video{width:100%;height:100%;object-fit:cover}
     .video-label{position:absolute;bottom:6px;left:8px;background:rgba(0,0,0,.65);padding:2px 8px;border-radius:6px;font-size:11px}
-    .rec-pulse{animation:pulse 1s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .rec-pulse{animation:pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.05)}}
+    canvas#audioVisualizer{filter: drop-shadow(0 0 4px rgba(10, 193, 142, 0.3))}
     .dm-item{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;cursor:pointer}
     .dm-item:hover,.dm-item.active{background:#1c222e}
 
+    .voice-user{padding:2px 18px;color:#94a3b8;font-size:11px;transition:color 0.2s}
+    .voice-user.speaking{color:#0AC18E}
+    .voice-user img{border:1.5px solid transparent;transition:border-color 0.2s}
+    .voice-user.speaking img{border-color:#0AC18E}
+    
     .status-online{background:#23a55a!important}
     .status-idle{background:#f0b232!important}
     .status-dnd{background:#f23f43!important}
@@ -384,7 +391,19 @@
   <div class="bg-dark-900 border border-bch/30 w-full max-w-lg rounded-xl relative flex flex-col max-h-[85vh]">
     <div class="flex items-center justify-between p-4 border-b border-dark-700">
       <h2 class="font-bold text-white"><span class="text-bch">GIF</span> Picker</h2>
-      <button onclick="closeModal('gif')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      <div class="flex items-center gap-2">
+        <button onclick="toggleGifSettings()" class="text-slate-500 hover:text-bch" title="GIPHY Settings"><i class="fa-solid fa-cog"></i></button>
+        <button onclick="closeModal('gif')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <!-- GIF SETTINGS AREA -->
+    <div id="gifSettings" class="hidden p-3 border-b border-dark-700 bg-dark-950/50">
+      <label class="text-[10px] font-bold text-slate-400 uppercase mono block mb-1">GIPHY API Key</label>
+      <div class="flex gap-2">
+        <input type="text" id="giphyApiKey" placeholder="Paste your GIPHY API Key..." class="field flex-1 text-xs">
+        <button onclick="saveGiphyKey()" class="btn-primary px-3 text-xs shrink-0">Save</button>
+      </div>
+      <p class="text-[9px] text-slate-500 mt-1">Get your key at <a href="https://developers.giphy.com/dashboard/" target="_blank" class="text-bch hover:underline">giphy.com/dashboard</a></p>
     </div>
     <div class="p-3 border-b border-dark-700 space-y-2">
       <div class="flex gap-2">
@@ -640,6 +659,7 @@
       <button onclick="adminTab('users')" id="at-users" class="py-2 px-3 text-xs mono tab-inactive">Users</button>
       <button onclick="adminTab('blacklist')" id="at-blacklist" class="py-2 px-3 text-xs mono tab-inactive">Blacklist</button>
       <button onclick="adminTab('gifs')" id="at-gifs" class="py-2 px-3 text-xs mono tab-inactive">GIFs</button>
+      <button onclick="adminTab('images')" id="at-images" class="py-2 px-3 text-xs mono tab-inactive">Images</button>
       <button onclick="adminTab('bans')" id="at-bans" class="py-2 px-3 text-xs mono tab-inactive">Bans</button>
     </div>
     <div class="flex-1 overflow-y-auto p-5">
@@ -650,9 +670,20 @@
         <div id="blacklistList" class="space-y-1 max-h-64 overflow-y-auto"></div>
       </div>
       <div id="ap-gifs" class="hidden space-y-4">
-        <p class="text-xs text-slate-400">Users paste GIF URLs in chat. You can ban abusive GIF domains or clear a message.</p>
-        <div class="flex gap-2"><input type="text" id="gifDomainInput" placeholder="tenor.com or giphy.com" class="field flex-1 text-xs"><button onclick="addGifDomainBan()" class="btn-primary px-4 text-xs">Ban Domain</button></div>
-        <div id="gifBanList" class="space-y-1 max-h-48 overflow-y-auto"></div>
+        <p class="text-xs text-slate-400">Manage user-uploaded GIFs and domain bans.</p>
+        <div class="space-y-2">
+          <label class="text-[10px] font-bold text-slate-500 uppercase mono">Banned Domains</label>
+          <div class="flex gap-2"><input type="text" id="gifDomainInput" placeholder="tenor.com or giphy.com" class="field flex-1 text-xs"><button onclick="addGifDomainBan()" class="btn-primary px-4 text-xs">Ban</button></div>
+          <div id="gifBanList" class="space-y-1 max-h-32 overflow-y-auto border border-dark-700/50 rounded-lg p-1"></div>
+        </div>
+        <div class="space-y-2">
+          <label class="text-[10px] font-bold text-slate-500 uppercase mono">User Uploaded GIFs</label>
+          <div id="adminGifList" class="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto p-1 border border-dark-700/50 rounded-lg"></div>
+        </div>
+      </div>
+      <div id="ap-images" class="hidden space-y-4">
+        <p class="text-xs text-slate-400">Manage user-uploaded normal images.</p>
+        <div id="adminImageList" class="grid grid-cols-4 gap-2 max-h-[500px] overflow-y-auto p-1 border border-dark-700/50 rounded-lg"></div>
       </div>
       <div id="ap-bans" class="hidden space-y-4">
         <p class="text-xs text-slate-400">Ban a user by UID or email. Banned users cannot login.</p>
@@ -1078,8 +1109,43 @@ async function loadFullTgifDataset(){
   S.tgifLoading = false;
 }
 
-window.searchGifs = (q) => {
+window.toggleGifSettings = () => {
+  const el = $('gifSettings');
+  el.classList.toggle('hidden');
+  if(!el.classList.contains('hidden')){
+    $('giphyApiKey').value = localStorage.getItem('giphy_api_key') || '';
+  }
+};
+window.saveGiphyKey = () => {
+  const key = ($('giphyApiKey').value||'').trim();
+  localStorage.setItem('giphy_api_key', key);
+  alert('GIPHY API Key saved!');
+  $('gifSettings').classList.add('hidden');
+};
+
+window.searchGifs = async (q) => {
   q = (q||'').toLowerCase().trim();
+  const apiKey = localStorage.getItem('giphy_api_key');
+  
+  if(apiKey && q.length > 2){
+    try {
+      const resp = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(q)}&limit=20&rating=g`);
+      const data = await resp.json();
+      if(data.data){
+        S.gifFiltered = data.data.map(g => ({
+          url: g.images.fixed_height.url,
+          desc: g.title,
+          uses: 0
+        }));
+        S.gifPage = 0;
+        renderGifPage();
+        return;
+      }
+    } catch(e) {
+      console.error('Giphy search error', e);
+    }
+  }
+
   const localMatches = S.gifCache.filter(g => (g.desc||'').toLowerCase().includes(q));
   
   const tgifMatches = S.tgifData.length > 0 
@@ -1118,6 +1184,19 @@ async function registerGif(url, desc = ""){
       await setDoc(ref, { url, desc, uses: 1, addedBy: S.user.uid, createdAt: Date.now(), lastUsed: Date.now() });
     }
   }catch(e){ console.warn('registerGif', e); }
+}
+
+async function registerImage(url, desc = ""){
+  try{
+    const id = btoa(url).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+    const ref = doc(db, 'imageBank', id);
+    const snap = await getDoc(ref);
+    if(snap.exists()){
+      await updateDoc(ref, { uses: (snap.data().uses||0)+1, lastUsed: Date.now() });
+    } else {
+      await setDoc(ref, { url, desc, uses: 1, addedBy: S.user.uid, createdAt: Date.now(), lastUsed: Date.now() });
+    }
+  }catch(e){ console.warn('registerImage', e); }
 }
 
 async function loadGifBank(){
@@ -1182,7 +1261,61 @@ window.gifPage = (dir) => {
 };
 
 // ========== AUDIO CLIPS ==========
-let mediaRecorder = null, audioChunks = [];
+let mediaRecorder = null, audioChunks = [], visCtx = null, visRaf = null, visStartTs = 0;
+
+function startVisualizer(stream) {
+  const canvas = $('audioVisualizer');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const source = audioCtx.createMediaStreamSource(stream);
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 64;
+  source.connect(analyser);
+  
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  
+  visStartTs = Date.now();
+  
+  function draw() {
+    visRaf = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArray);
+    
+    // Auto-resize canvas internal buffer
+    if (canvas.width !== canvas.clientWidth) canvas.width = canvas.clientWidth;
+    if (canvas.height !== canvas.clientHeight) canvas.height = canvas.clientHeight;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const barWidth = (canvas.width / bufferLength) * 1.5;
+    let x = 0;
+    
+    for (let i = 0; i < bufferLength; i++) {
+      const barHeight = (dataArray[i] / 255) * canvas.height * 0.8;
+      ctx.fillStyle = i % 2 === 0 ? '#0AC18E' : '#089d74';
+      // Rounded bars
+      ctx.beginPath();
+      ctx.roundRect(x, (canvas.height - barHeight) / 2, barWidth, barHeight, 2);
+      ctx.fill();
+      x += barWidth + 2;
+    }
+    
+    const elapsed = Math.floor((Date.now() - visStartTs) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    $('audioRecStatus').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+  
+  draw();
+  visCtx = audioCtx;
+}
+
+function stopVisualizer() {
+  if (visRaf) cancelAnimationFrame(visRaf);
+  if (visCtx) visCtx.close();
+  visCtx = null;
+}
+
 window.toggleAudioRecord = async () => {
   if(mediaRecorder && mediaRecorder.state === 'recording'){ stopAudioRecord(false); return; }
   try{
@@ -1191,6 +1324,7 @@ window.toggleAudioRecord = async () => {
     audioChunks = [];
     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
     mediaRecorder.onstop = async () => {
+      stopVisualizer();
       stream.getTracks().forEach(t => t.stop());
       if(S._cancelAudio){ S._cancelAudio=false; return; }
       const blob = new Blob(audioChunks, { type: 'audio/webm' });
@@ -1201,11 +1335,12 @@ window.toggleAudioRecord = async () => {
       }catch(err){ alert('Audio upload failed: '+err.message); }
     };
     mediaRecorder.start();
+    startVisualizer(stream);
     $('audioPreview').classList.remove('hidden');
-    $('audioRecStatus').textContent = 'Recording… click Send when done';
     $('audioClipBtn').classList.add('text-red-400','rec-pulse');
   }catch(err){ alert('Microphone access denied'); }
 };
+
 window.stopAudioRecord = (cancel) => {
   S._cancelAudio = cancel;
   if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
@@ -1434,8 +1569,9 @@ window.showAudioDevices = async (e, type) => {
     const storedId = localStorage.getItem(type === 'input' ? 'havoc_mic_id' : 'havoc_speaker_id');
 
     menu.innerHTML = `
-      <div class="px-2 py-1.5 text-[9px] text-slate-500 uppercase font-bold mono border-b border-dark-700">
-        Select ${type === 'input' ? 'Microphone' : 'Output Device'}
+      <div class="px-2 py-1.5 text-[9px] text-slate-500 uppercase font-bold mono border-b border-dark-700 flex justify-between items-center">
+        <span>Select ${type === 'input' ? 'Microphone' : 'Output Device'}</span>
+        ${type === 'output' ? '<button onclick="testAudioOutput()" class="text-bch hover:text-white"><i class="fa-solid fa-play"></i> Test</button>' : ''}
       </div>
       <div class="py-1 max-h-60 overflow-y-auto min-w-[160px]">
         <button onclick="setAudioDevice('${type}', '')" class="w-full flex items-center justify-between px-2 py-1.5 hover:bg-bch/20 text-xs text-slate-300 group">
@@ -1467,6 +1603,15 @@ window.setAudioDevice = async (type, id) => {
       if (typeof a.setSinkId === 'function') a.setSinkId(id);
     });
   }
+};
+
+window.testAudioOutput = async () => {
+  const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3');
+  const speakerId = localStorage.getItem('havoc_speaker_id');
+  if(speakerId && typeof audio.setSinkId === 'function') {
+    try { await audio.setSinkId(speakerId); } catch(e) { console.error(e); }
+  }
+  audio.play();
 };
 
 window.createServer = async () => {
@@ -1549,33 +1694,30 @@ async function loadChannels(serverId){
 function renderChannels(){
   const textList = $('channelsList'), voiceList = $('voiceList');
   textList.innerHTML = ''; voiceList.innerHTML = '';
-  S_channels.filter(c => c.type !== 'voice').forEach(c => {
-    const btn = document.createElement('button');
-    btn.className = `w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-xs text-slate-400 hover:bg-dark-800 hover:text-white transition ${S.channel===c.id&&S.channelType==='text'?'bg-dark-800 text-bch-bright border-l-2 border-bch':''}`;
-    btn.innerHTML = `<span class="text-slate-600">#</span><span class="truncate">${esc(c.name||c.id)}</span>`;
-    btn.onclick = () => switchChannel(c);
-    textList.appendChild(btn);
-  });
-  S_channels.filter(c => c.type === 'voice').forEach(c => {
-    const wrap = document.createElement('div');
-    const btn = document.createElement('button');
-    btn.className = `w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-xs text-slate-400 hover:bg-dark-800 hover:text-white transition ${S.channel===c.id&&S.channelType==='voice'?'bg-dark-800 text-bch-bright border-l-2 border-bch':''}`;
-    btn.innerHTML = `<i class="fa-solid fa-volume-high text-[10px] text-slate-600"></i><span class="truncate">${esc(c.name||c.id)}</span>`;
-    btn.onclick = () => joinVoice(c);
-    wrap.appendChild(btn);
-    const usersDiv = document.createElement('div');
-    usersDiv.id = `voice-users-${c.id}`;
-    usersDiv.className = 'space-y-0.5';
-    if(S.channel === c.id && S.channelType === 'voice'){
-      Object.values(S.voiceUsers).forEach(u => {
-        const row = document.createElement('div');
-        row.className = 'voice-user flex items-center gap-1.5';
-        row.innerHTML = `<img src="${esc(u.avatar)}" class="w-4 h-4 rounded-full"><span class="truncate">${esc(u.handle)}</span>`;
-        usersDiv.appendChild(row);
-      });
-    }
-    wrap.appendChild(usersDiv);
-    voiceList.appendChild(wrap);
+  // ... rest of logic
+  renderVoiceArea(); // Add this
+}
+
+function renderVoiceArea(){
+  const container = $('voicePeers');
+  if(!container || $('voiceArea').classList.contains('hidden')) return;
+  container.innerHTML = '';
+  
+  Object.keys(S.voiceUsers).forEach(uid => {
+    const u = S.voiceUsers[uid];
+    const div = document.createElement('div');
+    div.dataset.vpUser = uid;
+    div.className = 'flex flex-col items-center gap-2 group';
+    div.innerHTML = `
+      <div class="relative">
+        <div class="avatar-ring w-20 h-20 rounded-full ring-offset-4 ring-offset-dark-900 transition-all duration-300 flex items-center justify-center bg-dark-800 border-2 border-dark-700 overflow-hidden">
+          <img src="${esc(u.avatar||userAvatar(uid))}" class="w-full h-full object-cover">
+        </div>
+        ${uid === S.user.uid && S.micMuted ? '<div class="absolute -bottom-1 -right-1 bg-red-500 w-6 h-6 rounded-full flex items-center justify-center border-4 border-dark-900 text-[10px] text-white"><i class="fa-solid fa-microphone-slash"></i></div>' : ''}
+      </div>
+      <span class="text-xs font-bold text-slate-300 truncate w-24 text-center">${esc(u.handle||'User')}</span>
+    `;
+    container.appendChild(div);
   });
 }
 function switchChannel(c){
@@ -1952,8 +2094,17 @@ window.sendMsg = async e => {
     input.value = '';
     const dmId = [S.user.uid, S.dmTarget.uid].sort().join('_');
     let imageUrl = null;
-    if(S.pendingImageUrl){ imageUrl = S.pendingImageUrl; if(imageUrl.match(/\.gif(\?|$)/i) || imageUrl.includes('giphy') || imageUrl.includes('tenor')) await registerGif(imageUrl); clearImagePreview(); }
-    else if(S.pendingImage){ imageUrl = await uploadImage(S.pendingImage, `dms/${dmId}/${Date.now()}`); clearImagePreview(); }
+    if(S.pendingImageUrl){ 
+      imageUrl = S.pendingImageUrl; 
+      if(imageUrl.match(/\.gif(\?|$)/i) || imageUrl.includes('giphy') || imageUrl.includes('tenor')) await registerGif(imageUrl); 
+      else await registerImage(imageUrl);
+      clearImagePreview(); 
+    }
+    else if(S.pendingImage){ 
+      imageUrl = await uploadImage(S.pendingImage, `dms/${dmId}/${Date.now()}`); 
+      await registerImage(imageUrl);
+      clearImagePreview(); 
+    }
     await addDoc(collection(db,'dms',dmId,'messages'), { from:S.user.uid, content, imageUrl, ts:Date.now() });
     loadDms(S.dmTarget.uid);
     return;
@@ -1963,8 +2114,17 @@ window.sendMsg = async e => {
   input.value = '';
   let imageUrl = null;
   try{
-    if(S.pendingImageUrl){ imageUrl = S.pendingImageUrl; if(imageUrl.match(/\.gif(\?|$)/i) || imageUrl.includes('giphy') || imageUrl.includes('tenor')) await registerGif(imageUrl); clearImagePreview(); }
-    else if(S.pendingImage){ imageUrl = await uploadImage(S.pendingImage, `messages/${S.server.id}/${S.channel}/${Date.now()}`); clearImagePreview(); }
+    if(S.pendingImageUrl){ 
+      imageUrl = S.pendingImageUrl; 
+      if(imageUrl.match(/\.gif(\?|$)/i) || imageUrl.includes('giphy') || imageUrl.includes('tenor')) await registerGif(imageUrl); 
+      else await registerImage(imageUrl);
+      clearImagePreview(); 
+    }
+    else if(S.pendingImage){ 
+      imageUrl = await uploadImage(S.pendingImage, `messages/${S.server.id}/${S.channel}/${Date.now()}`); 
+      await registerImage(imageUrl);
+      clearImagePreview(); 
+    }
     await actuallySendMessage(content, imageUrl, null);
   }catch(err){ alert('Send failed: '+err.message); }
 };
@@ -2268,6 +2428,50 @@ async function loadDms(targetUid){
 }
 
 // ========== VOICE + VIDEO ==========
+const volMonitors = new Map();
+function stopVolumeMonitor(id){
+  if(volMonitors.has(id)){
+    volMonitors.get(id).stop();
+    volMonitors.delete(id);
+  }
+}
+
+function startVolumeMonitor(id, stream, type='sidebar'){
+  stopVolumeMonitor(id);
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const source = audioCtx.createMediaStreamSource(stream);
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
+  source.connect(analyser);
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  
+  let raf = null;
+  let wasSpeaking = false;
+  function check() {
+    analyser.getByteFrequencyData(dataArray);
+    let sum = 0;
+    for(let i=0; i<bufferLength; i++) sum += dataArray[i];
+    const isSpeaking = (sum / bufferLength) > 12;
+    
+    if(isSpeaking !== wasSpeaking){
+      wasSpeaking = isSpeaking;
+      // Update UI elements
+      const sidebarEl = document.querySelector(`[data-vc-user="${id}"]`);
+      if(sidebarEl) sidebarEl.classList.toggle('speaking', isSpeaking);
+      
+      const tileEl = document.getElementById(`tile-${id === S.user.uid ? 'local' : id}`);
+      if(tileEl) tileEl.classList.toggle('speaking', isSpeaking);
+
+      const peerEl = document.querySelector(`[data-vp-user="${id}"]`);
+      if(peerEl) peerEl.querySelector('.avatar-ring').classList.toggle('ring-bch', isSpeaking);
+    }
+    raf = requestAnimationFrame(check);
+  }
+  check();
+  volMonitors.set(id, { stop: () => { cancelAnimationFrame(raf); audioCtx.close(); } });
+}
+
 async function joinVoice(c){
   if(!S.user || !S.server) return;
   leaveVoice();
@@ -2292,6 +2496,7 @@ async function joinVoice(c){
     };
     S.localStream = await navigator.mediaDevices.getUserMedia(constraints);
     S.localStream.getAudioTracks().forEach(t => t.enabled = !S.micMuted && !S.deafened);
+    startVolumeMonitor(S.user.uid, S.localStream);
     $('voiceStatus').textContent = 'Connected — waiting for peers';
     const roomKey = `havoc/voice/${S.server.id}/${c.id}`;
     const room = gun.get(roomKey);
@@ -2347,6 +2552,7 @@ async function createPeer(remoteUid, meta, initiator){
       document.body.appendChild(audio);
     }
     audio.srcObject = stream;
+    startVolumeMonitor(remoteUid, stream);
     if(stream.getVideoTracks().length > 0){
       $('videoGrid').classList.remove('hidden');
       let tile = document.getElementById(`tile-${remoteUid}`);
@@ -2388,6 +2594,7 @@ window.toggleCamera = async () => {
 };
 window.leaveVoice = () => {
   if(window._voiceKeep) clearInterval(window._voiceKeep);
+  volMonitors.forEach((m, id) => stopVolumeMonitor(id));
   Object.values(S.peers).forEach(pc => pc.close());
   S.peers = {};
   if(S.localStream){ S.localStream.getTracks().forEach(t => t.stop()); S.localStream = null; }
@@ -2524,7 +2731,7 @@ window.deleteServer = async () => {
   await loadMyServers();
 };
 window.adminTab = tab => {
-  ['servers','users','blacklist','gifs','bans'].forEach(t => {
+  ['servers','users','blacklist','gifs','images','bans'].forEach(t => {
     $(`ap-${t}`)?.classList.add('hidden');
     $(`at-${t}`)?.classList.remove('tab-active'); $(`at-${t}`)?.classList.add('tab-inactive');
   });
@@ -2533,9 +2740,55 @@ window.adminTab = tab => {
   if(tab === 'servers') loadAdminServers();
   if(tab === 'users') loadAdminUsers();
   if(tab === 'blacklist') loadBlacklist();
-  if(tab === 'gifs') loadGifBans();
+  if(tab === 'gifs') { loadGifBans(); loadAdminGifs(); }
+  if(tab === 'images') loadAdminImages();
   if(tab === 'bans') loadBans();
 };
+
+window.loadAdminImages = async () => {
+  const snap = await getDocs(collection(db,'imageBank'));
+  const el = $('adminImageList'); el.innerHTML='';
+  if(snap.empty){ el.innerHTML='<p class="text-[10px] text-slate-500 col-span-4 py-4 text-center">No images in bank.</p>'; return; }
+  snap.forEach(d => {
+    const g = d.data();
+    const div = document.createElement('div');
+    div.className = 'relative group aspect-square rounded overflow-hidden border border-dark-700 bg-dark-950';
+    div.innerHTML = `
+      <img src="${esc(g.url)}" class="w-full h-full object-cover" loading="lazy">
+      <button onclick="adminDeleteImage('${esc(d.id)}')" class="absolute top-1 right-1 bg-black/70 text-red-500 w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash text-[10px]"></i></button>
+    `;
+    el.appendChild(div);
+  });
+};
+
+window.adminDeleteImage = async id => {
+  if(!confirm('Delete this image?')) return;
+  await deleteDoc(doc(db,'imageBank',id));
+  loadAdminImages();
+};
+
+window.loadAdminGifs = async () => {
+  const snap = await getDocs(collection(db,'gifBank'));
+  const el = $('adminGifList'); el.innerHTML='';
+  if(snap.empty){ el.innerHTML='<p class="text-[10px] text-slate-500 col-span-4 py-4 text-center">No GIFs in bank.</p>'; return; }
+  snap.forEach(d => {
+    const g = d.data();
+    const div = document.createElement('div');
+    div.className = 'relative group aspect-square rounded overflow-hidden border border-dark-700 bg-dark-950';
+    div.innerHTML = `
+      <img src="${esc(g.url)}" class="w-full h-full object-cover" loading="lazy">
+      <button onclick="adminDeleteGif('${esc(d.id)}')" class="absolute top-1 right-1 bg-black/70 text-red-500 w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash text-[10px]"></i></button>
+    `;
+    el.appendChild(div);
+  });
+};
+
+window.adminDeleteGif = async id => {
+  if(!confirm('Delete this GIF?')) return;
+  await deleteDoc(doc(db,'gifBank',id));
+  loadAdminGifs();
+};
+
 window.addGifDomainBan = async () => {
   let d = ($('gifDomainInput').value||'').trim().toLowerCase().replace(/^https?:\/\//,'').split('/')[0];
   if(!d) return;
@@ -2565,9 +2818,10 @@ window.loadBans = async () => {
   const el = $('banList'); el.innerHTML='';
   if(snap.empty){ el.innerHTML='<p class="text-xs text-slate-500 mono">No banned users.</p>'; return; }
   snap.forEach(d=>{
+    const b = d.data();
     const row=document.createElement('div');
     row.className='flex items-center gap-2 bg-dark-950 border border-dark-700 rounded-lg px-3 py-2';
-    row.innerHTML=`<span class="mono text-red-400 text-xs flex-1">${esc(d.id)}</span><button onclick="unbanUser('${esc(d.id)}')" class="text-bch text-xs">Unban</button>`;
+    row.innerHTML=`<div class="flex-1 min-w-0"><div class="mono text-red-400 text-xs truncate">${esc(d.id)}</div><div class="text-[9px] text-slate-500 mono">${b.info||''}</div></div><button onclick="unbanUser('${esc(d.id)}')" class="text-bch text-xs">Unban</button>`;
     el.appendChild(row);
   });
 };
@@ -2591,9 +2845,38 @@ window.loadAdminUsers = async () => {
     const u = d.data();
     const row = document.createElement('div');
     row.className = 'flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-3 py-2';
-    row.innerHTML = `<img src="${esc(u.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full border border-dark-700"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-white">${esc(u.handle||'User')} <span class="text-slate-500 font-normal">${esc(u.email||'')}</span></div></div>${u.email===ADMIN_EMAIL?'<span class="badge-admin">ADMIN</span>':''}`;
+    row.innerHTML = `<img src="${esc(u.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full border border-dark-700"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-white">${esc(u.handle||'User')} <span class="text-slate-500 font-normal">${esc(u.email||'')}</span></div><div class="text-[9px] text-slate-500 mono">${esc(d.id)}</div></div>
+    ${u.email===ADMIN_EMAIL?'<span class="badge-admin">ADMIN</span>':`
+      <div class="flex gap-1">
+        <button onclick="adminKickUser('${esc(d.id)}','${esc(u.handle)}')" class="text-[10px] text-amber-500 border border-amber-500/30 rounded px-1.5 py-0.5 hover:bg-amber-500/10">Kick</button>
+        <button onclick="adminBanUser('${esc(d.id)}','${esc(u.email||u.handle)}')" class="text-[10px] text-red-500 border border-red-500/30 rounded px-1.5 py-0.5 hover:bg-red-500/10">Ban</button>
+      </div>
+    `}`;
     el.appendChild(row);
   });
+};
+
+window.adminKickUser = async (uid, handle) => {
+  if(!confirm(`Kick ${handle} from all servers? (Removes from current if applicable)`)) return;
+  // In this simplified model, kick will just remove them from the current server if we are in one.
+  // Or we can just treat it as a temporary ban.
+  if(S.server){
+    await deleteDoc(doc(db,'servers',S.server.id,'members',uid));
+    alert(`${handle} kicked from current server.`);
+  } else {
+    alert('Select a server first to kick from.');
+  }
+};
+
+window.adminBanUser = async (uid, info) => {
+  if(!confirm(`Ban ${info}?`)) return;
+  await setDoc(doc(db,'bannedUsers', uid), { uid, info, bannedBy:S.user.uid, bannedAt:Date.now() });
+  // Also ban the info (email/handle) if it's an email
+  if(info.includes('@')){
+    await setDoc(doc(db,'bannedUsers', info), { uid, info, bannedBy:S.user.uid, bannedAt:Date.now() });
+  }
+  alert(`${info} has been globally banned.`);
+  loadAdminUsers();
 };
 window.loadBlacklist = async () => {
   const snap = await getDocs(collection(db,'blacklistedDomains'));
