@@ -403,7 +403,7 @@
         <a href="https://developers.giphy.com/dashboard/" target="_blank" class="text-[10px] bg-bch/20 text-bch-bright px-2 py-1 rounded hover:bg-bch/40 transition-colors mono font-bold border border-bch/30">Create Key</a>
       </div>
       <div class="flex gap-2">
-        <input type="text" id="giphyApiKey" placeholder="ZtqHPx1Hf3dGH4oTV7rCHbyqyJB4r9Lg" class="field flex-1 text-xs mono py-2" spellcheck="false">
+        <input type="text" id="giphyApiKey" placeholder="Enter your key here please" class="field flex-1 text-xs mono py-2" spellcheck="false">
         <div class="flex gap-1">
           <button id="saveGiphyBtn" onclick="saveGiphyKey()" class="btn-primary px-4 text-xs font-bold shrink-0">Save</button>
           <button id="editGiphyBtn" onclick="editGiphyKey()" class="hidden bg-dark-700 hover:bg-dark-600 text-slate-300 border border-dark-600 px-4 text-xs font-bold shrink-0 rounded">Edit</button>
@@ -419,7 +419,18 @@
         <input type="url" id="gifUrlInput" placeholder="Paste GIF URL... https://... .gif" class="field flex-1 text-xs">
         <button onclick="useGifUrl()" class="btn-primary px-3 text-xs shrink-0">Add</button>
       </div>
-      <p class="text-[10px] text-slate-500">Search 100k+ TGIF dataset descriptions or add your own</p>
+      <div class="flex items-center justify-between">
+        <p id="giphyPrompt" class="text-[10px] text-slate-500">Enter GIPHY API KEY FOR 120k+ gifs.</p>
+        <div class="flex items-center gap-1.5">
+          <label class="text-[9px] text-slate-500 mono">Per Page:</label>
+          <select id="gifPerPage" onchange="changeGifPerPage(this.value)" class="bg-dark-950 border border-dark-700 text-[9px] text-slate-300 rounded px-1 py-0.5 outline-none">
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="16">16</option>
+            <option value="32">32</option>
+          </select>
+        </div>
+      </div>
     </div>
     <div class="flex-1 overflow-y-auto p-3">
       <div class="text-[10px] font-bold text-slate-500 uppercase mono mb-2">Popular GIFs</div>
@@ -1066,6 +1077,7 @@ window.triggerImageUpload = () => {
 };
 window.clearImagePreview = () => { S.pendingImageUrl=null; S.pendingImage=null; $('imgPreview').classList.add('hidden'); };
 S.gifPage = 0;
+S.gifPerPage = 4;
 S.gifCache = [];
 S.gifFiltered = [];
 S.tgifData = [];
@@ -1152,9 +1164,12 @@ window.searchGifs = async (q) => {
   
   if(apiKey && q.length > 2){
     try {
-      const resp = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(q)}&limit=20&rating=g`);
+      const resp = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(q)}&limit=50&rating=g`);
       const data = await resp.json();
-      if(data.data){
+      if(data.data && data.data.length > 0){
+        // Success! Hide the prompt
+        if($('giphyPrompt')) $('giphyPrompt').classList.add('hidden');
+        
         S.gifFiltered = data.data.map(g => ({
           url: g.images.fixed_height.url,
           desc: g.title,
@@ -1168,6 +1183,9 @@ window.searchGifs = async (q) => {
       console.error('Giphy search error', e);
     }
   }
+
+  // If we reach here, either no API key or API failed/no results
+  if($('giphyPrompt') && !apiKey) $('giphyPrompt').classList.remove('hidden');
 
   const localMatches = S.gifCache.filter(g => (g.desc||'').toLowerCase().includes(q));
   
@@ -1242,12 +1260,22 @@ async function loadGifBank(){
   }
 }
 
+window.changeGifPerPage = (val) => {
+  S.gifPerPage = parseInt(val);
+  S.gifPage = 0;
+  renderGifPage();
+};
+
 function renderGifPage(){
-  const per = 4;
+  const per = S.gifPerPage || 4;
   const start = S.gifPage * per;
   const slice = S.gifFiltered.slice(start, start + per);
   const grid = $('gifGrid');
   grid.innerHTML = '';
+  
+  // Update grid columns based on per page for better layout
+  if(per > 4) grid.className = 'grid grid-cols-3 gap-2';
+  else grid.className = 'grid grid-cols-2 gap-3';
   
   if(!slice.length){
     grid.innerHTML = '<p class="text-xs text-slate-500 col-span-2 text-center py-8">No matching GIFs found</p>';
@@ -1595,8 +1623,9 @@ document.addEventListener('click', e => { if(!e.target.closest('#ctxMenu') && !e
 
 window.showAudioDevices = async (e, type) => {
   e.preventDefault();
+  hideCtx();
   const menu = $('ctxMenu');
-  menu.innerHTML = `<div class="p-2 text-[10px] text-slate-500 mono animate-pulse">Loading devices...</div>`;
+  menu.innerHTML = `<div class="p-2 text-[10px] text-slate-500 mono animate-pulse">Scanning ${type} devices...</div>`;
   menu.classList.remove('hidden');
   
   const rect = e.currentTarget.getBoundingClientRect();
@@ -1604,57 +1633,132 @@ window.showAudioDevices = async (e, type) => {
   menu.style.top = `${rect.top - 5}px`;
   menu.style.transform = `translateY(-100%)`;
 
+  console.info(`[AudioDebug] Opening ${type} device selector.`);
+
   try {
+    // Request permission if not granted
     await navigator.mediaDevices.getUserMedia({ audio: true });
     const devices = await navigator.mediaDevices.enumerateDevices();
     const kind = type === 'input' ? 'audioinput' : 'audiooutput';
     const filtered = devices.filter(d => d.kind === kind);
     const storedId = localStorage.getItem(type === 'input' ? 'havoc_mic_id' : 'havoc_speaker_id');
 
+    console.log(`[AudioDebug] Found ${filtered.length} ${kind} devices.`);
+
     menu.innerHTML = `
-      <div class="px-2 py-1.5 text-[9px] text-slate-500 uppercase font-bold mono border-b border-dark-700 flex justify-between items-center">
-        <span>Select ${type === 'input' ? 'Microphone' : 'Output Device'}</span>
-        ${type === 'output' ? '<button onclick="testAudioOutput()" class="text-bch hover:text-white"><i class="fa-solid fa-play"></i> Test</button>' : ''}
+      <div class="px-3 py-2 text-[10px] text-slate-400 uppercase font-bold mono border-b border-dark-700 flex justify-between items-center bg-dark-950 rounded-t-lg">
+        <span>Select ${type === 'input' ? 'Mic' : 'Output'}</span>
+        <button onclick="hideCtx()" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="py-1 max-h-60 overflow-y-auto min-w-[160px]">
-        <button onclick="setAudioDevice('${type}', '')" class="w-full flex items-center justify-between px-2 py-1.5 hover:bg-bch/20 text-xs text-slate-300 group">
-          <span class="truncate">System Default</span>
-          ${!storedId ? '<i class="fa-solid fa-check text-bch text-[10px]"></i>' : ''}
-        </button>
-        ${filtered.map(d => `
-          <button onclick="setAudioDevice('${type}', '${esc(d.deviceId)}')" class="w-full flex items-center justify-between px-2 py-1.5 hover:bg-bch/20 text-xs text-slate-300 group">
-            <span class="truncate">${esc(d.label || 'Unknown Device')}</span>
-            ${storedId === d.deviceId ? '<i class="fa-solid fa-check text-bch text-[10px]"></i>' : ''}
-          </button>
-        `).join('')}
+      <div class="p-3 bg-dark-900 rounded-b-lg space-y-3 min-w-[220px]">
+        <select id="audioDeviceSelect" class="bg-dark-950 border border-dark-700 text-xs text-slate-300 rounded px-2 py-2 outline-none w-full appearance-none cursor-pointer hover:border-bch/50 transition-colors">
+          <option value="" ${!storedId ? 'selected' : ''}>System Default</option>
+          ${filtered.map(d => `
+            <option value="${esc(d.deviceId)}" ${storedId === d.deviceId ? 'selected' : ''}>
+              ${esc(d.label || 'Unknown Device')}
+            </option>
+          `).join('')}
+        </select>
+        <div class="flex gap-2">
+          <button onclick="saveAudioDevice('${type}')" class="flex-1 py-2 bg-bch hover:bg-bch-bright text-white text-[10px] font-extrabold rounded-md mono shadow-lg shadow-bch/10 transition-all active:scale-95">SAVE</button>
+          <button onclick="testAudioDevice('${type}')" class="flex-1 py-2 bg-dark-800 hover:bg-dark-700 text-slate-300 text-[10px] font-extrabold rounded-md mono border border-dark-700 transition-all active:scale-95">TEST</button>
+        </div>
+        <div id="audioDebugLog" class="text-[8px] text-slate-500 mono mt-2 hidden p-1.5 bg-black/30 rounded border border-dark-700/50"></div>
       </div>
     `;
   } catch (err) {
-    menu.innerHTML = `<div class="p-2 text-[10px] text-red-400">Permission denied</div>`;
+    console.error(`[AudioDebug] Enumeration failed:`, err);
+    menu.innerHTML = `
+      <div class="p-3 bg-dark-900 rounded-lg border border-red-500/30 w-56">
+        <div class="text-red-400 text-[10px] font-bold mono mb-1">ACCESS ERROR</div>
+        <div class="text-slate-400 text-[9px] mono mb-2">${esc(err.message)}</div>
+        <button onclick="hideCtx()" class="w-full py-1.5 bg-dark-800 text-slate-300 text-[9px] rounded mono border border-dark-700">Dismiss</button>
+      </div>
+    `;
   }
 };
 
-window.setAudioDevice = async (type, id) => {
-  localStorage.setItem(type === 'input' ? 'havoc_mic_id' : 'havoc_speaker_id', id);
-  hideCtx();
-  if (type === 'input') {
-    if (S.localStream) {
-      alert('Microphone preference saved. Please rejoin the voice channel to switch devices.');
+window.saveAudioDevice = async (type) => {
+  const id = $('audioDeviceSelect').value;
+  const log = $('audioDebugLog');
+  log.classList.remove('hidden');
+  log.textContent = `Saving ${type}...`;
+  
+  try {
+    localStorage.setItem(type === 'input' ? 'havoc_mic_id' : 'havoc_speaker_id', id);
+    console.info(`[AudioDebug] Saved ${type} ID: ${id || 'Default'}`);
+    
+    if (type === 'input') {
+      if (S.localStream) {
+        log.textContent = `✓ Preference saved. Rejoin voice.`;
+        console.warn(`[AudioDebug] Mic saved, but stream active. User needs to rejoin.`);
+      } else {
+        log.textContent = `✓ Mic preference saved.`;
+      }
+    } else {
+      let count = 0;
+      document.querySelectorAll('audio[data-remote]').forEach(a => {
+        if (typeof a.setSinkId === 'function') {
+          a.setSinkId(id).catch(e => console.error(`[AudioDebug] setSinkId error on element:`, e));
+          count++;
+        }
+      });
+      log.textContent = `✓ Output saved. Applied to ${count} streams.`;
+      console.log(`[AudioDebug] SinkId applied to ${count} audio elements.`);
+    }
+    
+    setTimeout(() => hideCtx(), 1200);
+  } catch(e) {
+    log.textContent = `!! Error: ${e.message}`;
+    console.error(`[AudioDebug] Save error:`, e);
+  }
+};
+
+window.testAudioDevice = async (type) => {
+  const log = $('audioDebugLog');
+  log.classList.remove('hidden');
+  log.textContent = `Testing ${type}...`;
+  console.log(`[AudioDebug] Initiating ${type} test.`);
+
+  if(type === 'output') {
+    try {
+      await window.testAudioOutput();
+      log.textContent = `✓ Playing test tone...`;
+    } catch(e) {
+      log.textContent = `!! Test failed: ${e.message}`;
+      console.error(`[AudioDebug] Output test failed:`, e);
     }
   } else {
-    document.querySelectorAll('audio[data-remote]').forEach(a => {
-      if (typeof a.setSinkId === 'function') a.setSinkId(id);
-    });
+    try {
+      const id = $('audioDeviceSelect').value;
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: id ? { deviceId: { exact: id } } : true 
+      });
+      log.textContent = `✓ Mic access OK. (Audible test N/A)`;
+      alert('Microphone access successful! System can hear you.');
+      stream.getTracks().forEach(t => t.stop());
+      console.info(`[AudioDebug] Mic test stream opened and closed successfully.`);
+    } catch(e) {
+      log.textContent = `!! Mic error: ${e.message}`;
+      console.error(`[AudioDebug] Mic access failed:`, e);
+      alert('Microphone test failed: ' + e.message);
+    }
   }
 };
 
 window.testAudioOutput = async () => {
+  console.info(`[AudioDebug] Playing output test tone.`);
   const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3');
   const speakerId = localStorage.getItem('havoc_speaker_id');
   if(speakerId && typeof audio.setSinkId === 'function') {
-    try { await audio.setSinkId(speakerId); } catch(e) { console.error(e); }
+    try { 
+      await audio.setSinkId(speakerId); 
+      console.log(`[AudioDebug] Test tone SinkId set to: ${speakerId}`);
+    } catch(e) { 
+      console.warn(`[AudioDebug] Could not set SinkId for test tone:`, e); 
+    }
   }
-  audio.play();
+  audio.play().catch(e => console.error(`[AudioDebug] Playback failed:`, e));
 };
 
 window.createServer = async () => {
