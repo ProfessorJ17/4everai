@@ -77,6 +77,11 @@
     #upNote:focus{border-color:#0AC18E}
 
     .member-status-dot{width:10px;height:10px;border-radius:50%;border:2px solid #090b0e;position:absolute;bottom:0;right:0}
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #323c52; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #0AC18E; }
   </style>
 </head>
 <body class="h-full flex flex-col overflow-hidden text-sm">
@@ -230,18 +235,26 @@
           <img id="imgPreviewSrc" class="h-16 rounded-lg border border-dark-600 object-cover">
           <button onclick="clearImagePreview()" class="text-red-400 text-xs"><i class="fa-solid fa-xmark"></i> Remove</button>
         </div>
-        <div id="audioPreview" class="hidden mt-2 flex items-center gap-2 text-xs text-bch bg-dark-950/30 p-1.5 rounded-lg border border-dark-700/50">
-          <div class="flex items-center gap-2 flex-1">
-            <div class="relative flex items-center justify-center">
-              <div class="w-2 h-2 rounded-full bg-red-500 animate-ping absolute"></div>
-              <div class="w-2 h-2 rounded-full bg-red-500 relative"></div>
+        <div id="audioPreview" class="hidden mt-2 flex items-center gap-3 text-xs text-bch bg-dark-950/40 p-2 rounded-xl border border-dark-700/50 backdrop-blur-sm">
+          <div class="flex items-center gap-3 flex-1 min-w-0">
+            <div id="recIndicator" class="relative flex items-center justify-center shrink-0">
+              <div class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping absolute"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-red-500 relative"></div>
             </div>
-            <canvas id="audioVisualizer" class="h-6 w-32 bg-dark-950/50 rounded border border-dark-700"></canvas>
-            <span id="audioRecStatus" class="mono text-[10px]">0:00</span>
+            <div id="playBtnContainer" class="hidden shrink-0">
+              <button onclick="playRecordedAudio()" class="w-8 h-8 rounded-full bg-bch/20 text-bch hover:bg-bch/30 flex items-center justify-center transition-all"><i id="audioPlayIcon" class="fa-solid fa-play text-[10px]"></i></button>
+            </div>
+            <div class="flex-1 min-w-0">
+              <canvas id="audioVisualizer" class="h-8 w-full bg-dark-950/30 rounded-lg border border-dark-700/50"></canvas>
+            </div>
+            <div class="shrink-0 flex flex-col items-end">
+              <span id="audioRecStatus" class="mono text-[10px] font-bold text-slate-300">0:00 / 0:30</span>
+            </div>
           </div>
-          <div class="flex gap-1.5">
-            <button onclick="stopAudioRecord(true)" class="text-slate-500 hover:text-red-400 px-2 py-1">Cancel</button>
-            <button onclick="stopAudioRecord(false)" class="btn-primary px-3 py-1 text-[10px]">Send Clip</button>
+          <div class="flex gap-2 shrink-0">
+            <button id="cancelAudioBtn" onclick="stopAudioRecord(true)" class="text-slate-400 hover:text-red-400 px-2 py-1.5 transition-colors font-bold mono uppercase text-[9px]">Cancel</button>
+            <button id="stopAudioBtn" onclick="stopAudioRecord(false)" class="btn-primary px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider">Stop</button>
+            <button id="sendAudioBtn" onclick="sendRecordedAudio()" class="hidden btn-primary px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider shadow-lg shadow-bch/20">Send</button>
           </div>
         </div>
       </div>
@@ -497,7 +510,7 @@
 
 <!-- PROFILE – Seed + URL only -->
 <div id="modal-profile" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-  <div class="bg-dark-900 border border-dark-700 w-full max-w-sm rounded-xl p-6 relative">
+  <div class="bg-dark-900 border border-dark-700 w-full max-w-sm rounded-xl p-6 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
     <button onclick="closeModal('profile')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     <h2 class="font-bold text-white mb-4"><i class="fa-solid fa-user-pen text-bch"></i> Edit Profile</h2>
     <div class="flex items-center gap-4 mb-4">
@@ -506,6 +519,7 @@
     <div class="flex gap-1 mb-3 text-[10px] mono">
       <button onclick="avatarMethod('seed')" id="am-seed" class="px-2 py-1 rounded bg-bch/20 text-bch">Seed</button>
       <button onclick="avatarMethod('url')" id="am-url" class="px-2 py-1 rounded bg-dark-800 text-slate-400">URL</button>
+      <button onclick="openGifPicker('avatar')" id="am-gif" class="px-2 py-1 rounded bg-dark-800 text-slate-400 hover:text-bch">GIF</button>
     </div>
     <div id="avatarSeedBox">
       <label class="field-label">Avatar Seed</label>
@@ -513,9 +527,9 @@
       <p class="text-[10px] text-slate-500 mb-2">Uses DiceBear Bottts style</p>
     </div>
     <div id="avatarUrlBox" class="hidden">
-      <label class="field-label">Image URL</label>
+      <label class="field-label">Image/GIF URL</label>
       <input type="url" id="profileAvatarUrl" placeholder="https://i.imgur.com/..." oninput="previewFromUrl(this.value)" class="field text-xs mb-3">
-      <p class="text-[10px] text-slate-500 mb-2">Paste any direct image link</p>
+      <p class="text-[10px] text-slate-500 mb-2">Paste any direct image/GIF link</p>
     </div>
     <div class="space-y-3">
       <div><label class="field-label">Handle</label><input type="text" id="profileHandle" class="field"></div>
@@ -968,9 +982,13 @@ window.promptNewDM = () => {
 // ========== AVATAR (Seed + URL only) ==========
 window.avatarMethod = (m) => {
   S.avatarMode = m;
-  ['seed','url'].forEach(x => {
-    $(`am-${x}`).className = `px-2 py-1 rounded ${x===m?'bg-bch/20 text-bch':'bg-dark-800 text-slate-400'}`;
-    $(`avatar${x.charAt(0).toUpperCase()+x.slice(1)}Box`).classList.toggle('hidden', x!==m);
+  ['seed','url','gif'].forEach(x => {
+    const el = $(`am-${x}`);
+    if(!el) return;
+    el.className = `px-2 py-1 rounded ${x===m?'bg-bch/20 text-bch':'bg-dark-800 text-slate-400'}`;
+    if(x !== 'gif') {
+      $(`avatar${x.charAt(0).toUpperCase()+x.slice(1)}Box`).classList.toggle('hidden', x!==m);
+    }
   });
 };
 window.previewAvatar = seed => { $('profileAvatarPreview').src = userAvatar(seed||'Guest'); };
@@ -1083,8 +1101,9 @@ S.gifFiltered = [];
 S.tgifData = [];
 S.tgifLoading = false;
 
-window.openGifPicker = async () => {
+window.openGifPicker = async (target = 'message') => {
   if(!S.user||S.user.isAnonymous) return alert('Registered users only');
+  S.gifTarget = target;
   $('gifUrlInput').value = '';
   $('gifSearchInput').value = '';
   S.gifPage = 0;
@@ -1293,10 +1312,17 @@ function renderGifPage(){
       `;
       btn.onclick = async () => {
         await registerGif(g.url, g.desc || "");
-        S.pendingImageUrl = g.url;
-        $('imgPreviewSrc').src = g.url;
-        $('imgPreview').classList.remove('hidden');
-        closeModal('gif');
+        if(S.gifTarget === 'avatar'){
+          avatarMethod('url');
+          $('profileAvatarUrl').value = g.url;
+          previewFromUrl(g.url);
+          closeModal('gif');
+        } else {
+          S.pendingImageUrl = g.url;
+          $('imgPreviewSrc').src = g.url;
+          $('imgPreview').classList.remove('hidden');
+          closeModal('gif');
+        }
       };
       grid.appendChild(btn);
     });
@@ -1380,6 +1406,10 @@ function stopVisualizer() {
   visCtx = null;
 }
 
+let audioBlob = null;
+let audioURL = null;
+let previewAudio = null;
+
 window.toggleAudioRecord = async () => {
   if(mediaRecorder && mediaRecorder.state === 'recording'){ stopAudioRecord(false); return; }
   try{
@@ -1391,21 +1421,60 @@ window.toggleAudioRecord = async () => {
     mediaRecorder = new MediaRecorder(stream);
     audioChunks = [];
     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-    mediaRecorder.onstop = async () => {
+    mediaRecorder.onstop = () => {
       stopVisualizer();
       stream.getTracks().forEach(t => t.stop());
-      if(S._cancelAudio){ S._cancelAudio=false; return; }
-      const blob = new Blob(audioChunks, { type: 'audio/webm' });
-      if(blob.size < 500) return;
-      try{
-        const url = await uploadImage(blob, `audio/${S.user.uid}_${Date.now()}.webm`);
-        await actuallySendMessage('', null, url);
-      }catch(err){ alert('Audio upload failed: '+err.message); }
+      if(S._cancelAudio){
+        S._cancelAudio=false;
+        audioBlob = null;
+        if(audioURL) URL.revokeObjectURL(audioURL);
+        audioURL = null;
+        $('audioPreview').classList.add('hidden');
+        return;
+      }
+      
+      audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      if(audioBlob.size < 500) {
+        audioBlob = null;
+        $('audioPreview').classList.add('hidden');
+        return;
+      }
+      
+      audioURL = URL.createObjectURL(audioBlob);
+      
+      // Update UI to show Play/Send/Cancel
+      $('recIndicator').classList.add('hidden');
+      $('playBtnContainer').classList.remove('hidden');
+      $('stopAudioBtn').classList.add('hidden');
+      $('sendAudioBtn').classList.remove('hidden');
+      
+      // Clear visualizer for playback
+      const canvas = $('audioVisualizer');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#0AC18E55';
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height/2);
+      ctx.lineTo(canvas.width, canvas.height/2);
+      ctx.stroke();
     };
+    
     mediaRecorder.start();
     startVisualizer(stream);
+    
+    // Reset UI for recording
+    $('recIndicator').classList.remove('hidden');
+    $('playBtnContainer').classList.add('hidden');
+    $('stopAudioBtn').classList.remove('hidden');
+    $('sendAudioBtn').classList.add('hidden');
     $('audioPreview').classList.remove('hidden');
     $('audioClipBtn').classList.add('text-red-400','rec-pulse');
+    
+    audioBlob = null;
+    if(audioURL) URL.revokeObjectURL(audioURL);
+    audioURL = null;
   }catch(err){ 
     console.error('Mic access error', err);
     alert('Microphone access denied. Check permissions.'); 
@@ -1415,8 +1484,50 @@ window.toggleAudioRecord = async () => {
 window.stopAudioRecord = (cancel) => {
   S._cancelAudio = cancel;
   if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-  $('audioPreview').classList.add('hidden');
-  $('audioClipBtn').classList.remove('text-red-400','rec-pulse');
+  if(cancel) {
+    $('audioPreview').classList.add('hidden');
+    $('audioClipBtn').classList.remove('text-red-400','rec-pulse');
+  }
+};
+
+window.playRecordedAudio = () => {
+  if(!audioURL) return;
+  if(previewAudio && !previewAudio.paused) {
+    previewAudio.pause();
+    $('audioPlayIcon').className = 'fa-solid fa-play text-[10px]';
+    return;
+  }
+  
+  previewAudio = new Audio(audioURL);
+  previewAudio.onplay = () => {
+    $('audioPlayIcon').className = 'fa-solid fa-pause text-[10px]';
+  };
+  previewAudio.onended = () => {
+    $('audioPlayIcon').className = 'fa-solid fa-play text-[10px]';
+  };
+  previewAudio.play();
+};
+
+window.sendRecordedAudio = async () => {
+  if(!audioBlob) return;
+  const btn = $('sendAudioBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  
+  try{
+    const url = await uploadImage(audioBlob, `audio/${S.user.uid}_${Date.now()}.webm`);
+    await actuallySendMessage('', null, url);
+    $('audioPreview').classList.add('hidden');
+    $('audioClipBtn').classList.remove('text-red-400','rec-pulse');
+  }catch(err){ 
+    alert('Audio upload failed: '+err.message); 
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send';
+    audioBlob = null;
+    if(audioURL) URL.revokeObjectURL(audioURL);
+    audioURL = null;
+  }
 };
 
 // ========== MIC / DEAFEN ==========
@@ -1840,9 +1951,31 @@ async function loadChannels(serverId){
 }
 function renderChannels(){
   const textList = $('channelsList'), voiceList = $('voiceList');
+  if(!textList || !voiceList) return;
   textList.innerHTML = ''; voiceList.innerHTML = '';
-  // ... rest of logic
-  renderVoiceArea(); // Add this
+
+  S_channels.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = `w-full flex items-center gap-2 px-2 py-1 rounded text-sm transition-all group ${S.channel === c.id ? 'bg-dark-700 text-white' : 'text-slate-400 hover:bg-dark-800 hover:text-slate-200'}`;
+    
+    if(c.type === 'voice'){
+      btn.onclick = () => joinVoice(c);
+      btn.innerHTML = `
+        <i class="fa-solid fa-volume-high text-[10px] ${S.channel === c.id ? 'text-bch-bright' : 'text-slate-600 group-hover:text-slate-400'}"></i>
+        <span class="truncate flex-1 text-left font-medium">${esc(c.name || c.id)}</span>
+      `;
+      voiceList.appendChild(btn);
+    } else {
+      btn.onclick = () => switchChannel(c);
+      btn.innerHTML = `
+        <i class="fa-solid fa-hashtag text-xs ${S.channel === c.id ? 'text-bch' : 'text-slate-600 group-hover:text-slate-400'}"></i>
+        <span class="truncate flex-1 text-left font-medium">${esc(c.name || c.id)}</span>
+      `;
+      textList.appendChild(btn);
+    }
+  });
+  
+  renderVoiceArea();
 }
 
 function renderVoiceArea(){
@@ -2093,7 +2226,25 @@ async function renderMsgs(msgs){
     const nameStyle = color ? `style="color:${color}"` : '';
     let contentHtml = parseMentions(esc(parseEmojis(m.content||'')));
     if(m.imageUrl) contentHtml += `<div class="mt-2"><img src="${esc(m.imageUrl)}" class="max-w-xs max-h-64 rounded-lg border border-dark-600 cursor-pointer" onclick="window.open('${esc(m.imageUrl)}')"></div>`;
-    if(m.audioUrl) contentHtml += `<div class="mt-2"><audio controls src="${esc(m.audioUrl)}" class="max-w-xs h-8"></audio></div>`;
+    if(m.audioUrl) {
+      const aid = `audio-${Math.random().toString(36).slice(2,11)}`;
+      contentHtml += `
+        <div class="mt-2 flex items-center gap-3 bg-dark-950/60 p-2.5 rounded-xl border border-dark-700/50 max-w-sm">
+          <button onclick="playAudioMsg('${esc(m.audioUrl)}', '${aid}')" id="btn-${aid}" class="w-10 h-10 rounded-full bg-bch/20 text-bch hover:bg-bch/30 flex items-center justify-center shrink-0 transition-all">
+            <i id="icon-${aid}" class="fa-solid fa-play"></i>
+          </button>
+          <div class="flex-1 min-w-0">
+            <div class="h-1.5 w-full bg-dark-800 rounded-full overflow-hidden relative">
+              <div id="prog-${aid}" class="absolute inset-y-0 left-0 bg-bch w-0 transition-all duration-100"></div>
+            </div>
+            <div class="flex justify-between mt-1.5 mono text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+              <span id="time-${aid}">0:00</span>
+              <span class="text-bch/50">Voice Clip</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
     let reactHtml = '';
     if(m.reactions){
       const entries = Object.entries(m.reactions);
@@ -2231,6 +2382,49 @@ async function actuallySendMessage(content, imageUrl, audioUrl){
     reactions: {}, ts: Date.now()
   });
 }
+window.playAudioMsg = (url, aid) => {
+  const icon = $(`icon-${aid}`);
+  const prog = $(`prog-${aid}`);
+  const time = $(`time-${aid}`);
+  
+  if(window._currentAudio && window._currentAudio.aid === aid) {
+    if(window._currentAudio.audio.paused) {
+      window._currentAudio.audio.play();
+      icon.className = 'fa-solid fa-pause';
+    } else {
+      window._currentAudio.audio.pause();
+      icon.className = 'fa-solid fa-play';
+    }
+    return;
+  }
+  
+  if(window._currentAudio) {
+    window._currentAudio.audio.pause();
+    const oldIcon = $(`icon-${window._currentAudio.aid}`);
+    if(oldIcon) oldIcon.className = 'fa-solid fa-play';
+  }
+  
+  const audio = new Audio(url);
+  window._currentAudio = { audio, aid };
+  
+  audio.ontimeupdate = () => {
+    const p = (audio.currentTime / audio.duration) * 100;
+    prog.style.width = `${p}%`;
+    const cur = Math.floor(audio.currentTime);
+    time.textContent = `${Math.floor(cur/60)}:${(cur%60).toString().padStart(2,'0')}`;
+  };
+  
+  audio.onended = () => {
+    icon.className = 'fa-solid fa-play';
+    prog.style.width = '0%';
+    time.textContent = '0:00';
+    window._currentAudio = null;
+  };
+  
+  audio.play();
+  icon.className = 'fa-solid fa-pause';
+};
+
 window.sendMsg = async e => {
   e.preventDefault();
   const input = $('chatInput');
