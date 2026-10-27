@@ -3217,6 +3217,9 @@ window.toggleReaction = async (msgId, emoji) => {
 };
 async function actuallySendMessage(content, imageUrl, audioUrl){
   if(S.inDMs && S.dmTarget){
+    const isFriend = S.friends.some(f => f.uid === S.dmTarget.uid);
+    if(!isFriend) return alert('Cannot send message: You are no longer friends with this user.');
+
     const dmId = [S.user.uid, S.dmTarget.uid].sort().join('_');
     await addDoc(collection(db,'dms',dmId,'messages'), {
       from: S.user.uid,
@@ -3409,8 +3412,9 @@ window.showUserContext = (e, uid, handle, avatar) => {
   } else {
     friendAction = `<div class="ctx-item" onclick="sendFriendRequest('${esc(uid)}','${esc(handle)}','${esc(avatar||'')}');hideCtx()"><i class="fa-solid fa-user-plus w-4"></i> Add Friend</div>`;
   }
+  
   menu.innerHTML = `
-    <div class="ctx-item" onclick="startDM('${esc(uid)}','${esc(handle)}','${esc(avatar||'')}');hideCtx()"><i class="fa-solid fa-message w-4"></i> Message</div>
+    ${isFriend ? `<div class="ctx-item" onclick="startDM('${esc(uid)}','${esc(handle)}','${esc(avatar||'')}');hideCtx()"><i class="fa-solid fa-message w-4"></i> Message</div>` : ''}
     ${friendAction}
     <div class="ctx-item text-red-400" onclick="blockUser('${esc(uid)}');hideCtx()"><i class="fa-solid fa-ban w-4"></i> Block</div>`;
   menu.style.left = Math.min(e.clientX, window.innerWidth-200)+'px';
@@ -3602,6 +3606,9 @@ window.blockUser = async uid => {
   alert('Blocked');
 };
 window.startDM = (uid, handle, avatar) => {
+  const isFriend = S.friends.some(f => f.uid === uid);
+  if(!isFriend) return alert('You must be friends to start a direct message conversation.');
+  
   S.dmTarget = { uid, handle, avatar };
   S.inDMs = true;
   openDMs();
