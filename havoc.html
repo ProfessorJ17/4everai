@@ -387,6 +387,7 @@
       </div>
     </div>
     <div class="mt-3 flex gap-2">
+      <button id="upEditBtn" class="hidden flex-1 py-1.5 bg-bch hover:bg-bch-bright rounded text-xs font-bold text-black border border-bch" onclick="openModal('profile');hideCtx();"><i class="fa-solid fa-user-pen mr-1"></i> Edit Profile</button>
       <button id="upMsgBtn" class="flex-1 py-1.5 bg-[#1e1f22] hover:bg-dark-700 rounded text-xs font-bold text-slate-200 border border-dark-600">Message</button>
       <button id="upFriendBtn" class="py-1.5 px-3 bg-[#1e1f22] hover:bg-dark-700 rounded text-xs border border-dark-600 text-bch-bright"><i class="fa-solid fa-user-plus"></i></button>
       <button id="upMoreBtn" class="py-1.5 px-3 bg-[#1e1f22] hover:bg-dark-700 rounded text-xs border border-dark-600 text-slate-400"><i class="fa-solid fa-ellipsis"></i></button>
@@ -1397,8 +1398,8 @@ window.initProfileEditor = () => {
   const fp = $('fontPicker');
   if(fp) {
     fp.innerHTML = PROFILE_FONTS.map(f => `
-      <div class="font-option ${S.profileStyle.font === f.family ? 'active' : ''}" 
-           style="font-family:${f.family}" 
+      <div class="font-option ${S.profileStyle.font === f.family ? 'active' : ''}"
+           style="font-family:${f.family}"
            onclick="setNameFont('${f.family}', this)">
         ${f.name}
       </div>
@@ -1408,22 +1409,43 @@ window.initProfileEditor = () => {
   const ng = $('nameGradients');
   if(ng) {
     ng.innerHTML = NAME_GRADIENTS.map(g => `
-      <div class="gradient-swatch ${S.profileStyle.nameGradient === g ? 'active' : ''}" 
-           style="background:${g}" 
+      <div class="gradient-swatch ${S.profileStyle.nameGradient === g ? 'active' : ''}"
+           style="background:${g}"
            onclick="setNameGradient('${g}', this)"></div>
     `).join('');
   }
-  
+
   // Load existing profile style if available
   if(S.profile && S.profile.style) {
     S.profileStyle = { ...S.profileStyle, ...S.profile.style };
     updateProfileUIFromStyle();
   }
+  // Load ring URL
   if(S.profileStyle.ringUrl) {
     $('profileRingUrl').value = S.profileStyle.ringUrl;
     previewRingUrl(S.profileStyle.ringUrl);
   } else {
     removeAvatarRing();
+  }
+  // Load avatar crop settings
+  if(S.profileStyle.avatarCrop) {
+    const c = S.profileStyle.avatarCrop;
+    $('cropX').value = c.x || 0;
+    $('cropY').value = c.y || 0;
+    $('cropZoom').value = c.zoom || 1;
+    $('zoomVal').textContent = Math.round((c.zoom || 1) * 100) + '%';
+  }
+  // Load name color
+  if(S.profileStyle.nameColor) {
+    const colorPicker = $('nameColorPicker');
+    if(colorPicker) colorPicker.value = S.profileStyle.nameColor;
+  }
+  // Load custom gradient
+  if(S.profileStyle.customGradient && S.profileStyle.customGradient.length > 0) {
+    const inputs = document.querySelectorAll('.cg-input');
+    S.profileStyle.customGradient.forEach((color, i) => {
+      if(inputs[i]) inputs[i].value = color;
+    });
   }
 };
 
@@ -2383,6 +2405,13 @@ S.popupUid = null;
 window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   if(!uid || uid === 'undefined') return;
   e && e.stopPropagation && e.stopPropagation();
+
+  // If clicking own avatar, open Edit Profile modal instead
+  if(S.user && uid === S.user.uid) {
+    openModal('profile');
+    return;
+  }
+
   const popup = $('userPopup');
   const x = e ? e.clientX : 100;
   const y = e ? e.clientY : 100;
@@ -2519,6 +2548,15 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   // Buttons
   const isSelf = S.user && uid === S.user.uid;
   const isFriend = (S.friends||[]).some(f => f.uid === uid);
+
+  // Show/hide Edit Profile button based on whether viewing own profile
+  if(isSelf){
+    $('upEditBtn').classList.remove('hidden');
+    $('upEditBtn').onclick = () => { hideUserPopup(); openModal('profile'); };
+  } else {
+    $('upEditBtn').classList.add('hidden');
+  }
+
   $('upMsgBtn').onclick = () => { hideUserPopup(); if(!isSelf) startDM(uid, handle, avatar); else openModal('profile'); };
   $('upMsgBtn').textContent = isSelf ? 'Edit Profile' : `Message @${handle}`;
   if(isSelf){
