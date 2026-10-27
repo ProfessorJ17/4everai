@@ -98,8 +98,8 @@
     
     /* AVATAR RING */
     .avatar-ring-wrapper { position: relative; display: inline-block; }
-    .avatar-ring { position: absolute; inset: -4px; border-radius: 50%; pointer-events: none; z-index: 5; object-fit: cover; mask-image: radial-gradient(circle, transparent 50%, black 50.5%); -webkit-mask-image: radial-gradient(circle, transparent 50%, black 50.5%); }
-    .avatar-ring-large { inset: -6px; }
+    .avatar-ring { position: absolute; inset: -4px; border-radius: 50%; pointer-events: none; z-index: 20; width: calc(100% + 8px); height: calc(100% + 8px); top: -4px; left: -4px; object-fit: contain; }
+    .avatar-ring-large { inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); top: -6px; left: -6px; }
     
     /* DISCOVERY MODAL */
     .discover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
@@ -201,9 +201,10 @@
 
     <div class="bg-dark-950 border-t border-dark-700 px-2 py-2">
       <div class="flex items-center gap-2">
-        <div class="relative cursor-pointer" onclick="openModal('profile')">
-          <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600">
-          <span id="ucStatusDot" class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-slate-500 border-2 border-dark-950"></span>
+        <div class="relative cursor-pointer avatar-ring-wrapper" onclick="openModal('profile')">
+          <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600 relative z-10">
+          <img id="ucRing" class="avatar-ring hidden">
+          <span id="ucStatusDot" class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-slate-500 border-2 border-dark-950 z-20"></span>
         </div>
         <div class="min-w-0 flex-1">
           <div id="ucHandle" class="font-bold text-white text-xs truncate">Guest</div>
@@ -308,7 +309,11 @@
     </div>
     <div id="dmProfileContent" class="hidden">
       <div class="text-center mb-4">
-        <img id="dmProfileAvatar" class="w-20 h-20 rounded-full mx-auto border-2 border-bch/40 object-cover mb-2">
+        <div class="relative avatar-ring-wrapper inline-block mb-2">
+          <img id="dmProfileAvatar" class="w-20 h-20 rounded-full border-2 border-bch/40 object-cover relative z-10">
+          <img id="dmProfileRing" class="avatar-ring hidden">
+          <span id="dmProfileDot" class="member-status-dot status-offline z-20"></span>
+        </div>
         <div id="dmProfileHandle" class="font-bold text-white text-lg"></div>
         <div id="dmProfileStatus" class="text-xs text-slate-400 mono"></div>
       </div>
@@ -341,7 +346,7 @@
     </div>
   </div>
   <div class="pt-10 px-4 pb-3">
-    <div id="upHandle" class="font-bold text-white text-base leading-tight"></div>
+    <div id="upHandle" class="font-bold text-white text-base leading-tight flex items-center gap-1.5"></div>
     <div id="upStatusLine" class="text-xs text-slate-400 mono mt-0.5"></div>
     <div class="mt-3 bg-[#1e1f22] rounded-lg p-3 space-y-2">
       <div>
@@ -611,7 +616,7 @@
       <div class="relative">
         <div class="avatar-ring-wrapper">
           <img id="profileAvatarPreview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-20 h-20 rounded-full border-4 border-dark-900 shadow-xl object-cover -mt-10 ml-2 relative z-10">
-          <img id="profileRingPreview" src="" class="avatar-ring avatar-ring-large hidden -mt-10 ml-2 w-20 h-20">
+          <img id="profileRingPreview" src="" class="avatar-ring avatar-ring-large hidden -mt-10 ml-2">
         </div>
         <button onclick="openGifEditor()" class="absolute bottom-0 right-0 w-7 h-7 bg-bch text-black rounded-full flex items-center justify-center border-4 border-dark-900 z-20 hover:scale-110 transition-transform"><i class="fa-solid fa-camera text-[10px]"></i></button>
       </div>
@@ -721,6 +726,28 @@
 
       <div><label for="profileStatus" class="field-label">Status</label><input type="text" id="profileStatus" maxlength="40" class="field text-xs"></div>
       <div><label for="profileBio" class="field-label">Bio</label><textarea id="profileBio" rows="2" maxlength="120" class="field resize-none text-xs"></textarea></div>
+
+      <!-- USER TAG -->
+      <div class="bg-dark-950/50 border border-dark-700 rounded-xl p-3 space-y-3">
+        <label class="text-[10px] mono text-slate-500 uppercase tracking-widest font-bold">Identity Tag</label>
+        <select id="profileUserTag" class="field text-xs bg-dark-900 border-dark-700">
+          <option value="">No Tag</option>
+          <option value="BETA">BETA</option>
+          <option value="OG">OG</option>
+          <option value="DEV">DEV</option>
+          <option value="VIP">VIP</option>
+          <option value="ALPHA">ALPHA</option>
+          <option value="STAFF">STAFF</option>
+          <option value="FOUNDER">FOUNDER</option>
+          <option value="VERIFIED">VERIFIED</option>
+          <option value="CHAMP">CHAMP</option>
+          <option value="ELITE">ELITE</option>
+          <option value="LEGEND">LEGEND</option>
+          <option value="MYSTIC">MYSTIC</option>
+          <option value="PIONEER">PIONEER</option>
+        </select>
+        <p class="text-[9px] text-slate-500 italic">Select a tag to display next to your name across all servers.</p>
+      </div>
     </div>
 
     <div class="flex gap-2 mt-6">
@@ -1643,7 +1670,7 @@ window.renderDiscovery = (servers) => {
           ${banner ? `<img src="${esc(banner)}" class="w-full h-full object-cover">` : ''}
           <div class="absolute -bottom-6 left-4 avatar-ring-wrapper">
             <img src="${esc(icon)}" class="w-12 h-12 rounded-xl border-4 border-[#1e1f22] bg-dark-800 relative z-10">
-            ${ring ? `<img src="${esc(ring)}" class="avatar-ring w-12 h-12 -inset-1 z-20">` : ''}
+            ${ring ? `<img src="${esc(ring)}" class="avatar-ring -inset-1 z-20">` : ''}
           </div>
         </div>
         <div class="p-4 pt-8">
@@ -1707,6 +1734,7 @@ window.saveProfile = async () => {
   const handle = $('profileHandle').value.trim();
   const bio = $('profileBio').value.trim();
   const status = $('profileStatus').value.trim();
+  const userTag = $('profileUserTag').value;
   if(!handle) return showProfileMsg('Handle required', true);
   if(handle.length < 2 || handle.length > 24) return showProfileMsg('Handle must be 2-24 chars', true);
   if(!/^[a-zA-Z0-9_]+$/.test(handle)) return showProfileMsg('Handle: letters, numbers, _ only', true);
@@ -1736,7 +1764,7 @@ window.saveProfile = async () => {
       try{ await deleteDoc(doc(db,'usernames', oldHandle)); }catch(e){}
     }
     await setDoc(doc(db,'usernames', handleKey), { uid:S.user.uid, handle, updatedAt:Date.now() });
-    const updates = { handle, bio, status, avatar, style: S.profileStyle };
+    const updates = { handle, bio, status, avatar, style: S.profileStyle, userTag };
     if(!S.profile.createdAt) updates.createdAt = Date.now();
     await updateDoc(doc(db,'users',S.user.uid), updates);
     S.profile = { ...S.profile, ...updates };
@@ -1747,7 +1775,7 @@ window.saveProfile = async () => {
         const mRef = doc(db,'servers', s.id, 'members', S.user.uid);
         const mSnap = await getDoc(mRef);
         if(mSnap.exists()){
-          await updateDoc(mRef, { handle, avatar, style: S.profileStyle });
+          await updateDoc(mRef, { handle, avatar, style: S.profileStyle, userTag });
         }
       }
     } catch(propErr){ console.warn('propagate', propErr); }
@@ -2367,9 +2395,10 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
       status = computePresence(u);
       createdAt = u.createdAt || null;
       style = u.style || null;
+      const userTag = u.userTag || '';
       // Update cache
       if(!S.profileCache) S.profileCache = {};
-      S.profileCache[uid] = { handle, avatar, bio, status, createdAt, style, _ts: Date.now() };
+      S.profileCache[uid] = { handle, avatar, bio, status, createdAt, style, userTag, _ts: Date.now() };
     }
   }catch(err){ 
     console.warn('Profile fetch failed (permissions or network):', err.message);
@@ -2385,7 +2414,7 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
     }
   }
 
-  $('upHandle').textContent = handle;
+  $('upHandle').innerHTML = `<span>${esc(handle)}</span>${renderUserTag(S.profileCache[uid])}`;
   $('upAvatar').src = avatar;
   
   // Apply style & ring
@@ -3053,6 +3082,9 @@ async function resolveProfiles(uids){
           avatar: u.avatar || userAvatar(uid), 
           createdAt: u.createdAt || 0, 
           style: u.style || null,
+          userTag: u.userTag || '',
+          status: u.status || 'online',
+          lastSeen: u.lastSeen || 0,
           _ts: Date.now() 
         };
       } else {
@@ -3063,6 +3095,18 @@ async function resolveProfiles(uids){
     }
   }));
 }
+function renderUserTag(profile) {
+  if (!profile || !profile.userTag) return '';
+  return `<span class="px-1.5 py-0.5 rounded bg-dark-800 text-bch text-[8px] font-black mono tracking-tighter uppercase border border-bch/20 ml-1 shadow-sm">${esc(profile.userTag)}</span>`;
+}
+
+function renderStatusDot(profile) {
+  if (!profile) return '';
+  const st = computePresence(profile);
+  const dotClass = st === 'online' ? 'status-online' : st === 'idle' ? 'status-idle' : st === 'dnd' ? 'status-dnd' : 'status-offline';
+  return `<span class="member-status-dot ${dotClass} z-20"></span>`;
+}
+
 async function renderMsgs(msgs){
   const feed = $('msgFeed'); feed.innerHTML = '';
   if(!msgs.length){ feed.innerHTML = '<div class="text-center py-12 text-slate-600 mono text-xs">No messages yet.</div>'; return; }
@@ -3120,12 +3164,14 @@ async function renderMsgs(msgs){
            onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')"
            oncontextmenu="showUserContext(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')">
         <img src="${esc(displayAvatar)}" class="w-full h-full rounded-full object-cover relative z-10" style="${avatarStyle}">
-        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring w-full h-full rounded-full">` : ''}
+        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
+        ${renderStatusDot(live)}
       </div>
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5">
           <span class="font-bold text-xs cursor-pointer" style="${userStyle}"
             onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')">${esc(displayHandle)}</span>
+          ${renderUserTag(live)}
           ${isNewMember(m.uid)?'<span class="new-member-leaf" title="New member (joined within the last week)"><i class="fa-solid fa-seedling"></i></span>':''}
           ${isOwner?'<span class="badge-owner">OWNER</span>':''}
           <span class="text-[10px] text-slate-600 mono">${shortTime(m.ts)}</span>
@@ -3360,9 +3406,10 @@ function listenMembers(serverId){
             presence = computePresence(u);
             createdAt = u.createdAt || 0;
             style = u.style || null;
+            const userTag = u.userTag || '';
             // Update cache while we have the data
             if(!S.profileCache) S.profileCache = {};
-            S.profileCache[m.uid] = { handle, avatar, presence, createdAt, style, _ts: Date.now() };
+            S.profileCache[m.uid] = { handle, avatar, presence, createdAt, style, userTag, _ts: Date.now() };
           }
         }catch(e){}
         const row = { ...m, handle, avatar, presence, createdAt, joinedAt: m.joinedAt || 0 };
@@ -3392,11 +3439,15 @@ function listenMembers(serverId){
           div.innerHTML = `
             <div class="relative shrink-0 avatar-ring-wrapper">
               <img src="${esc(m.avatar)}" class="w-7 h-7 rounded-full border border-dark-600 relative z-10" style="${avatarStyle}">
-              ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring w-7 h-7">` : ''}
+              ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
               <span class="member-status-dot ${dotClass} z-20"></span>
             </div>
-            <div class="min-w-0">
-              <div class="font-bold text-xs truncate" style="${nameStyle}">${esc(m.handle)}${isNewMember(m.uid)?' <i class="fa-solid fa-seedling new-member-leaf" title="New member"></i>':''}</div>
+            <div class="min-w-0 flex-1">
+              <div class="font-bold text-xs truncate flex items-center" style="${nameStyle}">
+                <span>${esc(m.handle)}</span>
+                ${renderUserTag(S.profileCache[m.uid])}
+                ${isNewMember(m.uid)?' <i class="fa-solid fa-seedling new-member-leaf ml-1" title="New member"></i>':''}
+              </div>
               <div class="text-[9px] text-slate-500">${isOwner?'Owner · ':''}${statusLabel}</div>
             </div>`;
           list.appendChild(div);
@@ -3457,6 +3508,27 @@ async function loadFriends(){
     const out = await getDocs(collection(db,'users',S.user.uid,'outgoingRequests'));
     S.outgoing = [];
     out.forEach(d => S.outgoing.push({toUid:d.id, ...d.data()}));
+
+    // Load profile cache for friends to get presence status
+    if(!S.profileCache) S.profileCache = {};
+    for(const f of S.friends){
+      try{
+        const uSnap = await getDoc(doc(db,'users', f.uid));
+        if(uSnap.exists()){
+          const u = uSnap.data();
+          S.profileCache[f.uid] = {
+            handle: u.handle || f.handle,
+            avatar: u.avatar || f.avatar,
+            status: u.status,
+            lastSeen: u.lastSeen,
+            style: u.style,
+            userTag: u.userTag,
+            _ts: Date.now()
+          };
+        }
+      }catch(e){}
+    }
+
     renderFriends();
     renderPending();
     renderDMList();
@@ -3490,7 +3562,10 @@ function renderFriends(){
     const nameStyle = getUserStyleString({ style });
     const avatarStyle = getAvatarStyleString({ style });
     const ringUrl = style?.ringUrl || '';
-    
+    const profile = S.profileCache?.[f.uid] || {};
+    const presence = computePresence(profile);
+    const dotClass = presence === 'online' ? 'status-online' : presence === 'idle' ? 'status-idle' : presence === 'dnd' ? 'status-dnd' : 'status-offline';
+
     const div = document.createElement('div');
     div.className = 'dm-item';
     div.dataset.name = (f.handle||'').toLowerCase();
@@ -3499,7 +3574,8 @@ function renderFriends(){
     div.innerHTML = `
       <div class="avatar-ring-wrapper shrink-0">
         <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full cursor-pointer relative z-10" style="${avatarStyle}" data-profile-uid="${esc(f.uid)}" onclick="event.stopPropagation();showUserProfile(event,'${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')">
-        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring w-8 h-8">` : ''}
+        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
+        <span class="member-status-dot ${dotClass} z-20"></span>
       </div>
       <div class="min-w-0 flex-1">
         <div class="text-xs truncate" style="${nameStyle}">${esc(f.handle)}</div>
@@ -3539,6 +3615,9 @@ function renderDMList(){
     const nameStyle = getUserStyleString({ style });
     const avatarStyle = getAvatarStyleString({ style });
     const ringUrl = style?.ringUrl || '';
+    const profile = S.profileCache?.[f.uid] || {};
+    const presence = computePresence(profile);
+    const dotClass = presence === 'online' ? 'status-online' : presence === 'idle' ? 'status-idle' : presence === 'dnd' ? 'status-dnd' : 'status-offline';
 
     const div = document.createElement('div');
     div.className = `dm-item ${S.dmTarget?.uid===f.uid?'active':''}`;
@@ -3547,7 +3626,8 @@ function renderDMList(){
     div.innerHTML = `
       <div class="avatar-ring-wrapper shrink-0">
         <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full relative z-10" style="${avatarStyle}">
-        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring w-8 h-8">` : ''}
+        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
+        <span class="member-status-dot ${dotClass} z-20"></span>
       </div>
       <span class="text-xs truncate" style="${nameStyle}">${esc(f.handle)}</span>
     `;
@@ -3630,7 +3710,7 @@ window.blockUser = async uid => {
 window.startDM = (uid, handle, avatar) => {
   const isFriend = S.friends.some(f => f.uid === uid);
   if(!isFriend) return alert('You must be friends to start a direct message conversation.');
-  
+
   S.dmTarget = { uid, handle, avatar };
   S.inDMs = true;
   openDMs();
@@ -3643,13 +3723,31 @@ window.startDM = (uid, handle, avatar) => {
   $('dmProfileAvatar').src = avatar || userAvatar(uid);
   $('dmProfileHandle').textContent = handle;
   $('dmProfileStatus').textContent = 'Direct Message';
-  
+
+  // Update status dot and ring for DM profile
+  const profile = S.profileCache?.[uid] || {};
+  const presence = computePresence(profile);
+  const dotClass = presence === 'online' ? 'status-online' : presence === 'idle' ? 'status-idle' : presence === 'dnd' ? 'status-dnd' : 'status-offline';
+  const dot = $('dmProfileDot');
+  if(dot) dot.className = `member-status-dot ${dotClass} z-20`;
+
+  const ringUrl = profile?.style?.ringUrl || '';
+  const ring = $('dmProfileRing');
+  if(ring) {
+    if(ringUrl) {
+      ring.src = ringUrl;
+      ring.classList.remove('hidden');
+    } else {
+      ring.classList.add('hidden');
+    }
+  }
+
   if(S.unsubMsgs) { S.unsubMsgs(); S.unsubMsgs = null; }
   const load = () => loadDms(uid);
   load();
   const iv = setInterval(load, 3000);
   S.unsubMsgs = () => clearInterval(iv);
-  
+
   renderDMList();
 };
 window.removeCurrentDMFriend = () => { if(S.dmTarget) removeFriend(S.dmTarget.uid); };
@@ -3904,6 +4002,7 @@ window.openModal = id => {
     $('profileBio').value = safe(S.profile.bio,'');
     $('profileStatus').value = safe(S.profile.status,'');
     $('profileAvatarPreview').src = safe(S.profile.avatar, userAvatar('Guest'));
+    $('profileUserTag').value = S.profile.userTag || '';
     
     // Set initial avatar mode
     const av = S.profile.avatar || '';
@@ -4026,7 +4125,7 @@ async function renderServerMembers(){
     row.innerHTML = `
       <div class="w-7 h-7 rounded-full shrink-0 border border-dark-600 avatar-ring-wrapper">
         <img src="${esc(avatar)}" class="w-full h-full rounded-full object-cover relative z-10" style="${avatarStyle}">
-        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring w-full h-full rounded-full">` : ''}
+        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
       </div>
       <div class="flex-1 min-w-0">
         <div class="font-bold text-xs truncate" style="${userStyle}">${esc(handle)}</div>
@@ -4407,14 +4506,16 @@ function applyUserStyle(el, profile){
   if(!el || !profile) return;
   const s = profile.style;
   if(!s) {
-    el.style.fontFamily = '';
+    el.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
+    el.style.fontWeight = "800";
     el.style.background = 'none';
     el.style.webkitTextFillColor = '';
     el.style.webkitBackgroundClip = '';
     el.style.color = '';
     return;
   }
-  el.style.fontFamily = s.font || 'inherit';
+  el.style.fontFamily = s.font || "'Plus Jakarta Sans', sans-serif";
+  el.style.fontWeight = s.font ? "700" : "800";
   if(s.nameGradient) {
     el.style.background = s.nameGradient;
     el.style.webkitBackgroundClip = 'text';
@@ -4429,9 +4530,9 @@ function applyUserStyle(el, profile){
 }
 
 function getUserStyleString(profile){
-  if(!profile || !profile.style) return '';
+  if(!profile || !profile.style) return 'font-family:\'Plus Jakarta Sans\', sans-serif; font-weight:800;';
   const s = profile.style;
-  let css = `font-family:${s.font||'inherit'};`;
+  let css = `font-family:${s.font || "'Plus Jakarta Sans', sans-serif"}; font-weight:${s.font ? '700' : '800'};`;
   if(s.nameGradient) {
     css += `background:${s.nameGradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;color:transparent;`;
   } else {
@@ -4489,8 +4590,20 @@ function updateUserUI(){
     logoutBtn.classList.remove('hidden');
     
     // Auth bar name also styled
-    const ringHtml = (S.profile.style && S.profile.style.ringUrl) ? `<img src="${esc(S.profile.style.ringUrl)}" class="avatar-ring w-6 h-6">` : '';
-    bar.innerHTML = `<div class="flex items-center gap-2"><div class="avatar-ring-wrapper"><img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-bch/40" id="authBarAvatar">${ringHtml}</div><span class="font-bold text-slate-200 mono text-xs" id="authBarHandle">${esc(S.profile.handle)}</span>${S.isAdmin?'<span class="badge-admin">ADMIN</span>':''}<button onclick="doSignOut()" class="text-slate-400 hover:text-red-400 ml-1" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button></div>`;
+    const ringHtml = (S.profile.style && S.profile.style.ringUrl) ? `<img src="${esc(S.profile.style.ringUrl)}" class="avatar-ring">` : '';
+    bar.innerHTML = `
+      <div class="flex items-center gap-2">
+        <div class="avatar-ring-wrapper">
+          <img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-bch/40" id="authBarAvatar">
+          ${ringHtml}
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="font-bold text-slate-200 mono text-xs" id="authBarHandle">${esc(S.profile.handle)}</span>
+          ${renderUserTag(S.profile)}
+        </div>
+        ${S.isAdmin?'<span class="badge-admin">ADMIN</span>':''}
+        <button onclick="doSignOut()" class="text-slate-400 hover:text-red-400 ml-1" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>`;
     applyUserStyle($('authBarHandle'), S.profile);
   } else {
     const avatarEl = $('ucAvatar');
