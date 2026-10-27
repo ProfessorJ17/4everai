@@ -97,26 +97,26 @@
     .color-wheel-btn { width: 24px; height: 24px; border-radius: 4px; background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); cursor: pointer; }
     
     /* AVATAR RING - Discord-style border ring */
-    .avatar-ring-wrapper { position: relative; display: inline-block; }
+    .avatar-ring-wrapper { position: relative; display: inline-block; overflow: hidden; }
     .avatar-ring {
       position: absolute;
-      inset: -2px;
+      inset: -3px;
       border-radius: 50%;
       pointer-events: none;
       z-index: 20;
-      width: calc(100% + 4px);
-      height: calc(100% + 4px);
-      top: -2px;
-      left: -2px;
-      object-fit: contain;
-      /* Ring image must be transparent PNG/GIF with hole in middle - extends 2px beyond avatar */
-    }
-    .avatar-ring-large {
-      inset: -3px;
       width: calc(100% + 6px);
       height: calc(100% + 6px);
       top: -3px;
       left: -3px;
+      object-fit: contain;
+      /* Ring image must be transparent PNG/GIF with hole in middle - extends 3px beyond avatar */
+    }
+    .avatar-ring-large {
+      inset: -4px;
+      width: calc(100% + 8px);
+      height: calc(100% + 8px);
+      top: -4px;
+      left: -4px;
     }
     
     /* DISCOVERY MODAL */
@@ -4579,6 +4579,9 @@ function getUserStyleString(profile){
 
 function getAvatarStyleString(profile){
   if(!profile || !profile.style || !profile.style.avatarCrop) return '';
+  // Don't apply crop transform to GIF avatars - they should be displayed at full size
+  const avatar = profile.avatar || '';
+  if(avatar.includes('.gif') || avatar.includes('giphy') || avatar.includes('tenor')) return '';
   const c = profile.style.avatarCrop;
   return `object-position:${50-(c.x/2)}% ${50-(c.y/2)}%;transform:scale(${c.zoom});`;
 }
