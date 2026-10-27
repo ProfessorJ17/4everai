@@ -125,7 +125,7 @@
   <!-- SERVER RAIL -->
   <nav class="w-16 bg-dark-950 border-r border-dark-700 flex flex-col items-center py-3 gap-2 shrink-0 overflow-y-auto">
     <button id="dmHomeBtn" onclick="openDMs()" title="Direct Messages"
-      class="relative w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch transition-all flex items-center justify-center overflow-hidden">
+      class="relative w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch transition-all flex items-center justify-center overflow-hidden dm-active">
       <img src="https://professorj17.github.io/4everai/HAVOC.ico" class="w-7 h-7 rounded-md">
     </button>
     <div class="w-8 h-0.5 bg-dark-700 rounded-full my-1"></div>
@@ -151,7 +151,7 @@
       </div>
     </div>
 
-    <div id="channelsView" class="flex-1 overflow-y-auto px-2 py-3">
+    <div id="channelsView" class="hidden flex-1 overflow-y-auto px-2 py-3">
       <div class="flex items-center justify-between px-2 mb-1.5">
         <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mono">Text Channels</span>
         <button id="addChanBtn" onclick="openModal('createChan')" class="hidden text-bch hover:text-bch-bright text-xs"><i class="fa-solid fa-plus"></i></button>
@@ -164,7 +164,7 @@
       <div id="voiceList" class="space-y-0.5"></div>
     </div>
 
-    <div id="dmView" class="hidden flex-1 overflow-y-auto flex flex-col">
+    <div id="dmView" class="flex-1 overflow-y-auto flex flex-col">
       <div class="p-2 border-b border-dark-700">
         <input type="text" id="dmSearch" placeholder="Find or start a conversation" 
                class="w-full bg-dark-950 border border-dark-700 rounded-md px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-bch"
@@ -1190,6 +1190,7 @@ onAuthStateChanged(auth, async user => {
     updateStatusDot();
     startPresenceHeartbeat();
     loadFriends();
+    if(!S.server) openDMs();
   } else {
     S.profile=null; S.isAdmin=false;
     $('adminBtn').classList.add('hidden');
@@ -2368,7 +2369,7 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
       style = u.style || null;
       // Update cache
       if(!S.profileCache) S.profileCache = {};
-      S.profileCache[uid] = { handle, avatar, bio, status, createdAt, style };
+      S.profileCache[uid] = { handle, avatar, bio, status, createdAt, style, _ts: Date.now() };
     }
   }catch(err){ 
     console.warn('Profile fetch failed (permissions or network):', err.message);
@@ -2433,11 +2434,14 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
     (status==='online'?'status-online':status==='idle'?'status-idle':status==='dnd'?'status-dnd':'status-offline');
 
   // Account Created – if missing, show today
-  if(createdAt){
-    $('upCreated').textContent = new Date(createdAt).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
-  } else {
-    $('upCreated').textContent = new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
-  }
+  const formatProfileDate = (d) => {
+    if(!d) return new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+    // Handle Firebase Timestamp objects
+    const date = (typeof d.toDate === 'function') ? d.toDate() : new Date(d);
+    return isNaN(date.getTime()) ? new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}) : date.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+  };
+
+  $('upCreated').textContent = formatProfileDate(createdAt);
 
   // Server join date
   let serverJoined = 0;
@@ -2446,7 +2450,7 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
     serverJoined = mem?.joinedAt || 0;
   }
   if(serverJoined){
-    $('upServerJoined').textContent = new Date(serverJoined).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+    $('upServerJoined').textContent = formatProfileDate(serverJoined);
     $('upServerJoinWrap')?.classList.remove('hidden');
   } else {
     $('upServerJoinWrap')?.classList.add('hidden');
@@ -3030,18 +3034,32 @@ function listenMessages(serverId, channelId){
 }
 S.profileCache = S.profileCache || {};
 async function resolveProfiles(uids){
-  const missing = [...new Set(uids.filter(u => u && !S.profileCache[u]))];
+  const now = Date.now();
+  const missing = [...new Set(uids.filter(u => {
+    if(!u) return false;
+    const cached = S.profileCache[u];
+    // Re-fetch if not in cache OR if cache is older than 5 minutes
+    if(!cached || !cached._ts || (now - cached._ts > 300000)) return true;
+    return false;
+  }))];
+  
   await Promise.all(missing.map(async uid => {
     try{
       const snap = await getDoc(doc(db,'users', uid));
       if(snap.exists()){
         const u = snap.data();
-        S.profileCache[uid] = { handle: u.handle || 'User', avatar: u.avatar || userAvatar(uid), createdAt: u.createdAt || 0, style: u.style || null };
+        S.profileCache[uid] = { 
+          handle: u.handle || 'User', 
+          avatar: u.avatar || userAvatar(uid), 
+          createdAt: u.createdAt || 0, 
+          style: u.style || null,
+          _ts: Date.now() 
+        };
       } else {
-        S.profileCache[uid] = { handle: 'User', avatar: userAvatar(uid), style: null };
+        S.profileCache[uid] = { handle: 'User', avatar: userAvatar(uid), style: null, _ts: Date.now() };
       }
     }catch(e){
-      S.profileCache[uid] = { handle: 'User', avatar: userAvatar(uid) };
+      S.profileCache[uid] = { handle: 'User', avatar: userAvatar(uid), _ts: Date.now() };
     }
   }));
 }
@@ -3341,6 +3359,10 @@ function listenMembers(serverId){
             if(u.avatar) avatar = u.avatar;
             presence = computePresence(u);
             createdAt = u.createdAt || 0;
+            style = u.style || null;
+            // Update cache while we have the data
+            if(!S.profileCache) S.profileCache = {};
+            S.profileCache[m.uid] = { handle, avatar, presence, createdAt, style, _ts: Date.now() };
           }
         }catch(e){}
         const row = { ...m, handle, avatar, presence, createdAt, joinedAt: m.joinedAt || 0 };
