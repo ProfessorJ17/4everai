@@ -223,10 +223,19 @@
           <img id="imgPreviewSrc" class="h-16 rounded-lg border border-dark-600 object-cover">
           <button onclick="clearImagePreview()" class="text-red-400 text-xs"><i class="fa-solid fa-xmark"></i> Remove</button>
         </div>
-        <div id="audioPreview" class="hidden mt-2 flex items-center gap-2 text-xs text-bch">
-          <i class="fa-solid fa-waveform-lines"></i> <span id="audioRecStatus">Recording…</span>
-          <button onclick="stopAudioRecord(true)" class="text-red-400 ml-2">Cancel</button>
-          <button onclick="stopAudioRecord(false)" class="btn-primary px-2 py-0.5 text-[10px] ml-1">Send Clip</button>
+        <div id="audioPreview" class="hidden mt-2 flex items-center gap-2 text-xs text-bch bg-dark-950/30 p-1.5 rounded-lg border border-dark-700/50">
+          <div class="flex items-center gap-2 flex-1">
+            <div class="relative flex items-center justify-center">
+              <div class="w-2 h-2 rounded-full bg-red-500 animate-ping absolute"></div>
+              <div class="w-2 h-2 rounded-full bg-red-500 relative"></div>
+            </div>
+            <canvas id="audioVisualizer" class="h-6 w-32 bg-dark-950/50 rounded border border-dark-700"></canvas>
+            <span id="audioRecStatus" class="mono text-[10px]">0:00</span>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="stopAudioRecord(true)" class="text-slate-500 hover:text-red-400 px-2 py-1">Cancel</button>
+            <button onclick="stopAudioRecord(false)" class="btn-primary px-3 py-1 text-[10px]">Send Clip</button>
+          </div>
         </div>
       </div>
     </div>
@@ -389,11 +398,11 @@
     </div>
     <div class="flex-1 overflow-y-auto p-3">
       <div class="text-[10px] font-bold text-slate-500 uppercase mono mb-2">Popular GIFs</div>
-      <div id="gifGrid" class="grid grid-cols-3 gap-2"></div>
+      <div id="gifGrid" class="grid grid-cols-2 gap-3"></div>
       <div class="flex items-center justify-between mt-3">
-        <button onclick="gifPage(-1)" id="gifPrev" class="text-xs text-slate-400 hover:text-white px-2 py-1 rounded border border-dark-700">← Prev</button>
-        <span id="gifPageInfo" class="text-[10px] text-slate-500 mono">1</span>
-        <button onclick="gifPage(1)" id="gifNext" class="text-xs text-slate-400 hover:text-white px-2 py-1 rounded border border-dark-700">Next →</button>
+        <button onclick="gifPage(-1)" id="gifPrev" class="text-xs text-slate-400 hover:text-white px-2 py-1 rounded border border-dark-700 disabled:opacity-30">← Prev</button>
+        <span id="gifPageInfo" class="text-[10px] text-slate-500 mono">1 / 1</span>
+        <button onclick="gifPage(1)" id="gifNext" class="text-xs text-slate-400 hover:text-white px-2 py-1 rounded border border-dark-700 disabled:opacity-30">Next →</button>
       </div>
     </div>
   </div>
@@ -1046,18 +1055,24 @@ async function loadFullTgifDataset(){
 
   try {
     const res = await fetch('https://raw.githubusercontent.com/raingo/TGIF-Release/master/data/tgif-v1.0.tsv');
+    if (!res.ok) throw new Error('Fetch failed');
     const text = await res.text();
-    const lines = text.split('\n');
+    const lines = text.split(/\r?\n/);
     S.tgifData = lines.map(line => {
-      const [url, desc] = line.split('\t');
-      if(!url || !desc) return null;
-      return { url, desc: desc.trim() };
+      const parts = line.split('\t');
+      if(parts.length < 2) return null;
+      const url = parts[0].trim();
+      const desc = parts[1].trim();
+      if(!url.startsWith('http')) return null;
+      return { url, desc };
     }).filter(Boolean);
     status.textContent = `✓ ${S.tgifData.length.toLocaleString()} GIFs loaded`;
     setTimeout(() => status.remove(), 3000);
+    // Trigger search again if there's text
+    if($('gifSearchInput').value) searchGifs($('gifSearchInput').value);
   } catch(e) {
     status.className = 'text-[9px] text-red-400 mono mt-1';
-    status.textContent = 'Failed to load full dataset.';
+    status.textContent = 'Failed to load full dataset. Check connection.';
     console.error('TGIF load error', e);
   }
   S.tgifLoading = false;
@@ -1067,7 +1082,6 @@ window.searchGifs = (q) => {
   q = (q||'').toLowerCase().trim();
   const localMatches = S.gifCache.filter(g => (g.desc||'').toLowerCase().includes(q));
   
-  // Search TGIF data if loaded, otherwise use fallback
   const tgifMatches = S.tgifData.length > 0 
     ? S.tgifData.filter(g => g.desc.toLowerCase().includes(q)).map(g => ({...g, uses: 0}))
     : [];
@@ -1115,34 +1129,33 @@ async function loadGifBank(){
     S.gifCache.sort((a,b) => (b.uses||0) - (a.uses||0));
     S.gifFiltered = [...S.gifCache];
     
-    // If empty search, show some defaults from TGIF if available
     if(!S.gifFiltered.length && S.tgifData.length > 0){
-      S.gifFiltered = S.tgifData.slice(0, 50).map(g => ({...g, uses: 0}));
+      S.gifFiltered = S.tgifData.slice(0, 100).map(g => ({...g, uses: 0}));
     }
 
     renderGifPage();
   }catch(e){
-    if(S.tgifData.length) S.gifFiltered = S.tgifData.slice(0, 50).map(g => ({...g, uses:0}));
+    if(S.tgifData.length) S.gifFiltered = S.tgifData.slice(0, 100).map(g => ({...g, uses:0}));
     renderGifPage();
   }
 }
 
 function renderGifPage(){
-  const per = 25;
+  const per = 4;
   const start = S.gifPage * per;
   const slice = S.gifFiltered.slice(start, start + per);
   const grid = $('gifGrid');
   grid.innerHTML = '';
   
   if(!slice.length){
-    grid.innerHTML = '<p class="text-xs text-slate-500 col-span-3 text-center py-8">No matching GIFs found</p>';
+    grid.innerHTML = '<p class="text-xs text-slate-500 col-span-2 text-center py-8">No matching GIFs found</p>';
   } else {
     slice.forEach(g => {
       const btn = document.createElement('button');
       btn.className = 'relative rounded-lg overflow-hidden border border-dark-700 hover:border-bch aspect-square bg-dark-950 group';
       btn.title = g.desc || `${g.uses||0} uses`;
       btn.innerHTML = `
-        <img src="${esc(g.url)}" class="w-full h-full object-cover" loading="lazy">
+        <img src="${esc(g.url)}" class="w-full h-full object-cover" loading="lazy" onerror="this.src='https://professorj17.github.io/4everai/HAVOC.ico'; this.classList.add('opacity-20');">
         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
           <span class="text-[8px] text-white truncate">${esc(g.desc||'')}</span>
         </div>
