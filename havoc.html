@@ -97,7 +97,7 @@
     .color-wheel-btn { width: 24px; height: 24px; border-radius: 4px; background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); cursor: pointer; }
     
     /* AVATAR RING - Discord-style border ring */
-    .avatar-ring-wrapper { position: relative; display: inline-block; }
+    .avatar-ring-wrapper { position: relative; display: inline-block; overflow: hidden; }
     .avatar-ring {
       position: absolute;
       inset: -3px;
@@ -123,10 +123,15 @@
       mask-image: radial-gradient(circle at center, transparent 42%, black 48%);
     }
 
-    /* Ensure all avatars are perfectly circular */
+    /* Ensure all avatars are perfectly circular and properly sized */
     .avatar-ring-wrapper img:not(.avatar-ring) {
       border-radius: 50%;
       object-fit: cover;
+      max-width: 100%;
+      max-height: 100%;
+      width: 100%;
+      height: 100%;
+      display: block;
     }
     
     /* DISCOVERY MODAL */
@@ -4665,8 +4670,10 @@ function updateUserUI(){
     const avatarEl = $('ucAvatar');
     const ringEl = $('ucRing');
     avatarEl.src = safe(S.profile.avatar, userAvatar('Guest'));
-    
-    if(S.profile.style && S.profile.style.avatarCrop) {
+
+    // Don't apply crop transform if avatar is a GIF
+    const isGif = (S.profile.avatar || '').includes('.gif') || (S.profile.avatar || '').includes('giphy') || (S.profile.avatar || '').includes('tenor');
+    if(S.profile.style && S.profile.style.avatarCrop && !isGif) {
       const c = S.profile.style.avatarCrop;
       avatarEl.style.objectPosition = `${50 - (c.x/2)}% ${50 - (c.y/2)}%`;
       avatarEl.style.transform = `scale(${c.zoom})`;
