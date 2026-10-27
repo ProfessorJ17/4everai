@@ -143,11 +143,6 @@
       height: 32px !important;
       object-fit: cover !important;
     }
-
-    #membersList .avatar-ring {
-      max-width: 38px !important;
-      max-height: 38px !important;
-    }
     
     /* DISCOVERY MODAL */
     .discover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
@@ -1740,7 +1735,7 @@ window.renderDiscovery = (servers) => {
           ${banner ? `<img src="${esc(banner)}" class="w-full h-full object-cover">` : ''}
           <div class="absolute -bottom-6 left-4 avatar-ring-wrapper">
             <img src="${esc(icon)}" class="w-12 h-12 rounded-xl border-4 border-[#1e1f22] bg-dark-800 relative z-10">
-            ${ring ? `<img src="${esc(ring)}" class="avatar-ring -inset-1 z-20">` : ''}
+            ${ring ? `<img src="${esc(ring)}" class="avatar-ring">` : ''}
           </div>
         </div>
         <div class="p-4 pt-8">
@@ -2967,10 +2962,8 @@ function renderVoiceArea(){
     div.dataset.vpUser = uid;
     div.className = 'flex flex-col items-center gap-2 group';
     div.innerHTML = `
-      <div class="relative">
-        <div class="avatar-ring w-20 h-20 rounded-full ring-offset-4 ring-offset-dark-900 transition-all duration-300 flex items-center justify-center bg-dark-800 border-2 border-dark-700 overflow-hidden">
-          <img src="${esc(u.avatar||userAvatar(uid))}" class="w-full h-full object-cover">
-        </div>
+      <div class="relative avatar-ring-wrapper">
+        <img src="${esc(u.avatar||userAvatar(uid))}" class="w-20 h-20 rounded-full ring-offset-4 ring-offset-dark-900 transition-all duration-300 flex items-center justify-center bg-dark-800 border-2 border-dark-700 object-cover relative z-10">
         ${uid === S.user.uid && S.micMuted ? '<div class="absolute -bottom-1 -right-1 bg-red-500 w-6 h-6 rounded-full flex items-center justify-center border-4 border-dark-900 text-[10px] text-white"><i class="fa-solid fa-microphone-slash"></i></div>' : ''}
       </div>
       <span class="text-xs font-bold text-slate-300 truncate w-24 text-center">${esc(u.handle||'User')}</span>
@@ -4249,7 +4242,7 @@ async function renderServerMembers(){
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
     const ringUrl = style?.ringUrl || '';
     row.innerHTML = `
-      <div class="w-7 h-7 rounded-full shrink-0 border border-dark-600 avatar-ring-wrapper">
+      <div class="w-8 h-8 rounded-full shrink-0 border border-dark-600 avatar-ring-wrapper">
         <img src="${esc(avatar)}" class="w-full h-full rounded-full object-cover relative z-10" style="${avatarStyle}">
         ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
       </div>
@@ -4725,7 +4718,7 @@ function updateUserUI(){
     bar.innerHTML = `
       <div class="flex items-center gap-2">
         <div class="avatar-ring-wrapper">
-          <img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-bch/40" id="authBarAvatar">
+          <img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-bch/40 relative z-10" id="authBarAvatar">
           ${ringHtml}
         </div>
         <div class="flex items-center gap-1">
