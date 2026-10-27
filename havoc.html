@@ -686,9 +686,10 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const gun = Gun({ peers: [
+  'https://gun-server.com/gun',
+  'https://gun.dletta.com/gun',
   'https://gun-rs.iris.to/gun',
-  'https://gun-manhattan.herokuapp.com/gun',
-  'https://gun-us.herokuapp.com/gun'
+  'https://gun-relay.us-east-1.elasticbeanstalk.com/gun'
 ], localStorage: false });
 
 const $ = s => document.getElementById(s);
