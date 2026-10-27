@@ -1025,23 +1025,21 @@ S.gifCache = [];
 S.gifFiltered = [];
 
 const TGIF_DATA = [
-  {url:"https://38.media.tumblr.com/9f6c25cc350f12aa74a7dc386a5c4985/tumblr_mevmyaKtDf1rgvhr8o1_500.gif", desc:"a man is glaring, and someone with sunglasses appears"},
-  {url:"https://38.media.tumblr.com/9ead028ef62004ef6ac2b92e52edd210/tumblr_nok4eeONTv1s2yegdo1_400.gif", desc:"a cat tries to catch a mouse on a tablet"},
-  {url:"https://38.media.tumblr.com/9f43dc410be85b1159d1f42663d811d7/tumblr_mllh01J96X1s9npefo1_250.gif", desc:"a man dressed in red is dancing"},
-  {url:"https://38.media.tumblr.com/9f659499c8754e40cf3f7ac21d08dae6/tumblr_nqlr0rn8ox1r2r0koo1_400.gif", desc:"an animal comes close to another in the jungle"},
-  {url:"https://38.media.tumblr.com/9ed1c99afa7d71411884101cb054f35f/tumblr_mvtuwlhSkE1qbnleeo1_500.gif", desc:"a man in a hat adjusts his tie and makes a weird face"},
-  {url:"https://38.media.tumblr.com/9e437d26769cb2ac4217df14dbb20034/tumblr_npw7v7W07C1tmj047o1_250.gif", desc:"someone puts a cat on wrapping paper then wraps it up and puts on a bow"},
-  {url:"https://38.media.tumblr.com/9e4ab65c0e7d4bb8aa6b5be854b83794/tumblr_mdlv9v6hE91qanrf2o1_r11_500.gif", desc:"a brunette woman is looking at the man"},
-  {url:"https://38.media.tumblr.com/9ecd3483028290171dcb5e920ff4e3bb/tumblr_nkcmeflaVj1u26rdio1_500.gif", desc:"a man on a bicycle is jumping over a fence"},
-  {url:"https://38.media.tumblr.com/9f83754d20ce882224ae3392a8372ee8/tumblr_mkwd0y8Poo1qlnbq8o1_400.gif", desc:"a group of men are standing and staring in the same direction"},
-  {url:"https://38.media.tumblr.com/9e6fcb37722bf01996209bdf76708559/tumblr_np9xo74UgD1ux4g5vo1_250.gif", desc:"a boy is happy parking and see another boy"},
-  {url:"https://38.media.tumblr.com/8c14aa571911985d6d774762f8159452/tumblr_n4gk7efcMw1spy7ono1_400.gif", desc:"the tiger is running really fast in the garden"},
-  {url:"https://38.media.tumblr.com/be596acc2860e691e578c2a64d044d94/tumblr_nq0mhrqyAf1u4fhlko1_250.gif", desc:"a giant tiger creature jumps through the air"},
-  {url:"https://31.media.tumblr.com/tumblr_m43v8zZ3z11r5z7sho1_500.gif", desc:"a dog is dancing in a circle"},
-  {url:"https://33.media.tumblr.com/tumblr_n7w1x0rVwP1t0u4coo1_500.gif", desc:"a man is falling off a chair"},
-  {url:"https://38.media.tumblr.com/tumblr_n8b8r7hQeD1tbg4ybo1_500.gif", desc:"a woman is laughing and pointing"},
-  {url:"https://31.media.tumblr.com/tumblr_n8j8y8qUoE1tbg4ybo1_500.gif", desc:"a man is eating a sandwich"},
-  {url:"https://33.media.tumblr.com/tumblr_n8k8z8sUpF1tbg4ybo1_500.gif", desc:"a cat is jumping into a box"}
+  {desc: "cat tablet mouse chase", url: "https://38.media.tumblr.com/9ead028ef62004ef6ac2b92e52edd210/tumblr_nok4eeONTv1s2yegdo1_400.gif"},
+  {desc: "man glaring sunglasses surprise", url: "https://38.media.tumblr.com/9f6c25cc350f12aa74a7dc386a5c4985/tumblr_mevmyaKtDf1rgvhr8o1_500.gif"},
+  {desc: "dancing man dressed in red", url: "https://38.media.tumblr.com/9f43dc410be85b1159d1f42663d811d7/tumblr_mllh01J96X1s9npefo1_250.gif"},
+  {desc: "jungle animals meeting nose to nose", url: "https://38.media.tumblr.com/9f659499c8754e40cf3f7ac21d08dae6/tumblr_nqlr0rn8ox1r2r0koo1_400.gif"},
+  {desc: "excited minion celebrating cheering", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/11sBLVxNs7v6WA/giphy.gif"},
+  {desc: "mind blown explosion head shake", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/26ufdipLchakf5MRy/giphy.gif"},
+  {desc: "michael scott the office no god please no", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/12XMGIWtrHBl5e/giphy.gif"},
+  {desc: "popcorn eating drama waiting", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/hVTouqNmubKKQ/giphy.gif"},
+  {desc: "tiger running fast garden", url: "https://38.media.tumblr.com/8c14aa571911985d6d774762f8159452/tumblr_n4gk7efcMw1spy7ono1_400.gif"},
+  {desc: "giant tiger creature jumps", url: "https://38.media.tumblr.com/be596acc2860e691e578c2a64d044d94/tumblr_nq0mhrqyAf1u4fhlko1_250.gif"},
+  {desc: "dog dancing circle", url: "https://31.media.tumblr.com/tumblr_m43v8zZ3z11r5z7sho1_500.gif"},
+  {desc: "man falling off chair", url: "https://33.media.tumblr.com/tumblr_n7w1x0rVwP1t0u4coo1_500.gif"},
+  {desc: "woman laughing pointing", url: "https://38.media.tumblr.com/tumblr_n8b8r7hQeD1tbg4ybo1_500.gif"},
+  {desc: "man eating sandwich", url: "https://31.media.tumblr.com/tumblr_n8j8y8qUoE1tbg4ybo1_500.gif"},
+  {desc: "cat jumping into box", url: "https://33.media.tumblr.com/tumblr_n8k8z8sUpF1tbg4ybo1_500.gif"}
 ];
 
 window.openGifPicker = async () => {
@@ -1055,21 +1053,16 @@ window.openGifPicker = async () => {
 
 window.searchGifs = (q) => {
   q = q.toLowerCase();
-  if(!q){
-    S.gifFiltered = [...S.gifCache];
-  } else {
-    // Search both Firestore cache and TGIF dataset
-    const localMatches = S.gifCache.filter(g => (g.desc||'').toLowerCase().includes(q));
-    const tgifMatches = TGIF_DATA.filter(g => g.desc.toLowerCase().includes(q)).map(g => ({...g, uses:0}));
-    
-    // Merge and remove duplicates by URL
-    const seen = new Set();
-    S.gifFiltered = [...localMatches, ...tgifMatches].filter(g => {
-      if(seen.has(g.url)) return false;
-      seen.add(g.url);
-      return true;
-    });
-  }
+  const localMatches = S.gifCache.filter(g => (g.desc||'').toLowerCase().includes(q));
+  const tgifMatches = TGIF_DATA.filter(g => g.desc.toLowerCase().includes(q)).map(g => ({...g, uses: 0}));
+  
+  const seen = new Set();
+  S.gifFiltered = [...localMatches, ...tgifMatches].filter(g => {
+    if(seen.has(g.url)) return false;
+    seen.add(g.url);
+    return true;
+  });
+  
   S.gifPage = 0;
   renderGifPage();
 };
@@ -1865,7 +1858,10 @@ window.sendMsg = async e => {
   if(S.inDMs && S.dmTarget){
     input.value = '';
     const dmId = [S.user.uid, S.dmTarget.uid].sort().join('_');
-    await addDoc(collection(db,'dms',dmId,'messages'), { from:S.user.uid, content, ts:Date.now() });
+    let imageUrl = null;
+    if(S.pendingImageUrl){ imageUrl = S.pendingImageUrl; if(imageUrl.match(/\.gif(\?|$)/i) || imageUrl.includes('giphy') || imageUrl.includes('tenor')) await registerGif(imageUrl); clearImagePreview(); }
+    else if(S.pendingImage){ imageUrl = await uploadImage(S.pendingImage, `dms/${dmId}/${Date.now()}`); clearImagePreview(); }
+    await addDoc(collection(db,'dms',dmId,'messages'), { from:S.user.uid, content, imageUrl, ts:Date.now() });
     loadDms(S.dmTarget.uid);
     return;
   }
@@ -2170,7 +2166,9 @@ async function loadDms(targetUid){
     const mine = m.from === S.user.uid;
     const div = document.createElement('div');
     div.className = `flex ${mine?'justify-end':'justify-start'}`;
-    div.innerHTML = `<div class="max-w-[70%] px-3 py-2 rounded-xl text-xs ${mine?'bg-bch/20 text-bch-bright':'bg-dark-800 text-slate-200'}">${esc(m.content)}<div class="text-[9px] text-slate-500 mt-1 ${mine?'text-right':''}">${shortTime(m.ts)}</div></div>`;
+    let contentHtml = esc(m.content||'');
+    if(m.imageUrl) contentHtml += `<div class="mt-2"><img src="${esc(m.imageUrl)}" class="max-w-full rounded-lg border border-dark-600 cursor-pointer" onclick="window.open('${esc(m.imageUrl)}')"></div>`;
+    div.innerHTML = `<div class="max-w-[70%] px-3 py-2 rounded-xl text-xs ${mine?'bg-bch/20 text-bch-bright':'bg-dark-800 text-slate-200'}">${contentHtml}<div class="text-[9px] text-slate-500 mt-1 ${mine?'text-right':''}">${shortTime(m.ts)}</div></div>`;
     feed.appendChild(div);
   });
   const c = $('msgContainer'); c.scrollTop = c.scrollHeight;
