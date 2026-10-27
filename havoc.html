@@ -98,7 +98,7 @@
     
     /* AVATAR RING */
     .avatar-ring-wrapper { position: relative; display: inline-block; }
-    .avatar-ring { position: absolute; inset: -4px; border-radius: 50%; pointer-events: none; z-index: 5; object-fit: cover; }
+    .avatar-ring { position: absolute; inset: -4px; border-radius: 50%; pointer-events: none; z-index: 5; object-fit: cover; mask-image: radial-gradient(circle, transparent 50%, black 50.5%); -webkit-mask-image: radial-gradient(circle, transparent 50%, black 50.5%); }
     .avatar-ring-large { inset: -6px; }
     
     /* DISCOVERY MODAL */
@@ -616,13 +616,32 @@
         <button onclick="openGifEditor()" class="absolute bottom-0 right-0 w-7 h-7 bg-bch text-black rounded-full flex items-center justify-center border-4 border-dark-900 z-20 hover:scale-110 transition-transform"><i class="fa-solid fa-camera text-[10px]"></i></button>
       </div>
       <div class="flex-1 pt-1">
-        <label class="field-label mb-1">Banner Type</label>
-        <div class="flex gap-1 text-[9px] mono">
-          <button onclick="bannerMethod('color')" id="bm-color" class="px-2 py-1 rounded bg-bch/20 text-bch">Color</button>
-          <button onclick="bannerMethod('url')" id="bm-url" class="px-2 py-1 rounded bg-dark-800 text-slate-400">URL</button>
-          <button onclick="openGifPicker('banner')" id="bm-gif" class="px-2 py-1 rounded bg-dark-800 text-slate-400">GIF</button>
+        <label class="field-label mb-1">Avatar & Banner Methods</label>
+        <div class="flex flex-col gap-2">
+          <div class="flex gap-1 text-[9px] mono">
+            <span class="text-slate-500 mr-2 self-center">Avatar:</span>
+            <button onclick="avatarMethod('seed')" id="am-seed" class="px-2 py-1 rounded bg-bch/20 text-bch">Seed</button>
+            <button onclick="avatarMethod('url')" id="am-url" class="px-2 py-1 rounded bg-dark-800 text-slate-400">URL</button>
+            <button onclick="openGifPicker('avatar')" id="am-gif" class="px-2 py-1 rounded bg-dark-800 text-slate-400">GIF</button>
+          </div>
+          <div class="flex gap-1 text-[9px] mono">
+            <span class="text-slate-500 mr-2 self-center">Banner:</span>
+            <button onclick="bannerMethod('color')" id="bm-color" class="px-2 py-1 rounded bg-bch/20 text-bch">Color</button>
+            <button onclick="bannerMethod('url')" id="bm-url" class="px-2 py-1 rounded bg-dark-800 text-slate-400">URL</button>
+            <button onclick="openGifPicker('banner')" id="bm-gif" class="px-2 py-1 rounded bg-dark-800 text-slate-400">GIF</button>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- AVATAR CONTROLS -->
+    <div id="avatarSeedBox" class="mb-4">
+      <label class="field-label mb-1">Avatar Seed</label>
+      <input type="text" id="profileSeed" placeholder="Enter seed for generated avatar..." oninput="previewAvatar(this.value)" class="field text-xs">
+    </div>
+    <div id="avatarUrlBox" class="hidden mb-4">
+      <label class="field-label mb-1">Avatar URL</label>
+      <input type="url" id="profileAvatarUrl" placeholder="https://... (PNG, JPG, WEBP)" oninput="previewFromUrl(this.value)" class="field text-xs">
     </div>
 
     <!-- AVATAR RING CONTROL -->
@@ -633,6 +652,7 @@
       </div>
       <div class="flex gap-2">
         <input type="text" id="profileRingUrl" placeholder="Ring Image/GIF URL (HTTPS only)" oninput="previewRingUrl(this.value)" class="field text-xs flex-1">
+        <button onclick="openGifPicker('ring')" class="px-3 py-1.5 rounded bg-dark-800 text-slate-400 text-xs hover:bg-dark-700 transition-colors"><i class="fa-solid fa-gift mr-1"></i> GIF</button>
       </div>
       <p class="text-[9px] text-slate-500 italic">Paste a URL for a transparent PNG, JPG, or GIF to overlay a ring around your avatar.</p>
     </div>
@@ -780,6 +800,29 @@
       </div>
       <p class="text-[10px] text-slate-500">Server icons use DiceBear <strong>Shapes</strong> style (different from user avatars)</p>
       <div><label for="newServerName" class="field-label">Server Name</label><input type="text" id="newServerName" maxlength="40" class="field"></div>
+      <div class="bg-dark-950/50 border border-dark-700 rounded-lg p-3 space-y-3">
+        <label class="text-[10px] mono text-slate-500 uppercase tracking-widest font-bold">Server Tag (Required)</label>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[9px] text-slate-500 block mb-1">Tag (2-4 chars)</label>
+            <input type="text" id="newServerTag" maxlength="4" placeholder="HVOC" class="field text-xs uppercase mono">
+          </div>
+          <div>
+            <label class="text-[9px] text-slate-500 block mb-1">Emoji</label>
+            <input type="text" id="newServerTagEmoji" placeholder="⚡" class="field text-xs">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[9px] text-slate-500 block mb-1">Tag Color</label>
+            <input type="color" id="newServerTagBgColor" value="#0AC18E" class="w-full h-8 rounded bg-transparent cursor-pointer">
+          </div>
+          <div>
+            <label class="text-[9px] text-slate-500 block mb-1">Emoji Color</label>
+            <input type="color" id="newServerTagEmojiColor" value="#ffffff" class="w-full h-8 rounded bg-transparent cursor-pointer">
+          </div>
+        </div>
+      </div>
       <div><label for="newServerDesc" class="field-label">Description</label><input type="text" id="newServerDesc" maxlength="80" class="field"></div>
       <button onclick="createServer()" class="w-full py-2.5 btn-primary text-sm">Create & Become Owner</button>
     </div>
@@ -845,6 +888,29 @@
           <p class="text-[10px] text-slate-500">Shapes style – looks different from user avatars</p>
         </div>
         <div><label class="field-label">Name</label><input type="text" id="ssName" class="field"></div>
+        <div class="bg-dark-950/50 border border-dark-700 rounded-xl p-3 space-y-3">
+          <label class="text-[10px] mono text-slate-500 uppercase tracking-widest font-bold">Server Tag</label>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[9px] text-slate-500 block mb-1">Tag (2-4 chars)</label>
+              <input type="text" id="ssTag" maxlength="4" placeholder="HVOC" class="field text-xs uppercase mono">
+            </div>
+            <div>
+              <label class="text-[9px] text-slate-500 block mb-1">Emoji</label>
+              <input type="text" id="ssTagEmoji" placeholder="⚡" class="field text-xs">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[9px] text-slate-500 block mb-1">Tag Color</label>
+              <input type="color" id="ssTagBgColor" class="w-full h-8 rounded bg-transparent cursor-pointer">
+            </div>
+            <div>
+              <label class="text-[9px] text-slate-500 block mb-1">Emoji Color</label>
+              <input type="color" id="ssTagEmojiColor" class="w-full h-8 rounded bg-transparent cursor-pointer">
+            </div>
+          </div>
+        </div>
         <div><label class="field-label">Description</label><input type="text" id="ssDesc" class="field"></div>
         
         <div class="bg-dark-950/50 border border-dark-700 rounded-xl p-3 space-y-3">
@@ -919,8 +985,28 @@
       <button onclick="adminTab('bans')" id="at-bans" class="py-2 px-3 text-xs mono tab-inactive">Bans</button>
     </div>
     <div class="flex-1 overflow-y-auto p-5">
-      <div id="ap-servers"><div id="adminServerList" class="space-y-2"></div></div>
-      <div id="ap-users" class="hidden"><div id="adminUserList" class="space-y-2"></div></div>
+      <div id="ap-servers">
+        <div class="flex gap-2 mb-4">
+          <input type="text" id="adminServerSearch" placeholder="Search servers by name..." class="field flex-1 text-xs" oninput="adminSearchServers(this.value)">
+        </div>
+        <div id="adminServerList" class="space-y-2"></div>
+        <div class="flex items-center justify-between mt-4">
+          <button onclick="adminServerPage(-1)" id="adminServerPrev" class="text-[10px] text-slate-400 px-2 py-1 rounded border border-dark-700 disabled:opacity-30">← Prev</button>
+          <span id="adminServerPageInfo" class="text-[10px] text-slate-500 mono">Page 1</span>
+          <button onclick="adminServerPage(1)" id="adminServerNext" class="text-[10px] text-slate-400 px-2 py-1 rounded border border-dark-700 disabled:opacity-30">Next →</button>
+        </div>
+      </div>
+      <div id="ap-users" class="hidden">
+        <div class="flex gap-2 mb-4">
+          <input type="text" id="adminUserSearch" placeholder="Search users by handle or email..." class="field flex-1 text-xs" oninput="adminSearchUsers(this.value)">
+        </div>
+        <div id="adminUserList" class="space-y-2"></div>
+        <div class="flex items-center justify-between mt-4">
+          <button onclick="adminUserPage(-1)" id="adminUserPrev" class="text-[10px] text-slate-400 px-2 py-1 rounded border border-dark-700 disabled:opacity-30">← Prev</button>
+          <span id="adminUserPageInfo" class="text-[10px] text-slate-500 mono">Page 1</span>
+          <button onclick="adminUserPage(1)" id="adminUserNext" class="text-[10px] text-slate-400 px-2 py-1 rounded border border-dark-700 disabled:opacity-30">Next →</button>
+        </div>
+      </div>
       <div id="ap-blacklist" class="hidden space-y-4">
         <div class="flex gap-2"><input type="text" id="blacklistDomainInput" placeholder="example.com" class="field flex-1 text-xs"><button onclick="addBlacklistedDomain()" class="btn-primary px-4 text-xs">Add</button></div>
         <div id="blacklistList" class="space-y-1 max-h-64 overflow-y-auto"></div>
@@ -959,7 +1045,8 @@ import {
 } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
-  collection, addDoc, getDocs, query, where, writeBatch
+  collection, addDoc, getDocs, query, where, writeBatch,
+  orderBy, startAfter, limit
 } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js';
 
@@ -1466,6 +1553,8 @@ window.saveGifAvatar = () => {
   const url = $('cropImage').src;
   if(S.gifTarget === 'avatar') {
     S.profile.avatar = url;
+    S.avatarMode = 'gif';
+    if(typeof avatarMethod === 'function') avatarMethod('gif');
     $('profileAvatarPreview').src = url;
     const c = S.profileStyle.avatarCrop;
     $('profileAvatarPreview').style.objectPosition = `${50 - (c.x/2)}% ${50 - (c.y/2)}%`;
@@ -1558,7 +1647,10 @@ window.renderDiscovery = (servers) => {
         </div>
         <div class="p-4 pt-8">
           <div class="flex items-center justify-between mb-1">
-            <h3 class="font-bold text-white truncate">${esc(s.name)}</h3>
+            <div class="flex items-center gap-1 min-w-0">
+              <h3 class="font-bold text-white truncate">${esc(s.name)}</h3>
+              ${renderServerTag(s)}
+            </div>
             <span class="text-[10px] text-slate-500 mono"><i class="fa-solid fa-users mr-1"></i>${s.memberCount||0}</span>
           </div>
           <p class="text-xs text-slate-400 line-clamp-2 h-8 mb-3">${esc(s.desc || 'No description.')}</p>
@@ -1600,12 +1692,11 @@ window.avatarMethod = (m) => {
   S.avatarMode = m;
   ['seed','url','gif'].forEach(x => {
     const el = $(`am-${x}`);
-    if(!el) return;
-    el.className = `px-2 py-1 rounded ${x===m?'bg-bch/20 text-bch':'bg-dark-800 text-slate-400'}`;
-    if(x !== 'gif') {
-      $(`avatar${x.charAt(0).toUpperCase()+x.slice(1)}Box`).classList.toggle('hidden', x!==m);
-    }
+    if(el) el.className = `px-2 py-1 rounded ${x===m?'bg-bch/20 text-bch':'bg-dark-800 text-slate-400'}`;
+    const box = $(`avatar${x.charAt(0).toUpperCase()+x.slice(1)}Box`);
+    if(box) box.classList.toggle('hidden', x!==m);
   });
+  if(m === 'gif') openGifPicker('avatar');
 };
 window.previewAvatar = seed => { $('profileAvatarPreview').src = userAvatar(seed||'Guest'); };
 window.previewFromUrl = url => { if(url && url.startsWith('http')) $('profileAvatarPreview').src = url; };
@@ -1631,6 +1722,8 @@ window.saveProfile = async () => {
   if(S.avatarMode === 'url' && $('profileAvatarUrl').value.trim()){
     const url = $('profileAvatarUrl').value.trim();
     if(url.startsWith('http')) avatar = url;
+  } else if(S.avatarMode === 'gif'){
+    avatar = $('profileAvatarPreview').src;
   } else {
     const seed = $('profileSeed').value.trim() || S.user.uid;
     avatar = userAvatar(seed);
@@ -1653,7 +1746,7 @@ window.saveProfile = async () => {
         const mRef = doc(db,'servers', s.id, 'members', S.user.uid);
         const mSnap = await getDoc(mRef);
         if(mSnap.exists()){
-          await updateDoc(mRef, { handle, avatar });
+          await updateDoc(mRef, { handle, avatar, style: S.profileStyle });
         }
       }
     } catch(propErr){ console.warn('propagate', propErr); }
@@ -1721,7 +1814,7 @@ window.openGifPicker = async (target = 'message') => {
   if(!S.user||S.user.isAnonymous) return alert('Registered users only');
   S.gifTarget = target;
   
-  if(target === 'avatar' || target === 'banner') {
+  if(target === 'avatar' || target === 'banner' || target === 'ring') {
     openGifEditor();
     return;
   }
@@ -2213,7 +2306,7 @@ function renderServerRail(servers){
   servers.forEach(s => {
     const muted = isServerMuted(s.id,'server');
     const btn = document.createElement('button');
-    btn.title = safe(s.name,'Server') + (muted?' (muted)':'');
+    btn.title = (s.tag ? `[${s.tag}] ` : '') + safe(s.name,'Server') + (muted?' (muted)':'');
     btn.className = `w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch text-slate-400 hover:text-black transition-all flex items-center justify-center font-bold text-xs overflow-hidden ${S.server?.id===s.id?'server-active':''} ${muted?'muted-server':''}`;
     if(s.iconUrl) btn.innerHTML = `<img src="${esc(s.iconUrl)}" class="w-full h-full object-cover">`;
     else btn.textContent = safe(s.name,'??').slice(0,2).toUpperCase();
@@ -2261,6 +2354,7 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   let bio = '';
   let status = 'offline';
   let createdAt = null;
+  let style = null;
 
   try{
     const snap = await getDoc(doc(db,'users', uid));
@@ -2271,9 +2365,12 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
       bio = u.bio || '';
       status = computePresence(u);
       createdAt = u.createdAt || null;
+      style = u.style || null;
+      // Update cache
+      if(!S.profileCache) S.profileCache = {};
+      S.profileCache[uid] = { handle, avatar, bio, status, createdAt, style };
     }
   }catch(err){ 
-    // Missing or insufficient permissions – fall back gracefully
     console.warn('Profile fetch failed (permissions or network):', err.message);
   }
 
@@ -2283,6 +2380,7 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
     if(mem){
       if(!handle || handle === 'User') handle = mem.handle || handle;
       if(!avatar || avatar.includes('Guest')) avatar = mem.avatar || avatar;
+      if(!style) style = mem.style || null;
     }
   }
 
@@ -2290,30 +2388,29 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   $('upAvatar').src = avatar;
   
   // Apply style & ring
-  const liveProfile = (S.profileCache && S.profileCache[uid]) || { style: null };
-  const s = liveProfile.style;
   const handleEl = $('upHandle');
   const bannerEl = $('upBanner');
   const avatarEl = $('upAvatar');
   const ringEl = $('upRing');
   
-  applyUserStyle(handleEl, liveProfile);
+  applyUserStyle(handleEl, { style });
   
-  if(s && s.banner) {
-    if(s.banner.type === 'color') {
-      bannerEl.style.background = s.banner.value;
+  if(style && style.banner) {
+    const b = style.banner;
+    if(b.type === 'color') {
+      bannerEl.style.background = b.value;
       bannerEl.innerHTML = '';
     } else {
       bannerEl.style.background = 'transparent';
-      bannerEl.innerHTML = `<img src="${esc(s.banner.value)}" class="w-full h-full object-cover">`;
+      bannerEl.innerHTML = `<img src="${esc(b.value)}" class="w-full h-full object-cover">`;
     }
   } else {
     bannerEl.style.background = '';
     bannerEl.innerHTML = '';
   }
 
-  if(s && s.avatarCrop) {
-    const c = s.avatarCrop;
+  if(style && style.avatarCrop) {
+    const c = style.avatarCrop;
     avatarEl.style.objectPosition = `${50 - (c.x/2)}% ${50 - (c.y/2)}%`;
     avatarEl.style.transform = `scale(${c.zoom})`;
   } else {
@@ -2321,8 +2418,8 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
     avatarEl.style.transform = 'none';
   }
 
-  if(s && s.ringUrl) {
-    ringEl.src = s.ringUrl;
+  if(style && style.ringUrl) {
+    ringEl.src = style.ringUrl;
     ringEl.classList.remove('hidden');
   } else {
     ringEl.classList.add('hidden');
@@ -2563,35 +2660,57 @@ window.createServer = async () => {
   }
   const name = $('newServerName').value.trim();
   const desc = $('newServerDesc').value.trim();
-  if(!name){ $('createServerErr').textContent='Name required'; $('createServerErr').classList.remove('hidden'); return; }
+    const tag = $('newServerTag').value.trim().toUpperCase();
+    const tagEmoji = $('newServerTagEmoji').value.trim() || '⚡';
+    const tagBgColor = $('newServerTagBgColor').value;
+    const tagEmojiColor = $('newServerTagEmojiColor').value;
 
-  let iconUrl = null;
-  if(S.serverIconMode === 'url' && $('newServerIconUrl').value.trim()){
-    const url = $('newServerIconUrl').value.trim();
-    if(url.startsWith('http')) iconUrl = url;
-  } else {
-    const seed = $('newServerSeed').value.trim() || name || 'server';
-    iconUrl = serverIcon(seed);
-  }
+    if(!name){ $('createServerErr').textContent='Name required'; $('createServerErr').classList.remove('hidden'); return; }
+    if(tag.length < 2 || tag.length > 4) { $('createServerErr').textContent='Tag must be 2-4 characters'; $('createServerErr').classList.remove('hidden'); return; }
+    if(!/^[A-Z0-9]+$/.test(tag)) { $('createServerErr').textContent='Tag: letters/numbers only'; $('createServerErr').classList.remove('hidden'); return; }
 
-  $('createServerErr').classList.add('hidden');
-  try{
-    const ref = doc(collection(db,'servers'));
-    const serverData = { 
-      name, 
-      desc:desc||'', 
-      ownerUid:S.user.uid, 
-      ownerHandle:safe(S.profile.handle,'Owner'), 
-      iconUrl, 
-      createdAt:Date.now(),
-      memberCount: 1,
-      isPublic: false,
-      tags: [],
-      ringUrl: '',
-      bannerUrl: ''
-    };
-    await setDoc(ref, serverData);
-    await setDoc(doc(db,'servers',ref.id,'members',S.user.uid), {
+    // Check tag uniqueness
+    try {
+      const taken = await getDoc(doc(db,'serverTags', tag));
+      if(taken.exists()){
+        $('createServerErr').textContent = 'Tag already taken';
+        $('createServerErr').classList.remove('hidden');
+        return;
+      }
+    } catch(e){ console.warn('tag check', e); }
+
+    let iconUrl = null;
+    if(S.serverIconMode === 'url' && $('newServerIconUrl').value.trim()){
+      const url = $('newServerIconUrl').value.trim();
+      if(url.startsWith('http')) iconUrl = url;
+    } else {
+      const seed = $('newServerSeed').value.trim() || name || 'server';
+      iconUrl = serverIcon(seed);
+    }
+
+    $('createServerErr').classList.add('hidden');
+    try{
+      const ref = doc(collection(db,'servers'));
+      const serverData = { 
+        name, 
+        desc:desc||'', 
+        ownerUid:S.user.uid, 
+        ownerHandle:safe(S.profile.handle,'Owner'), 
+        iconUrl, 
+        tag,
+        tagEmoji,
+        tagBgColor,
+        tagEmojiColor,
+        createdAt:Date.now(),
+        memberCount: 1,
+        isPublic: false,
+        tags: [],
+        ringUrl: '',
+        bannerUrl: ''
+      };
+      await setDoc(ref, serverData);
+      await setDoc(doc(db,'serverTags', tag), { serverId: ref.id, ownerUid: S.user.uid });
+      await setDoc(doc(db,'servers',ref.id,'members',S.user.uid), {
       role:'owner', handle:safe(S.profile.handle,'Owner'),
       avatar:safe(S.profile.avatar, userAvatar(S.user.uid)),
       uid:S.user.uid, joinedAt:Date.now(), roles:[]
@@ -2608,13 +2727,37 @@ window.createServer = async () => {
   }catch(err){ console.error(err); $('createServerErr').textContent=err.message; $('createServerErr').classList.remove('hidden'); }
 };
 
+function renderServerTag(s){
+  if(!s?.tag) return '';
+  const emoji = s.tagEmoji || '⚡';
+  const tagText = s.tag || '';
+  const tagBg = s.tagBgColor || '#0AC18E';
+  const emojiBg = s.tagEmojiColor || '#ffffff';
+  
+  return `
+    <div class="flex items-center ml-2 scale-90 origin-left">
+      <div class="flex items-center bg-dark-950/80 rounded-md border border-dark-700/50 overflow-hidden shadow-lg shadow-black/20">
+        <div class="px-1.5 py-0.5 flex items-center justify-center" style="background:${esc(emojiBg)}">
+          <span class="text-[10px]">${esc(emoji)}</span>
+        </div>
+        <div class="px-2 py-0.5 text-[10px] font-black mono tracking-tighter text-white uppercase" style="background:${esc(tagBg)}">
+          ${esc(tagText)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 async function switchServer(s){
   leaveVoice();
   S.inDMs = false;
   S.server = s;
   S.canManage = (s.ownerUid === S.user?.uid) || S.isAdmin;
   showChannelsView();
-  $('currentServerName').textContent = safe(s.name,'Server');
+  
+  const nameEl = $('currentServerName');
+  nameEl.innerHTML = `<span>${esc(safe(s.name,'Server'))}</span>${renderServerTag(s)}`;
+  
   if(s.iconUrl){ $('serverIconPreview').src = s.iconUrl; $('serverIconPreview').classList.remove('hidden'); }
   else $('serverIconPreview').classList.add('hidden');
   $('serverSettingsBtn').classList.toggle('hidden', !S.canManage);
@@ -3210,17 +3353,27 @@ function listenMembers(serverId){
         list.appendChild(hdr);
         arr.forEach(m => {
           const isOwner = m.role === 'owner';
-          const color = getMemberColor(m) || (isOwner ? '#F7931A' : null);
-          const nameStyle = color ? `style="color:${color}"` : '';
+          const style = m.style || null;
+          const nameStyle = getUserStyleString({ style });
+          const avatarStyle = getAvatarStyleString({ style });
+          const ringUrl = style?.ringUrl || '';
           const dotClass = m.presence === 'online' ? 'status-online' : m.presence === 'idle' ? 'status-idle' : m.presence === 'dnd' ? 'status-dnd' : 'status-offline';
           const statusLabel = m.presence === 'online' ? 'Online' : m.presence === 'idle' ? 'Idle' : m.presence === 'dnd' ? 'Do Not Disturb' : 'Offline';
+          
           const div = document.createElement('div');
           div.className = 'flex items-center gap-2 px-1.5 py-1.5 rounded hover:bg-dark-800 cursor-pointer';
           div.onclick = e => { showUserProfile(e, m.uid, m.handle, m.avatar); };
           div.oncontextmenu = e => { e.preventDefault(); showUserContext(e, m.uid, m.handle, m.avatar); };
-          div.innerHTML = `<div class="relative shrink-0"><img src="${esc(m.avatar)}" class="w-7 h-7 rounded-full border border-dark-600"><span class="member-status-dot ${dotClass}"></span></div>
-            <div class="min-w-0"><div class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-300'} truncate" ${nameStyle}>${esc(m.handle)}${isNewMember(m.uid)?' <i class="fa-solid fa-seedling new-member-leaf" title="New member"></i>':''}</div>
-            <div class="text-[9px] text-slate-500">${isOwner?'Owner · ':''}${statusLabel}</div></div>`;
+          div.innerHTML = `
+            <div class="relative shrink-0 avatar-ring-wrapper">
+              <img src="${esc(m.avatar)}" class="w-7 h-7 rounded-full border border-dark-600 relative z-10" style="${avatarStyle}">
+              ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring w-7 h-7">` : ''}
+              <span class="member-status-dot ${dotClass} z-20"></span>
+            </div>
+            <div class="min-w-0">
+              <div class="font-bold text-xs truncate" style="${nameStyle}">${esc(m.handle)}${isNewMember(m.uid)?' <i class="fa-solid fa-seedling new-member-leaf" title="New member"></i>':''}</div>
+              <div class="text-[9px] text-slate-500">${isOwner?'Owner · ':''}${statusLabel}</div>
+            </div>`;
           list.appendChild(div);
         });
       };
@@ -3307,12 +3460,26 @@ function renderFriends(){
   el.innerHTML = '';
   if(!S.friends.length){ el.innerHTML = '<p class="text-[10px] text-slate-600 px-2">No friends yet. Right-click someone or use Add Friend.</p>'; return; }
   S.friends.forEach(f => {
+    const style = f.style || null;
+    const nameStyle = getUserStyleString({ style });
+    const avatarStyle = getAvatarStyleString({ style });
+    const ringUrl = style?.ringUrl || '';
+    
     const div = document.createElement('div');
     div.className = 'dm-item';
     div.dataset.name = (f.handle||'').toLowerCase();
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
     div.oncontextmenu = e => showUserContext(e, f.uid, f.handle, f.avatar);
-    div.innerHTML = `<img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full cursor-pointer" data-profile-uid="${esc(f.uid)}" onclick="event.stopPropagation();showUserProfile(event,'${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')"><div class="min-w-0 flex-1"><div class="text-xs text-slate-300 truncate">${esc(f.handle)}</div></div><button onclick="event.stopPropagation();startDM('${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')" class="text-slate-500 hover:text-bch text-xs"><i class="fa-solid fa-message"></i></button>`;
+    div.innerHTML = `
+      <div class="avatar-ring-wrapper shrink-0">
+        <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full cursor-pointer relative z-10" style="${avatarStyle}" data-profile-uid="${esc(f.uid)}" onclick="event.stopPropagation();showUserProfile(event,'${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')">
+        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring w-8 h-8">` : ''}
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="text-xs truncate" style="${nameStyle}">${esc(f.handle)}</div>
+      </div>
+      <button onclick="event.stopPropagation();startDM('${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')" class="text-slate-500 hover:text-bch text-xs"><i class="fa-solid fa-message"></i></button>
+    `;
     el.appendChild(div);
   });
 }
@@ -3342,11 +3509,22 @@ function renderDMList(){
   const el = $('dmList'); if(!el) return;
   el.innerHTML = '';
   S.friends.forEach(f => {
+    const style = f.style || null;
+    const nameStyle = getUserStyleString({ style });
+    const avatarStyle = getAvatarStyleString({ style });
+    const ringUrl = style?.ringUrl || '';
+
     const div = document.createElement('div');
     div.className = `dm-item ${S.dmTarget?.uid===f.uid?'active':''}`;
     div.dataset.name = (f.handle||'').toLowerCase();
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
-    div.innerHTML = `<img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full"><span class="text-xs truncate">${esc(f.handle)}</span>`;
+    div.innerHTML = `
+      <div class="avatar-ring-wrapper shrink-0">
+        <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full relative z-10" style="${avatarStyle}">
+        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring w-8 h-8">` : ''}
+      </div>
+      <span class="text-xs truncate" style="${nameStyle}">${esc(f.handle)}</span>
+    `;
     el.appendChild(div);
   });
 }
@@ -3680,6 +3858,12 @@ window.openModal = id => {
     $('ssTags').value = (S.server?.tags || []).join(', ');
     $('ssRingUrl').value = S.server?.ringUrl || '';
     $('ssBannerUrl').value = S.server?.bannerUrl || '';
+    
+    $('ssTag').value = S.server?.tag || '';
+    $('ssTagEmoji').value = S.server?.tagEmoji || '⚡';
+    $('ssTagBgColor').value = S.server?.tagBgColor || '#0AC18E';
+    $('ssTagEmojiColor').value = S.server?.tagEmojiColor || '#ffffff';
+
     S.ssIconMode = 'seed';
     ssIconMethod('seed');
     sSettingsTab('overview');
@@ -3691,6 +3875,19 @@ window.openModal = id => {
     $('profileBio').value = safe(S.profile.bio,'');
     $('profileStatus').value = safe(S.profile.status,'');
     $('profileAvatarPreview').src = safe(S.profile.avatar, userAvatar('Guest'));
+    
+    // Set initial avatar mode
+    const av = S.profile.avatar || '';
+    if(av.includes('dicebear.com')){
+      S.avatarMode = 'seed';
+      const seedMatch = av.match(/seed=([^&]+)/);
+      $('profileSeed').value = seedMatch ? seedMatch[1] : '';
+    } else {
+      S.avatarMode = 'url';
+      $('profileAvatarUrl').value = av;
+    }
+    avatarMethod(S.avatarMode);
+    
     initProfileEditor();
   }
   if(id === 'auth') loadRemember();
@@ -3701,6 +3898,11 @@ window.openModal = id => {
     $('newServerSeed').value = '';
     $('newServerIconUrl').value = '';
     $('newServerIconPreview').src = serverIcon('server');
+    
+    $('newServerTag').value = '';
+    $('newServerTagEmoji').value = '⚡';
+    $('newServerTagBgColor').value = '#0AC18E';
+    $('newServerTagEmojiColor').value = '#ffffff';
   }
   $(`modal-${id}`)?.classList.remove('hidden');
 };
@@ -3733,10 +3935,38 @@ window.saveServerSettings = async () => {
   const tags = $('ssTags').value.split(',').map(t => t.trim().toLowerCase()).filter(t => t.length > 0).slice(0, 10);
   const ringUrl = $('ssRingUrl').value.trim();
   const bannerUrl = $('ssBannerUrl').value.trim();
+  
+  const tag = $('ssTag').value.trim().toUpperCase();
+  const tagEmoji = $('ssTagEmoji').value.trim() || '⚡';
+  const tagBgColor = $('ssTagBgColor').value;
+  const tagEmojiColor = $('ssTagEmojiColor').value;
 
-  await updateDoc(doc(db,'servers',S.server.id), {name,desc,iconUrl,isPublic,tags,ringUrl,bannerUrl});
-  S.server = {...S.server, name, desc, iconUrl, isPublic, tags, ringUrl, bannerUrl};
-  $('currentServerName').textContent = name;
+  if(tag.length < 2 || tag.length > 4) return alert('Tag must be 2-4 chars');
+  
+  // If tag changed, check uniqueness
+  if(tag !== S.server.tag){
+    try {
+      const taken = await getDoc(doc(db,'serverTags', tag));
+      if(taken.exists()) return alert('Tag already taken');
+      
+      // Reserve new tag
+      await setDoc(doc(db,'serverTags', tag), { serverId: S.server.id, ownerUid: S.user.uid });
+      // Delete old tag reservation
+      if(S.server.tag) await deleteDoc(doc(db,'serverTags', S.server.tag));
+    } catch(e){ console.error(e); }
+  }
+
+  const updateData = {
+    name, desc, iconUrl, isPublic, tags, ringUrl, bannerUrl,
+    tag, tagEmoji, tagBgColor, tagEmojiColor
+  };
+
+  await updateDoc(doc(db,'servers',S.server.id), updateData);
+  S.server = {...S.server, ...updateData};
+  
+  const nameEl = $('currentServerName');
+  nameEl.innerHTML = `<span>${esc(name)}</span>${renderServerTag(S.server)}`;
+  
   if(iconUrl){ $('serverIconPreview').src = iconUrl; $('serverIconPreview').classList.remove('hidden'); }
   else $('serverIconPreview').classList.add('hidden');
   await loadMyServers();
@@ -3763,9 +3993,11 @@ async function renderServerMembers(){
     
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
+    const ringUrl = style?.ringUrl || '';
     row.innerHTML = `
-      <div class="w-7 h-7 rounded-full overflow-hidden border border-dark-600 shrink-0">
-        <img src="${esc(avatar)}" class="w-full h-full object-cover" style="${avatarStyle}">
+      <div class="w-7 h-7 rounded-full shrink-0 border border-dark-600 avatar-ring-wrapper">
+        <img src="${esc(avatar)}" class="w-full h-full rounded-full object-cover relative z-10" style="${avatarStyle}">
+        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring w-full h-full rounded-full">` : ''}
       </div>
       <div class="flex-1 min-w-0">
         <div class="font-bold text-xs truncate" style="${userStyle}">${esc(handle)}</div>
@@ -3913,34 +4145,142 @@ window.loadBans = async () => {
   });
 };
 window.unbanUser = async id => { if(!confirm('Unban?')) return; await deleteDoc(doc(db,'bannedUsers',id)); loadBans(); };
-window.loadAdminServers = async () => {
-  const snap = await getDocs(collection(db,'servers'));
-  const el = $('adminServerList'); el.innerHTML = '';
-  snap.forEach(d => {
-    const s = d.data();
-    const row = document.createElement('div');
-    row.className = 'flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-4 py-3';
-    row.innerHTML = `${s.iconUrl?`<img src="${esc(s.iconUrl)}" class="w-10 h-10 rounded-xl object-cover">`:'<div class="w-10 h-10 rounded-xl bg-dark-700"></div>'}<div class="flex-1 min-w-0"><div class="font-bold text-sm text-white">${esc(s.name)}</div><div class="text-[10px] text-slate-500 mono">owner: ${esc(s.ownerHandle||'—')}</div></div><button onclick="adminEnterServer('${esc(d.id)}')" class="text-xs text-bch border border-bch/40 rounded px-2 py-1">Enter</button>`;
-    el.appendChild(row);
-  });
+S.adminServers = { page: 0, lastDoc: null, search: '', perPage: 10 };
+S.adminUsers = { page: 0, lastDoc: null, search: '', perPage: 10 };
+
+window.adminSearchServers = (q) => {
+  S.adminServers.search = q.trim().toLowerCase();
+  S.adminServers.page = 0;
+  S.adminServers.lastDoc = null;
+  loadAdminServers();
 };
-window.adminEnterServer = async id => { const snap = await getDoc(doc(db,'servers',id)); if(snap.exists()){ closeModal('admin'); await switchServer({id, ...snap.data()}); } };
+window.adminServerPage = (dir) => {
+  if(dir === -1 && S.adminServers.page === 0) return;
+  S.adminServers.page += dir;
+  if(dir === -1) S.adminServers.lastDoc = null; // Can't easily go back in Firestore without storing all lastDocs
+  loadAdminServers();
+};
+
+window.loadAdminServers = async () => {
+  const el = $('adminServerList');
+  el.innerHTML = '<div class="text-center py-4 text-slate-500 mono animate-pulse">Loading servers...</div>';
+  
+  try {
+    let q;
+    if(S.adminServers.search) {
+      // Basic search: startAt(search) and endAt(search + \uf8ff)
+      q = query(collection(db, 'servers'), 
+                orderBy('name'), 
+                where('name', '>=', S.adminServers.search), 
+                where('name', '<=', S.adminServers.search + '\uf8ff'),
+                limit(S.adminServers.perPage));
+    } else {
+      q = query(collection(db, 'servers'), orderBy('createdAt', 'desc'), limit(S.adminServers.perPage));
+    }
+
+    if(S.adminServers.page > 0 && S.adminServers.lastDoc) {
+      q = query(q, startAfter(S.adminServers.lastDoc));
+    }
+
+    const snap = await getDocs(q);
+    el.innerHTML = '';
+    if(snap.empty) {
+      el.innerHTML = '<div class="text-center py-4 text-slate-500 mono">No servers found.</div>';
+      return;
+    }
+
+    S.adminServers.lastDoc = snap.docs[snap.docs.length - 1];
+    $('adminServerPageInfo').textContent = `Page ${S.adminServers.page + 1}`;
+    $('adminServerPrev').disabled = S.adminServers.page === 0;
+    $('adminServerNext').disabled = snap.docs.length < S.adminServers.perPage;
+
+    snap.forEach(d => {
+      const s = d.data();
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-4 py-3 hover:border-kiro/30 transition-all';
+      row.innerHTML = `
+        ${s.iconUrl?`<img src="${esc(s.iconUrl)}" class="w-10 h-10 rounded-xl object-cover">`:'<div class="w-10 h-10 rounded-xl bg-dark-700"></div>'}
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-sm text-white truncate">${esc(s.name)}</div>
+          <div class="text-[10px] text-slate-500 mono">owner: ${esc(s.ownerHandle||'—')}</div>
+        </div>
+        <button onclick="adminEnterServer('${esc(d.id)}')" class="text-xs text-bch border border-bch/40 rounded px-2 py-1 hover:bg-bch/10">Enter</button>
+      `;
+      el.appendChild(row);
+    });
+  } catch(e) {
+    el.innerHTML = `<div class="text-center py-4 text-red-400 mono">Error: ${e.message}</div>`;
+  }
+};
+
+window.adminSearchUsers = (q) => {
+  S.adminUsers.search = q.trim().toLowerCase();
+  S.adminUsers.page = 0;
+  S.adminUsers.lastDoc = null;
+  loadAdminUsers();
+};
+window.adminUserPage = (dir) => {
+  if(dir === -1 && S.adminUsers.page === 0) return;
+  S.adminUsers.page += dir;
+  if(dir === -1) S.adminUsers.lastDoc = null;
+  loadAdminUsers();
+};
+
 window.loadAdminUsers = async () => {
-  const snap = await getDocs(collection(db,'users'));
-  const el = $('adminUserList'); el.innerHTML = '';
-  snap.forEach(d => {
-    const u = d.data();
-    const row = document.createElement('div');
-    row.className = 'flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-3 py-2';
-    row.innerHTML = `<img src="${esc(u.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full border border-dark-700"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-white">${esc(u.handle||'User')} <span class="text-slate-500 font-normal">${esc(u.email||'')}</span></div><div class="text-[9px] text-slate-500 mono">${esc(d.id)}</div></div>
-    ${u.email===ADMIN_EMAIL?'<span class="badge-admin">ADMIN</span>':`
-      <div class="flex gap-1">
-        <button onclick="adminKickUser('${esc(d.id)}','${esc(u.handle)}')" class="text-[10px] text-amber-500 border border-amber-500/30 rounded px-1.5 py-0.5 hover:bg-amber-500/10">Kick</button>
-        <button onclick="adminBanUser('${esc(d.id)}','${esc(u.email||u.handle)}')" class="text-[10px] text-red-500 border border-red-500/30 rounded px-1.5 py-0.5 hover:bg-red-500/10">Ban</button>
-      </div>
-    `}`;
-    el.appendChild(row);
-  });
+  const el = $('adminUserList');
+  el.innerHTML = '<div class="text-center py-4 text-slate-500 mono animate-pulse">Loading users...</div>';
+  
+  try {
+    let q;
+    if(S.adminUsers.search) {
+      // Search by handle (case-insensitive handleKey recommended but using handle for now)
+      q = query(collection(db, 'users'), 
+                orderBy('handle'), 
+                where('handle', '>=', S.adminUsers.search), 
+                where('handle', '<=', S.adminUsers.search + '\uf8ff'),
+                limit(S.adminUsers.perPage));
+    } else {
+      q = query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(S.adminUsers.perPage));
+    }
+
+    if(S.adminUsers.page > 0 && S.adminUsers.lastDoc) {
+      q = query(q, startAfter(S.adminUsers.lastDoc));
+    }
+
+    const snap = await getDocs(q);
+    el.innerHTML = '';
+    if(snap.empty) {
+      el.innerHTML = '<div class="text-center py-4 text-slate-500 mono">No users found.</div>';
+      return;
+    }
+
+    S.adminUsers.lastDoc = snap.docs[snap.docs.length - 1];
+    $('adminUserPageInfo').textContent = `Page ${S.adminUsers.page + 1}`;
+    $('adminUserPrev').disabled = S.adminUsers.page === 0;
+    $('adminUserNext').disabled = snap.docs.length < S.adminUsers.perPage;
+
+    snap.forEach(d => {
+      const u = d.data();
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-3 bg-dark-950 border border-dark-800 rounded-lg px-3 py-2 hover:border-kiro/30 transition-all';
+      row.innerHTML = `
+        <img src="${esc(u.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full border border-dark-700">
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-xs text-white">${esc(u.handle||'User')} <span class="text-slate-500 font-normal text-[10px] ml-1">${esc(u.email||'')}</span></div>
+          <div class="text-[9px] text-slate-500 mono truncate">${esc(d.id)}</div>
+        </div>
+        ${u.email===ADMIN_EMAIL?'<span class="badge-admin">ADMIN</span>':`
+          <div class="flex gap-1">
+            <button onclick="adminKickUser('${esc(d.id)}','${esc(u.handle)}')" class="text-[10px] text-amber-500 border border-amber-500/30 rounded px-1.5 py-0.5 hover:bg-amber-500/10">Kick</button>
+            <button onclick="adminBanUser('${esc(d.id)}','${esc(u.email||u.handle)}')" class="text-[10px] text-red-500 border border-red-500/30 rounded px-1.5 py-0.5 hover:bg-red-500/10">Ban</button>
+          </div>
+        `}
+      `;
+      el.appendChild(row);
+    });
+  } catch(e) {
+    el.innerHTML = `<div class="text-center py-4 text-red-400 mono">Error: ${e.message}</div>`;
+  }
 };
 
 window.adminKickUser = async (uid, handle) => {
@@ -4041,16 +4381,19 @@ function applyUserStyle(el, profile){
     el.style.fontFamily = '';
     el.style.background = 'none';
     el.style.webkitTextFillColor = '';
+    el.style.webkitBackgroundClip = '';
     el.style.color = '';
     return;
   }
-  el.style.fontFamily = s.font || '';
+  el.style.fontFamily = s.font || 'inherit';
   if(s.nameGradient) {
     el.style.background = s.nameGradient;
     el.style.webkitBackgroundClip = 'text';
     el.style.webkitTextFillColor = 'transparent';
+    el.style.color = 'transparent';
   } else {
     el.style.background = 'none';
+    el.style.webkitBackgroundClip = '';
     el.style.webkitTextFillColor = s.nameColor || '#ffffff';
     el.style.color = s.nameColor || '#ffffff';
   }
@@ -4059,11 +4402,11 @@ function applyUserStyle(el, profile){
 function getUserStyleString(profile){
   if(!profile || !profile.style) return '';
   const s = profile.style;
-  let css = `font-family:${s.font};`;
+  let css = `font-family:${s.font||'inherit'};`;
   if(s.nameGradient) {
-    css += `background:${s.nameGradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;`;
+    css += `background:${s.nameGradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;color:transparent;`;
   } else {
-    css += `color:${s.nameColor};`;
+    css += `color:${s.nameColor||'#ffffff'};background:none;-webkit-text-fill-color:initial;`;
   }
   return css;
 }
