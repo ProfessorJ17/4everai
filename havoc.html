@@ -129,18 +129,30 @@
       object-fit: cover;
     }
 
-    /* Force GIF avatars in lists to fit their containers */
-    #membersList img[src*=".gif"], #dmList img[src*=".gif"], #friendsList img[src*=".gif"],
-    #membersList img[src*="giphy"], #dmList img[src*="giphy"], #friendsList img[src*="giphy"],
-    #membersList img[src*="tenor"], #dmList img[src*="tenor"], #friendsList img[src*="tenor"] {
-      width: 100% !important;
-      height: 100% !important;
+    /* Force all avatars in members list to be correct size */
+    #membersList .avatar-ring-wrapper {
+      display: inline-block !important;
+      width: 32px !important;
+      height: 32px !important;
+      overflow: hidden !important;
+      flex-shrink: 0 !important;
+    }
+
+    #membersList .avatar-ring-wrapper img {
+      width: 32px !important;
+      height: 32px !important;
       object-fit: cover !important;
     }
 
-    /* Ensure avatar wrappers in lists respect their size classes */
-    #membersList .avatar-ring-wrapper, #dmList .avatar-ring-wrapper, #friendsList .avatar-ring-wrapper {
-      overflow: hidden;
+    #membersList .avatar-ring {
+      max-width: 38px !important;
+      max-height: 38px !important;
+    }
+
+    /* Force the flex container to not expand */
+    #membersList > div > div {
+      max-width: 32px;
+      max-height: 32px;
     }
     
     /* DISCOVERY MODAL */
@@ -3551,7 +3563,6 @@ function listenMembers(serverId){
           div.innerHTML = `
             <div class="relative shrink-0 avatar-ring-wrapper">
               <img src="${esc(m.avatar)}" class="w-8 h-8 rounded-full border border-dark-600 relative z-10">
-              ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
               <span class="member-status-dot ${dotClass} z-20"></span>
             </div>
             <div class="min-w-0 flex-1">
