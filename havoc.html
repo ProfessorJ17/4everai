@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" class="h-full bg-[#050608] text-slate-100 antialiased">
 <head>
@@ -174,8 +173,8 @@
           <button id="ucRole" onclick="event.stopPropagation();openStatusMenu(event)" class="text-[10px] text-slate-500 mono truncate hover:text-bch text-left">Not signed in</button>
         </div>
         <div class="flex items-center gap-0.5">
-          <button id="micBtn" onclick="toggleMic()" class="w-7 h-7 rounded hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="Mute"><i class="fa-solid fa-microphone"></i></button>
-          <button id="deafenBtn" onclick="toggleDeafen()" class="w-7 h-7 rounded hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="Deafen"><i class="fa-solid fa-headphones"></i></button>
+          <button id="micBtn" onclick="toggleMic()" oncontextmenu="showAudioDevices(event, 'input')" class="w-7 h-7 rounded hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="Mute"><i class="fa-solid fa-microphone"></i></button>
+          <button id="deafenBtn" onclick="toggleDeafen()" oncontextmenu="showAudioDevices(event, 'output')" class="w-7 h-7 rounded hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="Deafen"><i class="fa-solid fa-headphones"></i></button>
           <button onclick="openModal('profile')" class="w-7 h-7 rounded hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="Settings"><i class="fa-solid fa-gear"></i></button>
         </div>
       </div>
@@ -240,7 +239,7 @@
       <div id="videoGrid" class="video-grid mb-6 hidden"></div>
       <div id="voicePeers" class="flex flex-wrap gap-4 justify-center mb-6 max-w-lg"></div>
       <div class="flex flex-wrap gap-3 justify-center">
-        <button id="muteBtn" onclick="toggleMute()" class="px-4 py-2 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-sm font-bold"><i class="fa-solid fa-microphone"></i> Mute</button>
+        <button id="muteBtn" onclick="toggleMic()" class="px-4 py-2 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-sm font-bold"><i class="fa-solid fa-microphone"></i> Mute</button>
         <button id="camBtn" onclick="toggleCamera()" class="px-4 py-2 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-sm font-bold"><i class="fa-solid fa-video"></i> Camera</button>
         <button id="screenBtn" onclick="toggleScreenShare()" class="px-4 py-2 bg-dark-800 hover:bg-dark-700 border border-dark-600 rounded-lg text-sm font-bold"><i class="fa-solid fa-desktop"></i> Share Screen</button>
         <button onclick="leaveVoice()" class="px-4 py-2 bg-red-900/50 hover:bg-red-800 border border-red-500/40 rounded-lg text-sm font-bold text-red-200"><i class="fa-solid fa-phone-slash"></i> Disconnect</button>
@@ -1023,24 +1022,8 @@ window.clearImagePreview = () => { S.pendingImageUrl=null; S.pendingImage=null; 
 S.gifPage = 0;
 S.gifCache = [];
 S.gifFiltered = [];
-
-const TGIF_DATA = [
-  {desc: "cat tablet mouse chase", url: "https://38.media.tumblr.com/9ead028ef62004ef6ac2b92e52edd210/tumblr_nok4eeONTv1s2yegdo1_400.gif"},
-  {desc: "man glaring sunglasses surprise", url: "https://38.media.tumblr.com/9f6c25cc350f12aa74a7dc386a5c4985/tumblr_mevmyaKtDf1rgvhr8o1_500.gif"},
-  {desc: "dancing man dressed in red", url: "https://38.media.tumblr.com/9f43dc410be85b1159d1f42663d811d7/tumblr_mllh01J96X1s9npefo1_250.gif"},
-  {desc: "jungle animals meeting nose to nose", url: "https://38.media.tumblr.com/9f659499c8754e40cf3f7ac21d08dae6/tumblr_nqlr0rn8ox1r2r0koo1_400.gif"},
-  {desc: "excited minion celebrating cheering", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/11sBLVxNs7v6WA/giphy.gif"},
-  {desc: "mind blown explosion head shake", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/26ufdipLchakf5MRy/giphy.gif"},
-  {desc: "michael scott the office no god please no", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/12XMGIWtrHBl5e/giphy.gif"},
-  {desc: "popcorn eating drama waiting", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6Z2x6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/hVTouqNmubKKQ/giphy.gif"},
-  {desc: "tiger running fast garden", url: "https://38.media.tumblr.com/8c14aa571911985d6d774762f8159452/tumblr_n4gk7efcMw1spy7ono1_400.gif"},
-  {desc: "giant tiger creature jumps", url: "https://38.media.tumblr.com/be596acc2860e691e578c2a64d044d94/tumblr_nq0mhrqyAf1u4fhlko1_250.gif"},
-  {desc: "dog dancing circle", url: "https://31.media.tumblr.com/tumblr_m43v8zZ3z11r5z7sho1_500.gif"},
-  {desc: "man falling off chair", url: "https://33.media.tumblr.com/tumblr_n7w1x0rVwP1t0u4coo1_500.gif"},
-  {desc: "woman laughing pointing", url: "https://38.media.tumblr.com/tumblr_n8b8r7hQeD1tbg4ybo1_500.gif"},
-  {desc: "man eating sandwich", url: "https://31.media.tumblr.com/tumblr_n8j8y8qUoE1tbg4ybo1_500.gif"},
-  {desc: "cat jumping into box", url: "https://33.media.tumblr.com/tumblr_n8k8z8sUpF1tbg4ybo1_500.gif"}
-];
+S.tgifData = [];
+S.tgifLoading = false;
 
 window.openGifPicker = async () => {
   if(!S.user||S.user.isAnonymous) return alert('Registered users only');
@@ -1049,13 +1032,46 @@ window.openGifPicker = async () => {
   S.gifPage = 0;
   openModal('gif');
   await loadGifBank();
+  if(!S.tgifData.length) await loadFullTgifDataset();
 };
 
+async function loadFullTgifDataset(){
+  if(S.tgifLoading) return;
+  S.tgifLoading = true;
+  const status = document.createElement('div');
+  status.id = 'tgifLoadStatus';
+  status.className = 'text-[9px] text-bch mono animate-pulse mt-1';
+  status.textContent = 'Loading 100k+ GIF dataset...';
+  $('gifSearchInput').parentElement.appendChild(status);
+
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/raingo/TGIF-Release/master/data/tgif-v1.0.tsv');
+    const text = await res.text();
+    const lines = text.split('\n');
+    S.tgifData = lines.map(line => {
+      const [url, desc] = line.split('\t');
+      if(!url || !desc) return null;
+      return { url, desc: desc.trim() };
+    }).filter(Boolean);
+    status.textContent = `✓ ${S.tgifData.length.toLocaleString()} GIFs loaded`;
+    setTimeout(() => status.remove(), 3000);
+  } catch(e) {
+    status.className = 'text-[9px] text-red-400 mono mt-1';
+    status.textContent = 'Failed to load full dataset.';
+    console.error('TGIF load error', e);
+  }
+  S.tgifLoading = false;
+}
+
 window.searchGifs = (q) => {
-  q = q.toLowerCase();
+  q = (q||'').toLowerCase().trim();
   const localMatches = S.gifCache.filter(g => (g.desc||'').toLowerCase().includes(q));
-  const tgifMatches = TGIF_DATA.filter(g => g.desc.toLowerCase().includes(q)).map(g => ({...g, uses: 0}));
   
+  // Search TGIF data if loaded, otherwise use fallback
+  const tgifMatches = S.tgifData.length > 0 
+    ? S.tgifData.filter(g => g.desc.toLowerCase().includes(q)).map(g => ({...g, uses: 0}))
+    : [];
+    
   const seen = new Set();
   S.gifFiltered = [...localMatches, ...tgifMatches].filter(g => {
     if(seen.has(g.url)) return false;
@@ -1096,26 +1112,23 @@ async function loadGifBank(){
     S.gifCache = [];
     snap.forEach(d => S.gifCache.push({id:d.id, ...d.data()}));
     
-    // Seed with TGIF if empty or few
-    if(S.gifCache.length < 5){
-      for(const g of TGIF_DATA.slice(0, 10)){
-        if(!S.gifCache.find(x => x.url === g.url)){
-          S.gifCache.push({...g, uses: 0});
-        }
-      }
-    }
-
     S.gifCache.sort((a,b) => (b.uses||0) - (a.uses||0));
     S.gifFiltered = [...S.gifCache];
+    
+    // If empty search, show some defaults from TGIF if available
+    if(!S.gifFiltered.length && S.tgifData.length > 0){
+      S.gifFiltered = S.tgifData.slice(0, 50).map(g => ({...g, uses: 0}));
+    }
+
     renderGifPage();
   }catch(e){
-    S.gifFiltered = TGIF_DATA.map(g => ({...g, uses:0}));
+    if(S.tgifData.length) S.gifFiltered = S.tgifData.slice(0, 50).map(g => ({...g, uses:0}));
     renderGifPage();
   }
 }
 
 function renderGifPage(){
-  const per = 21;
+  const per = 25;
   const start = S.gifPage * per;
   const slice = S.gifFiltered.slice(start, start + per);
   const grid = $('gifGrid');
@@ -1188,16 +1201,29 @@ window.stopAudioRecord = (cancel) => {
 };
 
 // ========== MIC / DEAFEN ==========
+function updateMicUI() {
+  const icon = S.micMuted ? '<i class="fa-solid fa-microphone-slash text-red-400"></i>' : '<i class="fa-solid fa-microphone"></i>';
+  if ($('micBtn')) $('micBtn').innerHTML = icon;
+  const voiceMuteBtn = $('muteBtn');
+  if (voiceMuteBtn) {
+    voiceMuteBtn.innerHTML = S.micMuted ? '<i class="fa-solid fa-microphone-slash"></i> Unmute' : '<i class="fa-solid fa-microphone"></i> Mute';
+    voiceMuteBtn.classList.toggle('bg-red-900/50', S.micMuted);
+  }
+}
+
 window.toggleMic = () => {
   S.micMuted = !S.micMuted;
-  $('micBtn').innerHTML = S.micMuted ? '<i class="fa-solid fa-microphone-slash text-red-400"></i>' : '<i class="fa-solid fa-microphone"></i>';
+  updateMicUI();
   if(S.localStream) S.localStream.getAudioTracks().forEach(t => t.enabled = !S.micMuted && !S.deafened);
 };
+
 window.toggleDeafen = () => {
   S.deafened = !S.deafened;
   $('deafenBtn').innerHTML = S.deafened ? '<i class="fa-solid fa-headphones text-red-400"></i>' : '<i class="fa-solid fa-headphones"></i>';
   if(S.localStream) S.localStream.getAudioTracks().forEach(t => t.enabled = !S.micMuted && !S.deafened);
   document.querySelectorAll('audio[data-remote]').forEach(a => a.muted = S.deafened);
+  // Auto-mute if deafening
+  if (S.deafened && !S.micMuted) window.toggleMic();
 };
 
 // ========== SERVERS ==========
@@ -1375,6 +1401,60 @@ document.addEventListener('click', (e) => {
 
 function hideCtx(){ $('ctxMenu').classList.add('hidden'); $('reactionPicker').classList.add('hidden'); $('statusMenu')?.classList.add('hidden'); $('notifMenu')?.classList.add('hidden'); }
 document.addEventListener('click', e => { if(!e.target.closest('#ctxMenu') && !e.target.closest('#reactionPicker')) hideCtx(); });
+
+window.showAudioDevices = async (e, type) => {
+  e.preventDefault();
+  const menu = $('ctxMenu');
+  menu.innerHTML = `<div class="p-2 text-[10px] text-slate-500 mono animate-pulse">Loading devices...</div>`;
+  menu.classList.remove('hidden');
+  
+  const rect = e.currentTarget.getBoundingClientRect();
+  menu.style.left = `${rect.left}px`;
+  menu.style.top = `${rect.top - 5}px`;
+  menu.style.transform = `translateY(-100%)`;
+
+  try {
+    await navigator.mediaDevices.getUserMedia({ audio: true });
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const kind = type === 'input' ? 'audioinput' : 'audiooutput';
+    const filtered = devices.filter(d => d.kind === kind);
+    const storedId = localStorage.getItem(type === 'input' ? 'havoc_mic_id' : 'havoc_speaker_id');
+
+    menu.innerHTML = `
+      <div class="px-2 py-1.5 text-[9px] text-slate-500 uppercase font-bold mono border-b border-dark-700">
+        Select ${type === 'input' ? 'Microphone' : 'Output Device'}
+      </div>
+      <div class="py-1 max-h-60 overflow-y-auto min-w-[160px]">
+        <button onclick="setAudioDevice('${type}', '')" class="w-full flex items-center justify-between px-2 py-1.5 hover:bg-bch/20 text-xs text-slate-300 group">
+          <span class="truncate">System Default</span>
+          ${!storedId ? '<i class="fa-solid fa-check text-bch text-[10px]"></i>' : ''}
+        </button>
+        ${filtered.map(d => `
+          <button onclick="setAudioDevice('${type}', '${esc(d.deviceId)}')" class="w-full flex items-center justify-between px-2 py-1.5 hover:bg-bch/20 text-xs text-slate-300 group">
+            <span class="truncate">${esc(d.label || 'Unknown Device')}</span>
+            ${storedId === d.deviceId ? '<i class="fa-solid fa-check text-bch text-[10px]"></i>' : ''}
+          </button>
+        `).join('')}
+      </div>
+    `;
+  } catch (err) {
+    menu.innerHTML = `<div class="p-2 text-[10px] text-red-400">Permission denied</div>`;
+  }
+};
+
+window.setAudioDevice = async (type, id) => {
+  localStorage.setItem(type === 'input' ? 'havoc_mic_id' : 'havoc_speaker_id', id);
+  hideCtx();
+  if (type === 'input') {
+    if (S.localStream) {
+      alert('Microphone preference saved. Please rejoin the voice channel to switch devices.');
+    }
+  } else {
+    document.querySelectorAll('audio[data-remote]').forEach(a => {
+      if (typeof a.setSinkId === 'function') a.setSinkId(id);
+    });
+  }
+};
 
 window.createServer = async () => {
   if(!S.user){ closeModal('createServer'); openModal('auth'); return; }
@@ -2187,7 +2267,18 @@ async function joinVoice(c){
   $('voiceStatus').textContent = 'Requesting media…';
   renderChannels();
   try{
-    S.localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
+    const micId = localStorage.getItem('havoc_mic_id');
+    const constraints = { 
+      audio: {
+        deviceId: micId ? { exact: micId } : undefined,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }, 
+      video: false 
+    };
+    S.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    S.localStream.getAudioTracks().forEach(t => t.enabled = !S.micMuted && !S.deafened);
     $('voiceStatus').textContent = 'Connected — waiting for peers';
     const roomKey = `havoc/voice/${S.server.id}/${c.id}`;
     const room = gun.get(roomKey);
@@ -2232,7 +2323,16 @@ async function createPeer(remoteUid, meta, initiator){
   pc.ontrack = (ev) => {
     const stream = ev.streams[0];
     let audio = document.querySelector(`audio[data-uid="${remoteUid}"]`);
-    if(!audio){ audio = document.createElement('audio'); audio.dataset.uid = remoteUid; audio.dataset.remote = '1'; audio.autoplay = true; audio.muted = S.deafened; document.body.appendChild(audio); }
+    if(!audio){
+      audio = document.createElement('audio');
+      audio.dataset.uid = remoteUid;
+      audio.dataset.remote = '1';
+      audio.autoplay = true;
+      audio.muted = S.deafened;
+      const speakerId = localStorage.getItem('havoc_speaker_id');
+      if(speakerId && typeof audio.setSinkId === 'function') audio.setSinkId(speakerId);
+      document.body.appendChild(audio);
+    }
     audio.srcObject = stream;
     if(stream.getVideoTracks().length > 0){
       $('videoGrid').classList.remove('hidden');
@@ -2272,15 +2372,6 @@ window.toggleCamera = async () => {
     S.camOn = false;
     $('camBtn').innerHTML = '<i class="fa-solid fa-video"></i> Camera';
   }
-};
-window.toggleMute = () => {
-  if(!S.localStream) return;
-  S.micMuted = !S.micMuted;
-  S.localStream.getAudioTracks().forEach(t => t.enabled = !S.micMuted);
-  const btn = $('muteBtn');
-  btn.innerHTML = S.micMuted ? '<i class="fa-solid fa-microphone-slash"></i> Unmute' : '<i class="fa-solid fa-microphone"></i> Mute';
-  btn.classList.toggle('bg-red-900/50', S.micMuted);
-  $('micBtn').innerHTML = S.micMuted ? '<i class="fa-solid fa-microphone-slash text-red-400"></i>' : '<i class="fa-solid fa-microphone"></i>';
 };
 window.leaveVoice = () => {
   if(window._voiceKeep) clearInterval(window._voiceKeep);
