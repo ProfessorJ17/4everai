@@ -97,7 +97,7 @@
     .color-wheel-btn { width: 24px; height: 24px; border-radius: 4px; background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); cursor: pointer; }
     
     /* AVATAR RING - Discord-style border ring */
-    .avatar-ring-wrapper { position: relative; display: inline-block; overflow: hidden; }
+    .avatar-ring-wrapper { position: relative; display: inline-block; }
     .avatar-ring {
       position: absolute;
       inset: -3px;
@@ -117,6 +117,12 @@
       height: calc(100% + 8px);
       top: -4px;
       left: -4px;
+    }
+
+    /* Ensure all avatars are perfectly circular */
+    .avatar-ring-wrapper img:not(.avatar-ring) {
+      border-radius: 50%;
+      object-fit: cover;
     }
     
     /* DISCOVERY MODAL */
@@ -387,7 +393,7 @@
       </div>
     </div>
     <div class="mt-3 flex gap-2">
-      <button id="upEditBtn" class="hidden flex-1 py-1.5 bg-bch hover:bg-bch-bright rounded text-xs font-bold text-black border border-bch" onclick="openModal('profile');hideCtx();"><i class="fa-solid fa-user-pen mr-1"></i> Edit Profile</button>
+      <button id="upEditBtn" class="hidden flex-1 py-1.5 bg-bch hover:bg-bch-bright rounded text-xs font-bold text-black border border-bch" onclick="openModal('profile');hideUserPopup();"><i class="fa-solid fa-user-pen mr-1"></i> Edit Profile</button>
       <button id="upMsgBtn" class="flex-1 py-1.5 bg-[#1e1f22] hover:bg-dark-700 rounded text-xs font-bold text-slate-200 border border-dark-600">Message</button>
       <button id="upFriendBtn" class="py-1.5 px-3 bg-[#1e1f22] hover:bg-dark-700 rounded text-xs border border-dark-600 text-bch-bright"><i class="fa-solid fa-user-plus"></i></button>
       <button id="upMoreBtn" class="py-1.5 px-3 bg-[#1e1f22] hover:bg-dark-700 rounded text-xs border border-dark-600 text-slate-400"><i class="fa-solid fa-ellipsis"></i></button>
@@ -2416,12 +2422,6 @@ S.popupUid = null;
 window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   if(!uid || uid === 'undefined') return;
   e && e.stopPropagation && e.stopPropagation();
-
-  // If clicking own avatar, open Edit Profile modal instead
-  if(S.user && uid === S.user.uid) {
-    openModal('profile');
-    return;
-  }
 
   const popup = $('userPopup');
   const x = e ? e.clientX : 100;
