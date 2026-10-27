@@ -96,10 +96,28 @@
     .gradient-swatch.active { border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
     .color-wheel-btn { width: 24px; height: 24px; border-radius: 4px; background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); cursor: pointer; }
     
-    /* AVATAR RING */
+    /* AVATAR RING - Discord-style border ring */
     .avatar-ring-wrapper { position: relative; display: inline-block; }
-    .avatar-ring { position: absolute; inset: -4px; border-radius: 50%; pointer-events: none; z-index: 20; width: calc(100% + 8px); height: calc(100% + 8px); top: -4px; left: -4px; object-fit: contain; }
-    .avatar-ring-large { inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); top: -6px; left: -6px; }
+    .avatar-ring {
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 20;
+      width: calc(100% + 4px);
+      height: calc(100% + 4px);
+      top: -2px;
+      left: -2px;
+      object-fit: contain;
+      /* Ring image must be transparent PNG/GIF with hole in middle - extends 2px beyond avatar */
+    }
+    .avatar-ring-large {
+      inset: -3px;
+      width: calc(100% + 6px);
+      height: calc(100% + 6px);
+      top: -3px;
+      left: -3px;
+    }
     
     /* DISCOVERY MODAL */
     .discover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
@@ -1584,9 +1602,9 @@ window.saveGifAvatar = () => {
     S.avatarMode = 'gif';
     if(typeof avatarMethod === 'function') avatarMethod('gif');
     $('profileAvatarPreview').src = url;
-    const c = S.profileStyle.avatarCrop;
-    $('profileAvatarPreview').style.objectPosition = `${50 - (c.x/2)}% ${50 - (c.y/2)}%`;
-    $('profileAvatarPreview').style.transform = `scale(${c.zoom})`;
+    // Reset crop transform for GIF to ensure same size as seed
+    $('profileAvatarPreview').style.objectPosition = 'center';
+    $('profileAvatarPreview').style.transform = 'none';
   } else if(S.gifTarget === 'banner') {
     S.profileStyle.banner = { type: 'gif', value: url };
     previewBannerUrl(url);
@@ -1778,12 +1796,16 @@ window.saveProfile = async () => {
           await updateDoc(mRef, { handle, avatar, style: S.profileStyle, userTag });
         }
       }
-    } catch(propErr){ console.warn('propagate', propErr); }
+    } catch(propErr){ console.warn('propagate to members', propErr); }
 
     S.profileCache = {};
     updateUserUI();
     if(S.server) listenMembers(S.server.id);
     if(S.server && S.channel) listenMessages(S.server.id, S.channel);
+    // Refresh profile popup if it's currently open and showing this user
+    if(S.popupUid === S.user.uid) {
+      showUserProfile(null, S.user.uid, handle, avatar);
+    }
     showProfileMsg('✓ Profile saved', false);
   } catch(err) {
     console.error(err);
@@ -2384,6 +2406,7 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   let status = 'offline';
   let createdAt = null;
   let style = null;
+  let userTag = '';
 
   try{
     const snap = await getDoc(doc(db,'users', uid));
@@ -2395,12 +2418,12 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
       status = computePresence(u);
       createdAt = u.createdAt || null;
       style = u.style || null;
-      const userTag = u.userTag || '';
+      userTag = u.userTag || '';
       // Update cache
       if(!S.profileCache) S.profileCache = {};
       S.profileCache[uid] = { handle, avatar, bio, status, createdAt, style, userTag, _ts: Date.now() };
     }
-  }catch(err){ 
+  }catch(err){
     console.warn('Profile fetch failed (permissions or network):', err.message);
   }
 
@@ -2416,15 +2439,15 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
 
   $('upHandle').innerHTML = `<span>${esc(handle)}</span>${renderUserTag(S.profileCache[uid])}`;
   $('upAvatar').src = avatar;
-  
+
   // Apply style & ring
   const handleEl = $('upHandle');
   const bannerEl = $('upBanner');
   const avatarEl = $('upAvatar');
   const ringEl = $('upRing');
-  
+
   applyUserStyle(handleEl, { style });
-  
+
   if(style && style.banner) {
     const b = style.banner;
     if(b.type === 'color') {
@@ -2744,9 +2767,14 @@ window.createServer = async () => {
       await setDoc(ref, serverData);
       await setDoc(doc(db,'serverTags', tag), { serverId: ref.id, ownerUid: S.user.uid });
       await setDoc(doc(db,'servers',ref.id,'members',S.user.uid), {
-      role:'owner', handle:safe(S.profile.handle,'Owner'),
+      role:'owner',
+      handle:safe(S.profile.handle,'Owner'),
       avatar:safe(S.profile.avatar, userAvatar(S.user.uid)),
-      uid:S.user.uid, joinedAt:Date.now(), roles:[]
+      uid:S.user.uid,
+      joinedAt:Date.now(),
+      roles:[],
+      style: S.profile?.style || null,
+      userTag: S.profile?.userTag || ''
     });
     await setDoc(doc(db,'servers',ref.id,'channels','general'), {name:'general',type:'text',createdAt:Date.now()});
     await setDoc(doc(db,'servers',ref.id,'channels','General'), {name:'General',type:'voice',createdAt:Date.now()});
@@ -2990,9 +3018,14 @@ window.joinViaInvite = async () => {
     const mSnap = await getDoc(doc(db,'servers',inv.serverId,'members',S.user.uid));
     if(!mSnap.exists()){
       await setDoc(doc(db,'servers',inv.serverId,'members',S.user.uid), {
-        role:'member', handle:safe(S.profile?.handle,'Member'),
+        role:'member',
+        handle:safe(S.profile?.handle,'Member'),
         avatar:safe(S.profile?.avatar, userAvatar(S.user.uid)),
-        uid:S.user.uid, joinedAt:Date.now(), roles:[]
+        uid:S.user.uid,
+        joinedAt:Date.now(),
+        roles:[],
+        style: S.profile?.style || null,
+        userTag: S.profile?.userTag || ''
       });
       await updateDoc(doc(db,'invites',code), {uses:(inv.uses||0)+1});
     }
@@ -4091,13 +4124,16 @@ window.saveServerSettings = async () => {
 
   await updateDoc(doc(db,'servers',S.server.id), updateData);
   S.server = {...S.server, ...updateData};
-  
+
   const nameEl = $('currentServerName');
   nameEl.innerHTML = `<span>${esc(name)}</span>${renderServerTag(S.server)}`;
-  
+
   if(iconUrl){ $('serverIconPreview').src = iconUrl; $('serverIconPreview').classList.remove('hidden'); }
   else $('serverIconPreview').classList.add('hidden');
   await loadMyServers();
+
+  // Refresh members list to update any cached member data
+  if(S.server) listenMembers(S.server.id);
 };
 async function renderServerMembers(){
   const snap = await getDocs(collection(db,'servers',S.server.id,'members'));
