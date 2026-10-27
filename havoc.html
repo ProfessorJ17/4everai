@@ -109,7 +109,9 @@
       top: -3px;
       left: -3px;
       object-fit: contain;
-      /* Ring image must be transparent PNG/GIF with hole in middle - extends 3px beyond avatar */
+      /* Automatically cut circular hole in middle of ring image */
+      -webkit-mask-image: radial-gradient(circle at center, transparent 45%, black 50%);
+      mask-image: radial-gradient(circle at center, transparent 45%, black 50%);
     }
     .avatar-ring-large {
       inset: -4px;
@@ -117,6 +119,8 @@
       height: calc(100% + 8px);
       top: -4px;
       left: -4px;
+      -webkit-mask-image: radial-gradient(circle at center, transparent 42%, black 48%);
+      mask-image: radial-gradient(circle at center, transparent 42%, black 48%);
     }
 
     /* Ensure all avatars are perfectly circular */
