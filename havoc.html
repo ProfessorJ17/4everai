@@ -135,12 +135,19 @@
                oninput="filterDMs(this.value)">
       </div>
       <div class="flex gap-1 px-2 pt-2 border-b border-dark-700">
-        <button onclick="dmTab('friends')" id="dmt-friends" class="px-2 py-1 text-[10px] mono tab-active">Friends</button>
+        <button onclick="dmTab('dms')" id="dmt-dms" class="px-2 py-1 text-[10px] mono tab-active">Direct Messages</button>
+        <button onclick="dmTab('friends')" id="dmt-friends" class="px-2 py-1 text-[10px] mono tab-inactive">Friends</button>
         <button onclick="dmTab('pending')" id="dmt-pending" class="px-2 py-1 text-[10px] mono tab-inactive">Pending <span id="pendingBadge" class="hidden ml-1 bg-bch text-black text-[9px] px-1 rounded-full font-bold">0</span></button>
-        <button onclick="dmTab('dms')" id="dmt-dms" class="px-2 py-1 text-[10px] mono tab-inactive">DMs</button>
       </div>
       <div class="flex-1 overflow-y-auto px-2 py-2">
-        <div id="dmTabFriends">
+        <div id="dmTabDms">
+          <div class="text-[10px] font-bold text-slate-500 uppercase mono px-2 mb-1 flex items-center justify-between">
+            <span>Conversations</span>
+            <button onclick="promptNewDM()" class="text-bch hover:text-bch-bright text-xs"><i class="fa-solid fa-plus"></i></button>
+          </div>
+          <div id="dmList" class="space-y-0.5"></div>
+        </div>
+        <div id="dmTabFriends" class="hidden">
           <div class="flex items-center justify-between px-2 mb-1">
             <span class="text-[10px] font-bold text-slate-500 uppercase mono">All Friends</span>
             <button onclick="openAddFriendModal()" class="text-[10px] btn-primary px-2 py-0.5">Add Friend</button>
@@ -152,13 +159,6 @@
           <div id="incomingRequests" class="space-y-0.5 mb-4"></div>
           <div class="text-[10px] font-bold text-slate-500 uppercase mono px-2 mb-1">Outgoing</div>
           <div id="outgoingRequests" class="space-y-0.5"></div>
-        </div>
-        <div id="dmTabDms" class="hidden">
-          <div class="text-[10px] font-bold text-slate-500 uppercase mono px-2 mb-1 flex items-center justify-between">
-            <span>Direct Messages</span>
-            <button onclick="promptNewDM()" class="text-bch hover:text-bch-bright text-xs"><i class="fa-solid fa-plus"></i></button>
-          </div>
-          <div id="dmList" class="space-y-0.5"></div>
         </div>
       </div>
     </div>
@@ -379,12 +379,14 @@
       <button onclick="closeModal('gif')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="p-3 border-b border-dark-700 space-y-2">
-      <label class="field-label">Paste GIF URL</label>
       <div class="flex gap-2">
-        <input type="url" id="gifUrlInput" placeholder="https://... .gif" class="field flex-1 text-xs">
-        <button onclick="useGifUrl()" class="btn-primary px-3 text-xs shrink-0">Use</button>
+        <input type="text" id="gifSearchInput" placeholder="Search GIFs (e.g. 'cat', 'tiger')..." class="field flex-1 text-xs" oninput="searchGifs(this.value)">
       </div>
-      <p class="text-[10px] text-slate-500">GIFs you use are added to the community bank</p>
+      <div class="flex gap-2">
+        <input type="url" id="gifUrlInput" placeholder="Paste GIF URL... https://... .gif" class="field flex-1 text-xs">
+        <button onclick="useGifUrl()" class="btn-primary px-3 text-xs shrink-0">Add</button>
+      </div>
+      <p class="text-[10px] text-slate-500">Search 100k+ TGIF dataset descriptions or add your own</p>
     </div>
     <div class="flex-1 overflow-y-auto p-3">
       <div class="text-[10px] font-bold text-slate-500 uppercase mono mb-2">Popular GIFs</div>
@@ -686,10 +688,11 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const gun = Gun({ peers: [
-  'https://gun-server.com/gun',
-  'https://gun.dletta.com/gun',
   'https://gun-rs.iris.to/gun',
-  'https://gun-relay.us-east-1.elasticbeanstalk.com/gun'
+  'https://gun-relay.us-east-1.elasticbeanstalk.com/gun',
+  'https://gun-manhattan.herokuapp.com/gun',
+  'https://gun-us.herokuapp.com/gun',
+  'https://gundb.dletta.com/gun'
 ], localStorage: false });
 
 const $ = s => document.getElementById(s);
@@ -886,7 +889,7 @@ window.openDMs = () => {
   if($('memberCount')) $('memberCount').textContent = '0';
   if($('membersList')) $('membersList').innerHTML = '';
   loadFriends(); renderDMList();
-  dmTab('friends');
+  dmTab('dms');
 };
 function showDMView(){ $('channelsView').classList.add('hidden'); $('dmView').classList.remove('hidden'); $('membersPanel').classList.remove('hidden'); }
 function showChannelsView(){ $('dmView').classList.add('hidden'); $('channelsView').classList.remove('hidden'); $('membersContent').classList.remove('hidden'); $('dmProfileContent').classList.add('hidden'); $('dmHomeBtn').classList.remove('dm-active'); }
@@ -1019,23 +1022,69 @@ window.triggerImageUpload = () => {
 window.clearImagePreview = () => { S.pendingImageUrl=null; S.pendingImage=null; $('imgPreview').classList.add('hidden'); };
 S.gifPage = 0;
 S.gifCache = [];
+S.gifFiltered = [];
+
+const TGIF_DATA = [
+  {url:"https://38.media.tumblr.com/9f6c25cc350f12aa74a7dc386a5c4985/tumblr_mevmyaKtDf1rgvhr8o1_500.gif", desc:"a man is glaring, and someone with sunglasses appears"},
+  {url:"https://38.media.tumblr.com/9ead028ef62004ef6ac2b92e52edd210/tumblr_nok4eeONTv1s2yegdo1_400.gif", desc:"a cat tries to catch a mouse on a tablet"},
+  {url:"https://38.media.tumblr.com/9f43dc410be85b1159d1f42663d811d7/tumblr_mllh01J96X1s9npefo1_250.gif", desc:"a man dressed in red is dancing"},
+  {url:"https://38.media.tumblr.com/9f659499c8754e40cf3f7ac21d08dae6/tumblr_nqlr0rn8ox1r2r0koo1_400.gif", desc:"an animal comes close to another in the jungle"},
+  {url:"https://38.media.tumblr.com/9ed1c99afa7d71411884101cb054f35f/tumblr_mvtuwlhSkE1qbnleeo1_500.gif", desc:"a man in a hat adjusts his tie and makes a weird face"},
+  {url:"https://38.media.tumblr.com/9e437d26769cb2ac4217df14dbb20034/tumblr_npw7v7W07C1tmj047o1_250.gif", desc:"someone puts a cat on wrapping paper then wraps it up and puts on a bow"},
+  {url:"https://38.media.tumblr.com/9e4ab65c0e7d4bb8aa6b5be854b83794/tumblr_mdlv9v6hE91qanrf2o1_r11_500.gif", desc:"a brunette woman is looking at the man"},
+  {url:"https://38.media.tumblr.com/9ecd3483028290171dcb5e920ff4e3bb/tumblr_nkcmeflaVj1u26rdio1_500.gif", desc:"a man on a bicycle is jumping over a fence"},
+  {url:"https://38.media.tumblr.com/9f83754d20ce882224ae3392a8372ee8/tumblr_mkwd0y8Poo1qlnbq8o1_400.gif", desc:"a group of men are standing and staring in the same direction"},
+  {url:"https://38.media.tumblr.com/9e6fcb37722bf01996209bdf76708559/tumblr_np9xo74UgD1ux4g5vo1_250.gif", desc:"a boy is happy parking and see another boy"},
+  {url:"https://38.media.tumblr.com/8c14aa571911985d6d774762f8159452/tumblr_n4gk7efcMw1spy7ono1_400.gif", desc:"the tiger is running really fast in the garden"},
+  {url:"https://38.media.tumblr.com/be596acc2860e691e578c2a64d044d94/tumblr_nq0mhrqyAf1u4fhlko1_250.gif", desc:"a giant tiger creature jumps through the air"},
+  {url:"https://31.media.tumblr.com/tumblr_m43v8zZ3z11r5z7sho1_500.gif", desc:"a dog is dancing in a circle"},
+  {url:"https://33.media.tumblr.com/tumblr_n7w1x0rVwP1t0u4coo1_500.gif", desc:"a man is falling off a chair"},
+  {url:"https://38.media.tumblr.com/tumblr_n8b8r7hQeD1tbg4ybo1_500.gif", desc:"a woman is laughing and pointing"},
+  {url:"https://31.media.tumblr.com/tumblr_n8j8y8qUoE1tbg4ybo1_500.gif", desc:"a man is eating a sandwich"},
+  {url:"https://33.media.tumblr.com/tumblr_n8k8z8sUpF1tbg4ybo1_500.gif", desc:"a cat is jumping into a box"}
+];
+
 window.openGifPicker = async () => {
   if(!S.user||S.user.isAnonymous) return alert('Registered users only');
   $('gifUrlInput').value = '';
+  $('gifSearchInput').value = '';
   S.gifPage = 0;
   openModal('gif');
   await loadGifBank();
 };
+
+window.searchGifs = (q) => {
+  q = q.toLowerCase();
+  if(!q){
+    S.gifFiltered = [...S.gifCache];
+  } else {
+    // Search both Firestore cache and TGIF dataset
+    const localMatches = S.gifCache.filter(g => (g.desc||'').toLowerCase().includes(q));
+    const tgifMatches = TGIF_DATA.filter(g => g.desc.toLowerCase().includes(q)).map(g => ({...g, uses:0}));
+    
+    // Merge and remove duplicates by URL
+    const seen = new Set();
+    S.gifFiltered = [...localMatches, ...tgifMatches].filter(g => {
+      if(seen.has(g.url)) return false;
+      seen.add(g.url);
+      return true;
+    });
+  }
+  S.gifPage = 0;
+  renderGifPage();
+};
+
 window.useGifUrl = async () => {
   const url = ($('gifUrlInput').value||'').trim();
   if(!url || !url.startsWith('http')) return alert('Valid URL required');
-  await registerGif(url);
+  await registerGif(url, "User added GIF");
   S.pendingImageUrl = url;
   $('imgPreviewSrc').src = url;
   $('imgPreview').classList.remove('hidden');
   closeModal('gif');
 };
-async function registerGif(url){
+
+async function registerGif(url, desc = ""){
   try{
     const id = btoa(url).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
     const ref = doc(db, 'gifBank', id);
@@ -1043,37 +1092,58 @@ async function registerGif(url){
     if(snap.exists()){
       await updateDoc(ref, { uses: (snap.data().uses||0)+1, lastUsed: Date.now() });
     } else {
-      await setDoc(ref, { url, uses: 1, addedBy: S.user.uid, createdAt: Date.now(), lastUsed: Date.now() });
+      await setDoc(ref, { url, desc, uses: 1, addedBy: S.user.uid, createdAt: Date.now(), lastUsed: Date.now() });
     }
   }catch(e){ console.warn('registerGif', e); }
 }
+
 async function loadGifBank(){
   try{
     const snap = await getDocs(collection(db, 'gifBank'));
     S.gifCache = [];
     snap.forEach(d => S.gifCache.push({id:d.id, ...d.data()}));
+    
+    // Seed with TGIF if empty or few
+    if(S.gifCache.length < 5){
+      for(const g of TGIF_DATA.slice(0, 10)){
+        if(!S.gifCache.find(x => x.url === g.url)){
+          S.gifCache.push({...g, uses: 0});
+        }
+      }
+    }
+
     S.gifCache.sort((a,b) => (b.uses||0) - (a.uses||0));
+    S.gifFiltered = [...S.gifCache];
     renderGifPage();
   }catch(e){
-    $('gifGrid').innerHTML = '<p class="text-xs text-slate-500 col-span-3">No GIFs yet — paste a URL above</p>';
+    S.gifFiltered = TGIF_DATA.map(g => ({...g, uses:0}));
+    renderGifPage();
   }
 }
+
 function renderGifPage(){
-  const per = 50;
+  const per = 21;
   const start = S.gifPage * per;
-  const slice = S.gifCache.slice(start, start + per);
+  const slice = S.gifFiltered.slice(start, start + per);
   const grid = $('gifGrid');
   grid.innerHTML = '';
+  
   if(!slice.length){
-    grid.innerHTML = '<p class="text-xs text-slate-500 col-span-3">No GIFs yet — paste a URL above to add one</p>';
+    grid.innerHTML = '<p class="text-xs text-slate-500 col-span-3 text-center py-8">No matching GIFs found</p>';
   } else {
     slice.forEach(g => {
       const btn = document.createElement('button');
-      btn.className = 'relative rounded-lg overflow-hidden border border-dark-700 hover:border-bch aspect-square bg-dark-950';
-      btn.title = `${g.uses||0} uses`;
-      btn.innerHTML = `<img src="${esc(g.url)}" class="w-full h-full object-cover" loading="lazy"><span class="absolute bottom-0 right-0 text-[8px] bg-black/70 px-1 text-slate-300">${g.uses||0}</span>`;
+      btn.className = 'relative rounded-lg overflow-hidden border border-dark-700 hover:border-bch aspect-square bg-dark-950 group';
+      btn.title = g.desc || `${g.uses||0} uses`;
+      btn.innerHTML = `
+        <img src="${esc(g.url)}" class="w-full h-full object-cover" loading="lazy">
+        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
+          <span class="text-[8px] text-white truncate">${esc(g.desc||'')}</span>
+        </div>
+        <span class="absolute top-0 right-0 text-[8px] bg-black/70 px-1 text-slate-300">${g.uses||0}</span>
+      `;
       btn.onclick = async () => {
-        await registerGif(g.url);
+        await registerGif(g.url, g.desc || "");
         S.pendingImageUrl = g.url;
         $('imgPreviewSrc').src = g.url;
         $('imgPreview').classList.remove('hidden');
@@ -1082,7 +1152,7 @@ function renderGifPage(){
       grid.appendChild(btn);
     });
   }
-  const total = Math.max(1, Math.ceil(S.gifCache.length / per));
+  const total = Math.max(1, Math.ceil(S.gifFiltered.length / per));
   $('gifPageInfo').textContent = `${S.gifPage+1} / ${total}`;
   $('gifPrev').disabled = S.gifPage <= 0;
   $('gifNext').disabled = S.gifPage >= total - 1;
