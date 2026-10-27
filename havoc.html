@@ -3073,6 +3073,19 @@ window.toggleReaction = async (msgId, emoji) => {
   }catch(err){ console.error(err); }
 };
 async function actuallySendMessage(content, imageUrl, audioUrl){
+  if(S.inDMs && S.dmTarget){
+    const dmId = [S.user.uid, S.dmTarget.uid].sort().join('_');
+    await addDoc(collection(db,'dms',dmId,'messages'), {
+      from: S.user.uid,
+      content: content||'',
+      imageUrl: imageUrl||null,
+      audioUrl: audioUrl||null,
+      ts: Date.now()
+    });
+    loadDms(S.dmTarget.uid);
+    return;
+  }
+  if(!S.server || !S.channel) return;
   await addDoc(collection(db,'servers',S.server.id,'channels',S.channel,'messages'), {
     uid:S.user.uid, handle:safe(S.profile?.handle,'User'),
     avatar:safe(S.profile?.avatar, userAvatar(S.user.uid)),
@@ -3129,27 +3142,10 @@ window.sendMsg = async e => {
   const content = input.value.trim();
   if((!content && !S.pendingImage && !S.pendingImageUrl && !S.pendingAudio) || !S.user) return;
 
-  if(S.inDMs && S.dmTarget){
-    input.value = '';
-    const dmId = [S.user.uid, S.dmTarget.uid].sort().join('_');
-    let imageUrl = null;
-    if(S.pendingImageUrl){ 
-      imageUrl = S.pendingImageUrl; 
-      if(imageUrl.match(/\.gif(\?|$)/i) || imageUrl.includes('giphy') || imageUrl.includes('tenor')) await registerGif(imageUrl); 
-      else await registerImage(imageUrl);
-      clearImagePreview(); 
-    }
-    else if(S.pendingImage){ 
-      imageUrl = await uploadImage(S.pendingImage, `dms/${dmId}/${Date.now()}`); 
-      await registerImage(imageUrl);
-      clearImagePreview(); 
-    }
-    await addDoc(collection(db,'dms',dmId,'messages'), { from:S.user.uid, content, imageUrl, ts:Date.now() });
-    loadDms(S.dmTarget.uid);
-    return;
-  }
-  if(!S.server || S.channelType !== 'text') return;
-  if(S.locked && !S.canManage) return alert('Channel is locked');
+  if(S.inDMs && !S.dmTarget) return;
+  if(!S.inDMs && (!S.server || S.channelType !== 'text')) return;
+  if(!S.inDMs && S.locked && !S.canManage) return alert('Channel is locked');
+
   input.value = '';
   let imageUrl = null;
   try{
@@ -3160,7 +3156,8 @@ window.sendMsg = async e => {
       clearImagePreview(); 
     }
     else if(S.pendingImage){ 
-      imageUrl = await uploadImage(S.pendingImage, `messages/${S.server.id}/${S.channel}/${Date.now()}`); 
+      const path = S.inDMs ? `dms/${[S.user.uid, S.dmTarget.uid].sort().join('_')}/${Date.now()}` : `messages/${S.server.id}/${S.channel}/${Date.now()}`;
+      imageUrl = await uploadImage(S.pendingImage, path); 
       await registerImage(imageUrl);
       clearImagePreview(); 
     }
@@ -3439,7 +3436,13 @@ window.startDM = (uid, handle, avatar) => {
   $('dmProfileAvatar').src = avatar || userAvatar(uid);
   $('dmProfileHandle').textContent = handle;
   $('dmProfileStatus').textContent = 'Direct Message';
-  loadDms(uid);
+  
+  if(S.unsubMsgs) { S.unsubMsgs(); S.unsubMsgs = null; }
+  const load = () => loadDms(uid);
+  load();
+  const iv = setInterval(load, 3000);
+  S.unsubMsgs = () => clearInterval(iv);
+  
   renderDMList();
 };
 window.removeCurrentDMFriend = () => { if(S.dmTarget) removeFriend(S.dmTarget.uid); };
@@ -3460,8 +3463,27 @@ async function loadDms(targetUid){
     const mine = m.from === S.user.uid;
     const div = document.createElement('div');
     div.className = `flex ${mine?'justify-end':'justify-start'}`;
-    let contentHtml = esc(m.content||'');
+    let contentHtml = esc(parseEmojis(m.content||''));
     if(m.imageUrl) contentHtml += `<div class="mt-2"><img src="${esc(m.imageUrl)}" class="max-w-full rounded-lg border border-dark-600 cursor-pointer" onclick="window.open('${esc(m.imageUrl)}')"></div>`;
+    if(m.audioUrl) {
+      const aid = `audio-${Math.random().toString(36).slice(2,11)}`;
+      contentHtml += `
+        <div class="mt-2 flex items-center gap-3 bg-dark-950/60 p-2.5 rounded-xl border border-dark-700/50 max-w-sm">
+          <button onclick="playAudioMsg('${esc(m.audioUrl)}', '${aid}')" id="btn-${aid}" class="w-8 h-8 rounded-full bg-bch/20 text-bch hover:bg-bch/30 flex items-center justify-center shrink-0 transition-all">
+            <i id="icon-${aid}" class="fa-solid fa-play"></i>
+          </button>
+          <div class="flex-1 min-w-0">
+            <div class="h-1.5 w-full bg-dark-800 rounded-full overflow-hidden relative">
+              <div id="prog-${aid}" class="absolute inset-y-0 left-0 bg-bch w-0 transition-all duration-100"></div>
+            </div>
+            <div class="flex justify-between mt-1.5 mono text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+              <span id="time-${aid}">0:00</span>
+              <span class="text-bch/50">Voice Clip</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
     div.innerHTML = `<div class="max-w-[70%] px-3 py-2 rounded-xl text-xs ${mine?'bg-bch/20 text-bch-bright':'bg-dark-800 text-slate-200'}">${contentHtml}<div class="text-[9px] text-slate-500 mt-1 ${mine?'text-right':''}">${shortTime(m.ts)}</div></div>`;
     feed.appendChild(div);
   });
@@ -4008,9 +4030,7 @@ function startPresenceHeartbeat(){
   beat();
   window._presenceIv = setInterval(beat, 30000);
   window.addEventListener('beforeunload', () => {
-    try{
-      navigator.sendBeacon && navigator.sendBeacon('');
-    }catch(e){}
+    // Presence cleanup if needed
   });
 }
 
