@@ -1464,7 +1464,7 @@ function updateProfileUIFromStyle() {
 window.setNameFont = (family, el) => {
   S.profileStyle.font = family;
   document.querySelectorAll('.font-option').forEach(x => x.classList.remove('active'));
-  el.classList.add('active');
+  if(el) el.classList.add('active');
   updateNamePreview();
 };
 
@@ -1766,8 +1766,19 @@ window.avatarMethod = (m) => {
   });
   if(m === 'gif') openGifPicker('avatar');
 };
-window.previewAvatar = seed => { $('profileAvatarPreview').src = userAvatar(seed||'Guest'); };
-window.previewFromUrl = url => { if(url && url.startsWith('http')) $('profileAvatarPreview').src = url; };
+window.previewAvatar = seed => {
+  const url = userAvatar(seed||'Guest');
+  $('profileAvatarPreview').src = url;
+  $('profileAvatarPreview').style.objectPosition = 'center';
+  $('profileAvatarPreview').style.transform = 'none';
+};
+window.previewFromUrl = url => {
+  if(url && url.startsWith('http')) {
+    $('profileAvatarPreview').src = url;
+    $('profileAvatarPreview').style.objectPosition = 'center';
+    $('profileAvatarPreview').style.transform = 'none';
+  }
+};
 
 window.saveProfile = async () => {
   if(!S.user) return showProfileMsg('Login required', true);
@@ -2493,8 +2504,15 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
 
   if(style && style.avatarCrop) {
     const c = style.avatarCrop;
-    avatarEl.style.objectPosition = `${50 - (c.x/2)}% ${50 - (c.y/2)}%`;
-    avatarEl.style.transform = `scale(${c.zoom})`;
+    // Don't apply crop if avatar is a GIF
+    const isGif = avatar.includes('.gif') || avatar.includes('giphy') || avatar.includes('tenor');
+    if(!isGif) {
+      avatarEl.style.objectPosition = `${50 - (c.x/2)}% ${50 - (c.y/2)}%`;
+      avatarEl.style.transform = `scale(${c.zoom})`;
+    } else {
+      avatarEl.style.objectPosition = 'center';
+      avatarEl.style.transform = 'none';
+    }
   } else {
     avatarEl.style.objectPosition = 'center';
     avatarEl.style.transform = 'none';
@@ -2516,10 +2534,10 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
 
   // Account Created – if missing, show today
   const formatProfileDate = (d) => {
-    if(!d) return new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+    if(!d) return 'Not set';
     // Handle Firebase Timestamp objects
     const date = (typeof d.toDate === 'function') ? d.toDate() : new Date(d);
-    return isNaN(date.getTime()) ? new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}) : date.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+    return isNaN(date.getTime()) ? 'Not set' : date.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
   };
 
   $('upCreated').textContent = formatProfileDate(createdAt);
@@ -4072,21 +4090,26 @@ window.openModal = id => {
     $('profileHandle').value = safe(S.profile.handle,'');
     $('profileBio').value = safe(S.profile.bio,'');
     $('profileStatus').value = safe(S.profile.status,'');
-    $('profileAvatarPreview').src = safe(S.profile.avatar, userAvatar('Guest'));
+    const avatarUrl = safe(S.profile.avatar, userAvatar('Guest'));
+    $('profileAvatarPreview').src = avatarUrl;
+    $('profileAvatarPreview').style.objectPosition = 'center';
+    $('profileAvatarPreview').style.transform = 'none';
     $('profileUserTag').value = S.profile.userTag || '';
-    
+
     // Set initial avatar mode
     const av = S.profile.avatar || '';
     if(av.includes('dicebear.com')){
       S.avatarMode = 'seed';
       const seedMatch = av.match(/seed=([^&]+)/);
       $('profileSeed').value = seedMatch ? seedMatch[1] : '';
+    } else if(av.includes('.gif') || av.includes('giphy') || av.includes('tenor')) {
+      S.avatarMode = 'gif';
     } else {
       S.avatarMode = 'url';
       $('profileAvatarUrl').value = av;
     }
     avatarMethod(S.avatarMode);
-    
+
     initProfileEditor();
   }
   if(id === 'auth') loadRemember();
