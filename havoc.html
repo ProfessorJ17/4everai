@@ -22,7 +22,7 @@
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Orbitron:wght@400;700&family=Press+Start+2P&family=UnifrakturMaguntia&family=Monoton&family=Playfair+Display:wght@700&family=Pacifico&family=Anton&family=Quicksand:wght@700&family=Exo+2:wght@700&family=Bubblegum+Sans&family=Montserrat:wght@800&family=Righteous&family=Kanit:wght@800&family=Raleway:wght@300&family=Oswald:wght@700&family=Varela+Round&family=Comfortaa:wght@700&display=swap');
     body{font-family:'Plus Jakarta Sans',sans-serif}
     .mono{font-family:'JetBrains Mono',monospace}
     ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#090b0e}
@@ -82,6 +82,30 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #323c52; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #0AC18E; }
+
+    /* PROFILE ENHANCEMENTS */
+    .banner-preview { width: 100%; height: 80px; border-radius: 8px; background: #151922; margin-bottom: 12px; position: relative; overflow: hidden; border: 1px solid #242b3b; }
+    .banner-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .crop-container { width: 100%; aspect-ratio: 1; background: #050608; border-radius: 12px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid #242b3b; }
+    .crop-circle { position: absolute; width: 200px; height: 200px; border-radius: 50%; border: 2px solid #0AC18E; box-shadow: 0 0 0 2000px rgba(0,0,0,0.6); pointer-events: none; z-index: 10; }
+    .font-option { padding: 6px 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
+    .font-option:hover { background: #1c222e; border-color: #242b3b; }
+    .font-option.active { border-color: #0AC18E; background: rgba(10,193,142,0.1); }
+    .gradient-swatch { width: 24px; height: 24px; border-radius: 4px; cursor: pointer; border: 1.5px solid transparent; transition: transform 0.1s; }
+    .gradient-swatch:hover { transform: scale(1.1); }
+    .gradient-swatch.active { border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
+    .color-wheel-btn { width: 24px; height: 24px; border-radius: 4px; background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); cursor: pointer; }
+    
+    /* AVATAR RING */
+    .avatar-ring-wrapper { position: relative; display: inline-block; }
+    .avatar-ring { position: absolute; inset: -4px; border-radius: 50%; pointer-events: none; z-index: 5; object-fit: cover; }
+    .avatar-ring-large { inset: -6px; }
+    
+    /* DISCOVERY MODAL */
+    .discover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .discover-card { background: #1e1f22; border-radius: 12px; overflow: hidden; transition: transform 0.2s, background 0.2s; cursor: pointer; border: 1px solid #242b3b; }
+    .discover-card:hover { transform: translateY(-4px); background: #2b2d31; border-color: #0AC18E; }
+    .tag { background: #050608; color: #94a3b8; font-size: 10px; padding: 2px 8px; border-radius: 4px; border: 1px solid #242b3b; }
   </style>
 </head>
 <body class="h-full flex flex-col overflow-hidden text-sm">
@@ -109,6 +133,7 @@
     <div class="flex flex-col items-center gap-2 pb-2 w-full px-2">
       <button onclick="openModal('joinInvite')" title="Join Server" class="w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch text-slate-400 hover:text-black transition-all flex items-center justify-center"><i class="fa-solid fa-ticket"></i></button>
       <button onclick="openModal('createServer')" title="Create Server" class="w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch text-slate-400 hover:text-black transition-all flex items-center justify-center text-lg font-bold"><i class="fa-solid fa-plus"></i></button>
+      <button onclick="openModal('discover')" title="Discover Servers" class="w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-dark-800 hover:bg-bch text-slate-400 hover:text-black transition-all flex items-center justify-center text-lg"><i class="fa-solid fa-compass"></i></button>
       <button id="adminBtn" onclick="openModal('admin')" title="Global Admin" class="hidden w-11 h-11 rounded-[18px] hover:rounded-[12px] bg-kiro/20 hover:bg-kiro text-kiro-bright hover:text-white transition-all flex items-center justify-center"><i class="fa-solid fa-shield-halved"></i></button>
     </div>
   </nav>
@@ -308,9 +333,10 @@
 <div id="userPopup" class="fixed z-[350] hidden w-72 rounded-xl overflow-hidden shadow-2xl border border-dark-600" style="background:#111214">
   <div id="upBanner" class="h-14 bg-gradient-to-r from-bch/40 to-kiro/40 relative">
     <div class="absolute -bottom-8 left-4">
-      <div class="relative">
-        <img id="upAvatar" src="" class="w-16 h-16 rounded-full border-4 border-[#111214] object-cover bg-dark-800">
-        <span id="upDot" class="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#111214] status-online"></span>
+      <div class="relative avatar-ring-wrapper">
+        <img id="upAvatar" src="" class="w-16 h-16 rounded-full border-4 border-[#111214] object-cover bg-dark-800 relative z-10">
+        <img id="upRing" src="" class="avatar-ring avatar-ring-large hidden w-16 h-16">
+        <span id="upDot" class="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#111214] z-20 status-online"></span>
       </div>
     </div>
   </div>
@@ -457,6 +483,66 @@
   </div>
 </div>
 
+<!-- GIF EDITOR / CROPPER -->
+<div id="modal-gif-editor" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-[60] flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-bch/30 w-full max-w-lg rounded-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
+    <div class="flex items-center justify-between p-4 border-b border-dark-700">
+      <h2 class="font-bold text-white"><span class="text-bch">Avatar</span> Editor</h2>
+      <button onclick="closeModal('gif-editor')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div id="gifEditorGrid" class="flex-1 overflow-y-auto p-4 space-y-4">
+      <!-- STEP 1: PICK GIF -->
+      <div id="editorPickStep">
+        <div class="flex gap-2 mb-3">
+          <input type="text" id="editorGifSearch" placeholder="Search for avatar GIFs..." class="field flex-1 text-xs" oninput="searchEditorGifs(this.value)">
+        </div>
+        <div id="editorGifGrid" class="grid grid-cols-3 gap-2 min-h-[300px]"></div>
+        <div class="flex items-center justify-between mt-3">
+          <button onclick="editorGifPage(-1)" id="editorGifPrev" class="text-[10px] text-slate-400 px-2 py-1 rounded border border-dark-700">← Prev</button>
+          <span id="editorGifPageInfo" class="text-[10px] text-slate-500 mono">1 / 1</span>
+          <button onclick="editorGifPage(1)" id="editorGifNext" class="text-[10px] text-slate-400 px-2 py-1 rounded border border-dark-700">Next →</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: CROP/ADJUST -->
+      <div id="editorAdjustStep" class="hidden flex flex-col items-center">
+        <div class="crop-container mb-6 shadow-2xl shadow-bch/10">
+          <img id="cropImage" src="" class="max-w-none transition-transform duration-75" style="transform: translate(0px, 0px) scale(1);">
+          <div class="crop-circle"></div>
+        </div>
+        
+        <div class="w-full space-y-4 px-4">
+          <div class="space-y-1">
+            <div class="flex justify-between text-[10px] mono text-slate-500 uppercase tracking-widest font-bold">
+              <span>Zoom</span>
+              <span id="zoomVal">100%</span>
+            </div>
+            <input type="range" id="cropZoom" min="0.5" max="3" step="0.01" value="1" oninput="updateCropTransform()" class="w-full accent-bch bg-dark-700 rounded-lg h-1.5 appearance-none cursor-pointer">
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="text-[10px] mono text-slate-500 uppercase tracking-widest font-bold">X Offset</label>
+              <input type="range" id="cropX" min="-150" max="150" step="1" value="0" oninput="updateCropTransform()" class="w-full accent-bch bg-dark-700 rounded-lg h-1.5 appearance-none cursor-pointer">
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] mono text-slate-500 uppercase tracking-widest font-bold">Y Offset</label>
+              <input type="range" id="cropY" min="-150" max="150" step="1" value="0" oninput="updateCropTransform()" class="w-full accent-bch bg-dark-700 rounded-lg h-1.5 appearance-none cursor-pointer">
+            </div>
+          </div>
+
+          <div class="flex gap-2 pt-2">
+            <button onclick="resetCrop()" class="flex-1 py-2 bg-dark-800 text-slate-400 font-bold rounded-lg text-xs border border-dark-700 hover:text-white">Reset</button>
+            <button onclick="saveGifAvatar()" class="flex-[2] py-2 btn-primary text-xs font-extrabold uppercase tracking-widest">Apply Avatar</button>
+          </div>
+          <button onclick="backToGifPick()" class="w-full py-2 text-[10px] text-slate-500 hover:text-bch mono">← Pick different GIF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ADD FRIEND MODAL -->
 <div id="modal-addFriend" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
   <div class="bg-dark-900 border border-bch/30 w-full max-w-sm rounded-xl p-5 relative">
@@ -482,8 +568,8 @@
       <button id="tabR" onclick="authTab('register')" class="flex-1 py-2 font-bold text-xs mono tab-inactive">REGISTER</button>
     </div>
     <form id="formLogin" onsubmit="doLogin(event)" class="space-y-3">
-      <div><label class="field-label">Email</label><input type="email" id="lEmail" required class="field"></div>
-      <div><label class="field-label">Password</label><input type="password" id="lPass" required class="field"></div>
+      <div><label for="lEmail" class="field-label">Email</label><input type="email" id="lEmail" required class="field"></div>
+      <div><label for="lPass" class="field-label">Password</label><input type="password" id="lPass" required class="field"></div>
       <div class="flex items-center justify-between">
         <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer"><input type="checkbox" id="rememberMe" class="rounded border-dark-600 bg-dark-800 text-bch"> Remember me</label>
         <button type="button" onclick="showForgot()" class="text-[11px] text-bch hover:text-bch-bright mono">Forgot password?</button>
@@ -492,14 +578,14 @@
       <button type="button" onclick="doAnon()" class="w-full py-2 bg-dark-800 hover:bg-dark-700 text-slate-400 font-bold rounded-lg text-xs border border-dark-700">CONTINUE ANONYMOUSLY</button>
     </form>
     <form id="formReg" onsubmit="doRegister(event)" class="space-y-3 hidden">
-      <div><label class="field-label">Handle</label><input type="text" id="rHandle" required class="field"></div>
-      <div><label class="field-label">Email</label><input type="email" id="rEmail" required class="field"></div>
-      <div><label class="field-label">Password</label><input type="password" id="rPass" required minlength="6" class="field"></div>
+      <div><label for="rHandle" class="field-label">Handle</label><input type="text" id="rHandle" required class="field"></div>
+      <div><label for="rEmail" class="field-label">Email</label><input type="email" id="rEmail" required class="field"></div>
+      <div><label for="rPass" class="field-label">Password</label><input type="password" id="rPass" required minlength="6" class="field"></div>
       <button type="submit" class="w-full py-2.5 btn-primary text-sm">CREATE ACCOUNT</button>
     </form>
     <div id="formForgot" class="space-y-3 hidden">
       <p class="text-xs text-slate-400">Enter your email for a reset link.</p>
-      <div><label class="field-label">Email</label><input type="email" id="fEmail" required class="field"></div>
+      <div><label for="fEmail" class="field-label">Email</label><input type="email" id="fEmail" required class="field"></div>
       <button onclick="doForgot()" class="w-full py-2.5 btn-primary text-sm">Send Reset Link</button>
       <button type="button" onclick="authTab('login')" class="w-full py-2 text-xs text-slate-400">← Back</button>
     </div>
@@ -510,37 +596,150 @@
 
 <!-- PROFILE – Seed + URL only -->
 <div id="modal-profile" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-  <div class="bg-dark-900 border border-dark-700 w-full max-w-sm rounded-xl p-6 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+  <div class="bg-dark-900 border border-dark-700 w-full max-w-md rounded-xl p-6 relative max-h-[92vh] overflow-y-auto custom-scrollbar">
     <button onclick="closeModal('profile')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     <h2 class="font-bold text-white mb-4"><i class="fa-solid fa-user-pen text-bch"></i> Edit Profile</h2>
-    <div class="flex items-center gap-4 mb-4">
-      <img id="profileAvatarPreview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-16 h-16 rounded-full border-2 border-bch/40 object-cover">
+    
+    <!-- BANNER PREVIEW -->
+    <div class="banner-preview" id="profileBannerPreview">
+      <div id="bannerColorOverlay" class="absolute inset-0 transition-all duration-300"></div>
+      <img id="bannerImage" src="" class="hidden">
     </div>
-    <div class="flex gap-1 mb-3 text-[10px] mono">
-      <button onclick="avatarMethod('seed')" id="am-seed" class="px-2 py-1 rounded bg-bch/20 text-bch">Seed</button>
-      <button onclick="avatarMethod('url')" id="am-url" class="px-2 py-1 rounded bg-dark-800 text-slate-400">URL</button>
-      <button onclick="openGifPicker('avatar')" id="am-gif" class="px-2 py-1 rounded bg-dark-800 text-slate-400 hover:text-bch">GIF</button>
+
+    <!-- AVATAR & BANNER METHODS -->
+    <div class="flex gap-4 mb-6">
+      <div class="relative">
+        <div class="avatar-ring-wrapper">
+          <img id="profileAvatarPreview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-20 h-20 rounded-full border-4 border-dark-900 shadow-xl object-cover -mt-10 ml-2 relative z-10">
+          <img id="profileRingPreview" src="" class="avatar-ring avatar-ring-large hidden -mt-10 ml-2 w-20 h-20">
+        </div>
+        <button onclick="openGifEditor()" class="absolute bottom-0 right-0 w-7 h-7 bg-bch text-black rounded-full flex items-center justify-center border-4 border-dark-900 z-20 hover:scale-110 transition-transform"><i class="fa-solid fa-camera text-[10px]"></i></button>
+      </div>
+      <div class="flex-1 pt-1">
+        <label class="field-label mb-1">Banner Type</label>
+        <div class="flex gap-1 text-[9px] mono">
+          <button onclick="bannerMethod('color')" id="bm-color" class="px-2 py-1 rounded bg-bch/20 text-bch">Color</button>
+          <button onclick="bannerMethod('url')" id="bm-url" class="px-2 py-1 rounded bg-dark-800 text-slate-400">URL</button>
+          <button onclick="openGifPicker('banner')" id="bm-gif" class="px-2 py-1 rounded bg-dark-800 text-slate-400">GIF</button>
+        </div>
+      </div>
     </div>
-    <div id="avatarSeedBox">
-      <label class="field-label">Avatar Seed</label>
-      <input type="text" id="profileSeed" placeholder="any text" oninput="previewAvatar(this.value)" class="field text-xs mb-3">
-      <p class="text-[10px] text-slate-500 mb-2">Uses DiceBear Bottts style</p>
+
+    <!-- AVATAR RING CONTROL -->
+    <div class="bg-dark-950/50 border border-dark-700 rounded-xl p-3 mb-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <label class="text-[10px] mono text-slate-500 uppercase tracking-widest font-bold">Avatar Ring</label>
+        <button onclick="removeAvatarRing()" class="text-[9px] text-red-400 hover:text-red-300 mono">Remove</button>
+      </div>
+      <div class="flex gap-2">
+        <input type="text" id="profileRingUrl" placeholder="Ring Image/GIF URL (HTTPS only)" oninput="previewRingUrl(this.value)" class="field text-xs flex-1">
+      </div>
+      <p class="text-[9px] text-slate-500 italic">Paste a URL for a transparent PNG, JPG, or GIF to overlay a ring around your avatar.</p>
     </div>
-    <div id="avatarUrlBox" class="hidden">
-      <label class="field-label">Image/GIF URL</label>
-      <input type="url" id="profileAvatarUrl" placeholder="https://i.imgur.com/..." oninput="previewFromUrl(this.value)" class="field text-xs mb-3">
-      <p class="text-[10px] text-slate-500 mb-2">Paste any direct image/GIF link</p>
+
+    <!-- BANNER CONTROLS -->
+    <div id="bannerColorBox" class="space-y-3 mb-4">
+      <div class="flex flex-wrap gap-2">
+        <div class="gradient-swatch" style="background:linear-gradient(135deg,#7C3AED,#0AC18E)" onclick="setBannerGradient('linear-gradient(135deg,#7C3AED,#0AC18E)')"></div>
+        <div class="gradient-swatch" style="background:linear-gradient(135deg,#FFB347,#F7931A)" onclick="setBannerGradient('linear-gradient(135deg,#FFB347,#F7931A)')"></div>
+        <div class="gradient-swatch" style="background:linear-gradient(135deg,#00d2ff,#3a7bd5)" onclick="setBannerGradient('linear-gradient(135deg,#00d2ff,#3a7bd5)')"></div>
+        <div class="gradient-swatch" style="background:linear-gradient(135deg,#f953c6,#b91d73)" onclick="setBannerGradient('linear-gradient(135deg,#f953c6,#b91d73)')"></div>
+        <div class="gradient-swatch" style="background:linear-gradient(135deg,#11998e,#38ef7d)" onclick="setBannerGradient('linear-gradient(135deg,#11998e,#38ef7d)')"></div>
+        <div class="gradient-swatch" style="background:linear-gradient(135deg,#fc4a1a,#f7b733)" onclick="setBannerGradient('linear-gradient(135deg,#fc4a1a,#f7b733)')"></div>
+        <div class="gradient-swatch" style="background:linear-gradient(135deg,#ee0979,#ff6a00)" onclick="setBannerGradient('linear-gradient(135deg,#ee0979,#ff6a00)')"></div>
+        <div class="gradient-swatch" style="background:linear-gradient(135deg,#4568dc,#b06ab3)" onclick="setBannerGradient('linear-gradient(135deg,#4568dc,#b06ab3)')"></div>
+        <div class="gradient-swatch" style="background:linear-gradient(135deg,#0fd850,#f9f047)" onclick="setBannerGradient('linear-gradient(135deg,#0fd850,#f9f047)')"></div>
+        <div class="gradient-swatch" style="background:linear-gradient(135deg,#007adf,#00ecbc)" onclick="setBannerGradient('linear-gradient(135deg,#007adf,#00ecbc)')"></div>
+        <input type="color" id="bannerHex" class="hidden" oninput="setBannerColor(this.value)">
+        <div class="color-wheel-btn" onclick="document.getElementById('bannerHex').click()"></div>
+      </div>
     </div>
-    <div class="space-y-3">
-      <div><label class="field-label">Handle</label><input type="text" id="profileHandle" class="field"></div>
-      <div><label class="field-label">Status</label><input type="text" id="profileStatus" maxlength="40" class="field"></div>
-      <div><label class="field-label">Bio</label><textarea id="profileBio" rows="2" maxlength="120" class="field resize-none text-xs"></textarea></div>
+    <div id="bannerUrlBox" class="hidden mb-4">
+      <input type="url" id="profileBannerUrl" placeholder="Banner Image/GIF URL" oninput="previewBannerUrl(this.value)" class="field text-xs">
     </div>
-    <div class="flex gap-2 mt-4">
-      <button onclick="saveProfile()" class="flex-1 py-2 btn-primary text-sm">Save Profile</button>
-      <button onclick="doSignOut()" class="px-4 py-2 bg-dark-800 text-red-400 font-bold rounded-lg text-sm border border-dark-700">Logout</button>
+
+    <!-- USER INFO -->
+    <div class="space-y-4">
+      <div>
+        <label for="profileHandle" class="field-label">Handle</label>
+        <input type="text" id="profileHandle" class="field font-bold" oninput="updateNamePreview()">
+      </div>
+
+      <!-- NAME CUSTOMIZATION -->
+      <div class="bg-dark-950/50 border border-dark-700 rounded-xl p-3 space-y-3">
+        <label class="text-[10px] mono text-slate-500 uppercase tracking-widest font-bold">Name Style</label>
+        
+        <!-- FONT PICKER -->
+        <div class="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto custom-scrollbar p-1" id="fontPicker">
+          <!-- JS will populate -->
+        </div>
+
+        <!-- NAME COLOR / GRADIENT -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[9px] mono text-slate-400">Color & Gradients</span>
+            <div class="flex gap-1">
+              <input type="color" id="nameHex" class="hidden" oninput="setNameColor(this.value)">
+              <button onclick="document.getElementById('nameHex').click()" class="w-5 h-5 rounded-full border border-dark-600 bg-white/10 flex items-center justify-center hover:bg-white/20"><i class="fa-solid fa-dropper text-[8px]"></i></button>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1.5" id="nameGradients">
+            <!-- JS will populate -->
+          </div>
+          
+          <!-- CUSTOM GRADIENT -->
+          <div class="pt-2 border-t border-dark-700/50">
+            <span class="text-[9px] mono text-slate-400 block mb-2">Custom Multi-Hex Gradient (up to 5)</span>
+            <div class="flex gap-1.5" id="customGradientInputs">
+              <input type="color" class="w-6 h-6 rounded bg-transparent cursor-pointer cg-input" oninput="updateCustomGradient()">
+              <input type="color" class="w-6 h-6 rounded bg-transparent cursor-pointer cg-input" oninput="updateCustomGradient()">
+              <button onclick="addGradientStop()" class="w-6 h-6 rounded border border-dark-600 flex items-center justify-center text-[10px] text-slate-500 hover:text-bch"><i class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div><label for="profileStatus" class="field-label">Status</label><input type="text" id="profileStatus" maxlength="40" class="field text-xs"></div>
+      <div><label for="profileBio" class="field-label">Bio</label><textarea id="profileBio" rows="2" maxlength="120" class="field resize-none text-xs"></textarea></div>
     </div>
-    <div id="profileMsg" class="mt-2 text-xs mono hidden"></div>
+
+    <div class="flex gap-2 mt-6">
+      <button onclick="saveProfile()" class="flex-1 py-2.5 btn-primary text-sm font-bold shadow-lg shadow-bch/10">Save Changes</button>
+      <button onclick="doSignOut()" class="px-4 py-2.5 bg-dark-800 text-red-400 font-bold rounded-lg text-sm border border-dark-700">Logout</button>
+    </div>
+    <div id="profileMsg" class="mt-2 text-xs mono hidden text-center"></div>
+  </div>
+</div>
+
+<!-- DISCOVER MODAL -->
+<div id="modal-discover" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-dark-900 border border-bch/30 w-full max-w-5xl rounded-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
+    <div class="flex items-center justify-between p-6 border-b border-dark-700">
+      <div>
+        <h2 class="font-extrabold text-white text-2xl tracking-tight"><i class="fa-solid fa-compass text-bch mr-2"></i>Discover Communities</h2>
+        <p class="text-slate-500 text-sm mt-1">Explore public communities and find your next home.</p>
+      </div>
+      <button onclick="closeModal('discover')" class="text-slate-500 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+    </div>
+    
+    <div class="p-6 bg-dark-950/50 border-b border-dark-700">
+      <div class="relative max-w-2xl mx-auto">
+        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+        <input type="text" id="discoverSearch" placeholder="Explore communities (e.g. 'gaming', 'tech', 'music')..." 
+               class="w-full bg-dark-900 border border-dark-700 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-bch transition-all"
+               oninput="searchDiscovery(this.value)">
+      </div>
+    </div>
+    
+    <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+      <div id="discoverGrid" class="discover-grid">
+        <!-- Servers will be injected here -->
+      </div>
+      <div id="discoverEmpty" class="hidden text-center py-20">
+        <i class="fa-solid fa-ghost text-4xl text-slate-700 mb-4"></i>
+        <p class="text-slate-500 mono">No public communities found matching your search.</p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -549,6 +748,7 @@
   <div class="bg-dark-900 border border-bch/30 w-full max-w-sm rounded-xl p-6 relative">
     <button onclick="closeModal('joinInvite')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
     <h2 class="font-bold text-white mb-1"><i class="fa-solid fa-ticket text-bch"></i> Join via Invite</h2>
+    <label for="inviteCodeInput" class="hidden">Invite Code</label>
     <input type="text" id="inviteCodeInput" placeholder="HAVOC-XXXXXX" maxlength="20" class="field uppercase tracking-widest text-center font-bold mono mb-3 mt-3">
     <button onclick="joinViaInvite()" class="w-full py-2.5 btn-primary text-sm">Join Server</button>
     <div id="inviteMsg" class="mt-3 text-xs mono text-center hidden"></div>
@@ -569,16 +769,18 @@
             <button onclick="serverIconMethod('url')" id="sim-url" class="px-2 py-0.5 rounded bg-dark-800 text-slate-400">URL</button>
           </div>
           <div id="serverIconSeedBox">
+            <label for="newServerSeed" class="hidden">Server Seed</label>
             <input type="text" id="newServerSeed" placeholder="server seed" oninput="previewServerSeed(this.value)" class="field text-xs">
           </div>
           <div id="serverIconUrlBox" class="hidden">
+            <label for="newServerIconUrl" class="hidden">Server Icon URL</label>
             <input type="url" id="newServerIconUrl" placeholder="https://..." oninput="previewServerUrl(this.value)" class="field text-xs">
           </div>
         </div>
       </div>
       <p class="text-[10px] text-slate-500">Server icons use DiceBear <strong>Shapes</strong> style (different from user avatars)</p>
-      <div><label class="field-label">Server Name</label><input type="text" id="newServerName" maxlength="40" class="field"></div>
-      <div><label class="field-label">Description</label><input type="text" id="newServerDesc" maxlength="80" class="field"></div>
+      <div><label for="newServerName" class="field-label">Server Name</label><input type="text" id="newServerName" maxlength="40" class="field"></div>
+      <div><label for="newServerDesc" class="field-label">Description</label><input type="text" id="newServerDesc" maxlength="80" class="field"></div>
       <button onclick="createServer()" class="w-full py-2.5 btn-primary text-sm">Create & Become Owner</button>
     </div>
     <div id="createServerErr" class="mt-2 text-xs text-red-400 mono hidden"></div>
@@ -644,6 +846,29 @@
         </div>
         <div><label class="field-label">Name</label><input type="text" id="ssName" class="field"></div>
         <div><label class="field-label">Description</label><input type="text" id="ssDesc" class="field"></div>
+        
+        <div class="bg-dark-950/50 border border-dark-700 rounded-xl p-3 space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="text-[10px] mono text-slate-500 uppercase tracking-widest font-bold">Public Discovery</label>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="ssIsPublic" class="sr-only peer">
+              <div class="w-9 h-5 bg-dark-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-bch"></div>
+            </label>
+          </div>
+          <div>
+            <label class="field-label">Search Tags (up to 10)</label>
+            <input type="text" id="ssTags" placeholder="gaming, art, music (comma separated)" class="field text-xs">
+          </div>
+          <div>
+            <label class="field-label">Server Ring URL (URL only)</label>
+            <input type="text" id="ssRingUrl" placeholder="Transparent PNG/JPG/GIF Ring URL" class="field text-xs">
+          </div>
+          <div>
+            <label class="field-label">Server Banner URL (URL only)</label>
+            <input type="text" id="ssBannerUrl" placeholder="Image/GIF Banner URL" class="field text-xs">
+          </div>
+        </div>
+        
         <button onclick="saveServerSettings()" class="py-2 px-4 btn-primary text-xs">Save</button>
       </div>
       <div id="ssp-roles" class="space-y-4 hidden">
@@ -979,6 +1204,397 @@ window.promptNewDM = () => {
   else alert('User not in your friends list. Add them first by right-clicking their avatar.');
 };
 
+// ========== PROFILE ENHANCEMENTS (Banner, Name, GIF Editor) ==========
+const PROFILE_FONTS = [
+  { name: 'Standard', family: "'Plus Jakarta Sans', sans-serif" },
+  { name: 'Havoc', family: "'JetBrains Mono', monospace" },
+  { name: 'Cyber', family: "'Orbitron', sans-serif" },
+  { name: 'Pixel', family: "'Press Start 2P', cursive" },
+  { name: 'Gothic', family: "'UnifrakturMaguntia', cursive" },
+  { name: 'Neon', family: "'Monoton', cursive" },
+  { name: 'Elegant', family: "'Playfair Display', serif" },
+  { name: 'Script', family: "'Pacifico', cursive" },
+  { name: 'Impact', family: "'Anton', sans-serif" },
+  { name: 'Rounded', family: "'Quicksand', sans-serif" },
+  { name: 'Tech', family: "'Exo 2', sans-serif" },
+  { name: 'Fun', family: "'Bubblegum Sans', cursive" },
+  { name: 'Modern', family: "'Montserrat', sans-serif" },
+  { name: 'Retro', family: "'Righteous', cursive" },
+  { name: 'Bold', family: "'Kanit', sans-serif" },
+  { name: 'Slim', family: "'Raleway', sans-serif" },
+  { name: 'Sharp', family: "'Oswald', sans-serif" },
+  { name: 'Soft', family: "'Varela Round', sans-serif" },
+  { name: 'Vibe', family: "'Comfortaa', sans-serif" }
+];
+
+const NAME_GRADIENTS = [
+  'linear-gradient(to right, #0AC18E, #00E5A3)',
+  'linear-gradient(to right, #7C3AED, #A78BFA)',
+  'linear-gradient(to right, #F7931A, #FFB347)',
+  'linear-gradient(to right, #ff00cc, #3333ff)',
+  'linear-gradient(to right, #00c6ff, #0072ff)',
+  'linear-gradient(to right, #f7971e, #ffd200)',
+  'linear-gradient(to right, #ee0979, #ff6a00)',
+  'linear-gradient(to right, #4568dc, #b06ab3)',
+  'linear-gradient(to right, #0575e6, #021b79)',
+  'linear-gradient(to right, #43e97b, #38f9d7)',
+  'linear-gradient(to right, #fa709a, #fee140)',
+  'linear-gradient(to right, #30cfd0, #330867)',
+  'linear-gradient(to right, #a8edea, #fed6e3)',
+  'linear-gradient(to right, #5f2c82, #49a09d)',
+  'linear-gradient(to right, #ffafbd, #ffc3a0)',
+  'linear-gradient(to right, #2193b0, #6dd5ed)',
+  'linear-gradient(to right, #cc2b5e, #753a88)',
+  'linear-gradient(to right, #ec008c, #fc6767)',
+  'linear-gradient(to right, #141e30, #243b55)',
+  'linear-gradient(to right, #e65c00, #f9d423)'
+];
+
+S.profileStyle = {
+  font: PROFILE_FONTS[0].family,
+  nameColor: '#ffffff',
+  nameGradient: '',
+  customGradient: [],
+  banner: { type: 'color', value: 'linear-gradient(135deg,#7C3AED,#0AC18E)' },
+  avatarCrop: { x: 0, y: 0, zoom: 1 },
+  ringUrl: ''
+};
+
+window.initProfileEditor = () => {
+  const fp = $('fontPicker');
+  if(fp) {
+    fp.innerHTML = PROFILE_FONTS.map(f => `
+      <div class="font-option ${S.profileStyle.font === f.family ? 'active' : ''}" 
+           style="font-family:${f.family}" 
+           onclick="setNameFont('${f.family}', this)">
+        ${f.name}
+      </div>
+    `).join('');
+  }
+
+  const ng = $('nameGradients');
+  if(ng) {
+    ng.innerHTML = NAME_GRADIENTS.map(g => `
+      <div class="gradient-swatch ${S.profileStyle.nameGradient === g ? 'active' : ''}" 
+           style="background:${g}" 
+           onclick="setNameGradient('${g}', this)"></div>
+    `).join('');
+  }
+  
+  // Load existing profile style if available
+  if(S.profile && S.profile.style) {
+    S.profileStyle = { ...S.profileStyle, ...S.profile.style };
+    updateProfileUIFromStyle();
+  }
+  if(S.profileStyle.ringUrl) {
+    $('profileRingUrl').value = S.profileStyle.ringUrl;
+    previewRingUrl(S.profileStyle.ringUrl);
+  } else {
+    removeAvatarRing();
+  }
+};
+
+function updateProfileUIFromStyle() {
+  if(S.profileStyle.banner) {
+    bannerMethod(S.profileStyle.banner.type);
+    if(S.profileStyle.banner.type === 'color') setBannerGradient(S.profileStyle.banner.value);
+    else if(S.profileStyle.banner.type === 'url' || S.profileStyle.banner.type === 'gif') {
+      $('profileBannerUrl').value = S.profileStyle.banner.value;
+      previewBannerUrl(S.profileStyle.banner.value);
+    }
+  }
+  updateNamePreview();
+}
+
+window.setNameFont = (family, el) => {
+  S.profileStyle.font = family;
+  document.querySelectorAll('.font-option').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  updateNamePreview();
+};
+
+window.setNameColor = (hex) => {
+  S.profileStyle.nameColor = hex;
+  S.profileStyle.nameGradient = '';
+  S.profileStyle.customGradient = [];
+  document.querySelectorAll('#nameGradients .gradient-swatch').forEach(x => x.classList.remove('active'));
+  updateNamePreview();
+};
+
+window.setNameGradient = (grad, el) => {
+  S.profileStyle.nameGradient = grad;
+  S.profileStyle.customGradient = [];
+  document.querySelectorAll('#nameGradients .gradient-swatch').forEach(x => x.classList.remove('active'));
+  if(el) el.classList.add('active');
+  updateNamePreview();
+};
+
+window.updateCustomGradient = () => {
+  const inputs = document.querySelectorAll('.cg-input');
+  const colors = Array.from(inputs).map(i => i.value);
+  S.profileStyle.customGradient = colors;
+  S.profileStyle.nameGradient = `linear-gradient(to right, ${colors.join(', ')})`;
+  updateNamePreview();
+};
+
+window.addGradientStop = () => {
+  const container = $('customGradientInputs');
+  const inputs = container.querySelectorAll('.cg-input');
+  if(inputs.length >= 5) return;
+  
+  const newInput = document.createElement('input');
+  newInput.type = 'color';
+  newInput.className = 'w-6 h-6 rounded bg-transparent cursor-pointer cg-input';
+  newInput.value = '#ffffff';
+  newInput.oninput = updateCustomGradient;
+  container.insertBefore(newInput, container.lastElementChild);
+  updateCustomGradient();
+};
+
+window.updateNamePreview = () => {
+  const handle = $('profileHandle').value || S.profile?.handle || 'Username';
+  const preview = $('ucHandle'); // In real app, we might have a specific preview el
+  // For now, let's just update the handle in the modal if we had one, or apply style to ucHandle for live feedback
+  const style = S.profileStyle;
+  const target = $('profileHandle');
+  target.style.fontFamily = style.font;
+  if(style.nameGradient) {
+    target.style.background = style.nameGradient;
+    target.style.webkitBackgroundClip = 'text';
+    target.style.webkitTextFillColor = 'transparent';
+  } else {
+    target.style.background = 'none';
+    target.style.webkitTextFillColor = style.nameColor;
+    target.style.color = style.nameColor;
+  }
+};
+
+window.bannerMethod = (m) => {
+  S.profileStyle.banner.type = m;
+  ['color','url','gif'].forEach(x => {
+    const el = $(`bm-${x}`);
+    if(el) el.className = `px-2 py-1 rounded ${x===m?'bg-bch/20 text-bch':'bg-dark-800 text-slate-400'}`;
+  });
+  $('bannerColorBox').classList.toggle('hidden', m!=='color');
+  $('bannerUrlBox').classList.toggle('hidden', m==='color');
+  if(m === 'gif') openGifPicker('banner');
+};
+
+window.setBannerGradient = (grad) => {
+  S.profileStyle.banner.value = grad;
+  $('bannerColorOverlay').style.background = grad;
+  $('bannerImage').classList.add('hidden');
+  document.querySelectorAll('.gradient-swatch').forEach(x => {
+    x.classList.toggle('active', x.style.background.includes(grad));
+  });
+};
+
+window.setBannerColor = (hex) => {
+  setBannerGradient(hex);
+};
+
+window.previewBannerUrl = (url) => {
+  if(!url || !url.startsWith('http')) return;
+  S.profileStyle.banner.value = url;
+  $('bannerImage').src = url;
+  $('bannerImage').classList.remove('hidden');
+  $('bannerColorOverlay').style.background = 'transparent';
+};
+
+// GIF EDITOR LOGIC
+S.editorPage = 0;
+window.openGifEditor = () => {
+  openModal('gif-editor');
+  $('editorAdjustStep').classList.add('hidden');
+  $('editorPickStep').classList.remove('hidden');
+  searchEditorGifs('');
+};
+
+window.searchEditorGifs = async (q) => {
+  const grid = $('editorGifGrid');
+  grid.innerHTML = '<div class="col-span-3 py-10 text-center text-[10px] text-slate-500 mono animate-pulse">Searching...</div>';
+  
+  // Use existing S.tgifData if available
+  let results = S.tgifData || [];
+  if(q) {
+    const query = q.toLowerCase();
+    results = results.filter(g => g.desc.toLowerCase().includes(query));
+  }
+  
+  const start = S.editorPage * 9;
+  const page = results.slice(start, start + 9);
+  
+  grid.innerHTML = page.map(g => `
+    <div class="aspect-square rounded-lg overflow-hidden border border-dark-700 hover:border-bch cursor-pointer transition-all" onclick="selectEditorGif('${g.url}')">
+      <img src="${g.url}" class="w-full h-full object-cover">
+    </div>
+  `).join('');
+  
+  $('editorGifPageInfo').textContent = `${S.editorPage + 1} / ${Math.ceil(results.length / 9) || 1}`;
+};
+
+window.editorGifPage = (dir) => {
+  S.editorPage = Math.max(0, S.editorPage + dir);
+  searchEditorGifs($('editorGifSearch').value);
+};
+
+window.selectEditorGif = (url) => {
+  $('cropImage').src = url;
+  $('editorPickStep').classList.add('hidden');
+  $('editorAdjustStep').classList.remove('hidden');
+  resetCrop();
+};
+
+window.resetCrop = () => {
+  S.profileStyle.avatarCrop = { x: 0, y: 0, zoom: 1 };
+  $('cropZoom').value = 1;
+  $('cropX').value = 0;
+  $('cropY').value = 0;
+  updateCropTransform();
+};
+
+window.updateCropTransform = () => {
+  const z = parseFloat($('cropZoom').value);
+  const x = parseInt($('cropX').value);
+  const y = parseInt($('cropY').value);
+  S.profileStyle.avatarCrop = { x, y, zoom: z };
+  $('cropImage').style.transform = `translate(${x}px, ${y}px) scale(${z})`;
+  $('zoomVal').textContent = Math.round(z * 100) + '%';
+};
+
+window.saveGifAvatar = () => {
+  const url = $('cropImage').src;
+  if(S.gifTarget === 'avatar') {
+    S.profile.avatar = url;
+    $('profileAvatarPreview').src = url;
+    const c = S.profileStyle.avatarCrop;
+    $('profileAvatarPreview').style.objectPosition = `${50 - (c.x/2)}% ${50 - (c.y/2)}%`;
+    $('profileAvatarPreview').style.transform = `scale(${c.zoom})`;
+  } else if(S.gifTarget === 'banner') {
+    S.profileStyle.banner = { type: 'gif', value: url };
+    previewBannerUrl(url);
+  } else if(S.gifTarget === 'ring') {
+    previewRingUrl(url);
+  } else if(S.gifTarget === 'serverRing') {
+    $('ssRingUrl').value = url;
+  }
+  closeModal('gif-editor');
+};
+
+window.backToGifPick = () => {
+  $('editorAdjustStep').classList.add('hidden');
+  $('editorPickStep').classList.remove('hidden');
+};
+
+// AVATAR RING LOGIC
+window.previewRingUrl = (url) => {
+  if(!url || !url.startsWith('http')) return;
+  S.profileStyle.ringUrl = url;
+  $('profileRingPreview').src = url;
+  $('profileRingPreview').classList.remove('hidden');
+  $('profileRingUrl').value = url;
+};
+
+window.removeAvatarRing = () => {
+  S.profileStyle.ringUrl = null;
+  $('profileRingPreview').classList.add('hidden');
+  $('profileRingUrl').value = '';
+};
+
+// SERVER DISCOVERY LOGIC
+window.loadDiscovery = async () => {
+  const grid = $('discoverGrid');
+  const empty = $('discoverEmpty');
+  grid.innerHTML = '<div class="col-span-full py-20 text-center text-slate-500 mono animate-pulse">Loading communities...</div>';
+  empty.classList.add('hidden');
+
+  try {
+    const q = query(collection(db, 'servers'), where('isPublic', '==', true), limit(50));
+    const snap = await getDocs(q);
+    S.discoverServers = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    renderDiscovery(S.discoverServers);
+  } catch(e) {
+    console.error('Discovery load error', e);
+    grid.innerHTML = '<div class="col-span-full py-20 text-center text-red-400 mono">Failed to load communities.</div>';
+  }
+};
+
+window.searchDiscovery = (val) => {
+  const q = val.toLowerCase().trim();
+  if(!S.discoverServers) return;
+  const filtered = S.discoverServers.filter(s => 
+    s.name.toLowerCase().includes(q) || 
+    (s.desc||'').toLowerCase().includes(q) ||
+    (s.tags||[]).some(t => t.toLowerCase().includes(q))
+  );
+  renderDiscovery(filtered);
+};
+
+window.renderDiscovery = (servers) => {
+  const grid = $('discoverGrid');
+  const empty = $('discoverEmpty');
+  
+  if(!servers.length) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  
+  empty.classList.add('hidden');
+  grid.innerHTML = servers.map(s => {
+    const icon = s.iconUrl || serverIcon(s.id);
+    const banner = s.bannerUrl || '';
+    const ring = s.ringUrl || '';
+    const tags = (s.tags || []).map(t => `<span class="tag">#${esc(t)}</span>`).join('');
+    
+    return `
+      <div class="discover-card" onclick="joinPublicServer('${s.id}')">
+        <div class="h-24 w-full bg-dark-800 relative">
+          ${banner ? `<img src="${esc(banner)}" class="w-full h-full object-cover">` : ''}
+          <div class="absolute -bottom-6 left-4 avatar-ring-wrapper">
+            <img src="${esc(icon)}" class="w-12 h-12 rounded-xl border-4 border-[#1e1f22] bg-dark-800 relative z-10">
+            ${ring ? `<img src="${esc(ring)}" class="avatar-ring w-12 h-12 -inset-1 z-20">` : ''}
+          </div>
+        </div>
+        <div class="p-4 pt-8">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="font-bold text-white truncate">${esc(s.name)}</h3>
+            <span class="text-[10px] text-slate-500 mono"><i class="fa-solid fa-users mr-1"></i>${s.memberCount||0}</span>
+          </div>
+          <p class="text-xs text-slate-400 line-clamp-2 h-8 mb-3">${esc(s.desc || 'No description.')}</p>
+          <div class="flex flex-wrap gap-1">
+            ${tags}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+window.joinPublicServer = async (id) => {
+  if(!S.user || S.user.isAnonymous) return openModal('auth');
+  try {
+    const mRef = doc(db, 'servers', id, 'members', S.user.uid);
+    const mSnap = await getDoc(mRef);
+    if(!mSnap.exists()){
+      await setDoc(mRef, {
+        handle: S.profile.handle,
+        avatar: S.profile.avatar,
+        role: 'member',
+        joinedAt: Date.now()
+      });
+      // Update member count
+      const sRef = doc(db, 'servers', id);
+      const sSnap = await getDoc(sRef);
+      await updateDoc(sRef, { memberCount: (sSnap.data().memberCount || 0) + 1 });
+    }
+    closeModal('discover');
+    selectServer(id);
+  } catch(e) {
+    alert('Failed to join server: ' + e.message);
+  }
+};
+
 // ========== AVATAR (Seed + URL only) ==========
 window.avatarMethod = (m) => {
   S.avatarMode = m;
@@ -1026,7 +1642,7 @@ window.saveProfile = async () => {
       try{ await deleteDoc(doc(db,'usernames', oldHandle)); }catch(e){}
     }
     await setDoc(doc(db,'usernames', handleKey), { uid:S.user.uid, handle, updatedAt:Date.now() });
-    const updates = { handle, bio, status, avatar };
+    const updates = { handle, bio, status, avatar, style: S.profileStyle };
     if(!S.profile.createdAt) updates.createdAt = Date.now();
     await updateDoc(doc(db,'users',S.user.uid), updates);
     S.profile = { ...S.profile, ...updates };
@@ -1104,6 +1720,12 @@ S.tgifLoading = false;
 window.openGifPicker = async (target = 'message') => {
   if(!S.user||S.user.isAnonymous) return alert('Registered users only');
   S.gifTarget = target;
+  
+  if(target === 'avatar' || target === 'banner') {
+    openGifEditor();
+    return;
+  }
+
   $('gifUrlInput').value = '';
   $('gifSearchInput').value = '';
   S.gifPage = 0;
@@ -1511,22 +2133,38 @@ window.playRecordedAudio = () => {
 window.sendRecordedAudio = async () => {
   if(!audioBlob) return;
   const btn = $('sendAudioBtn');
+  const cancelBtn = $('cancelAudioBtn');
   btn.disabled = true;
+  cancelBtn.disabled = true;
   btn.textContent = 'Sending...';
   
   try{
-    const url = await uploadImage(audioBlob, `audio/${S.user.uid}_${Date.now()}.webm`);
+    const path = `audio/${S.user.uid}_${Date.now()}.webm`;
+    console.info(`[AudioDebug] Attempting upload to Storage: ${path}`);
+    const url = await uploadImage(audioBlob, path);
+    
+    console.info(`[AudioDebug] Upload success. Sending message...`);
     await actuallySendMessage('', null, url);
+    
     $('audioPreview').classList.add('hidden');
     $('audioClipBtn').classList.remove('text-red-400','rec-pulse');
-  }catch(err){ 
-    alert('Audio upload failed: '+err.message); 
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Send';
+    
+    // Cleanup
     audioBlob = null;
     if(audioURL) URL.revokeObjectURL(audioURL);
     audioURL = null;
+  }catch(err){ 
+    console.error('[AudioDebug] Send failed:', err);
+    let msg = err.message;
+    if(err.code === 'storage/unauthorized') msg = "Firebase Storage: Permission Denied. Check your Security Rules.";
+    if(msg.includes('CORS') || msg.includes('preflight') || err.name === 'FirebaseError' && !err.code) {
+      msg = "CORS Error: Your Firebase Storage bucket is blocking uploads from this domain. Please configure CORS in the Firebase CLI or Console.";
+    }
+    alert('Audio Send Failed:\n' + msg); 
+  } finally {
+    btn.disabled = false;
+    cancelBtn.disabled = false;
+    btn.textContent = 'Send';
   }
 };
 
@@ -1650,6 +2288,46 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
 
   $('upHandle').textContent = handle;
   $('upAvatar').src = avatar;
+  
+  // Apply style & ring
+  const liveProfile = (S.profileCache && S.profileCache[uid]) || { style: null };
+  const s = liveProfile.style;
+  const handleEl = $('upHandle');
+  const bannerEl = $('upBanner');
+  const avatarEl = $('upAvatar');
+  const ringEl = $('upRing');
+  
+  applyUserStyle(handleEl, liveProfile);
+  
+  if(s && s.banner) {
+    if(s.banner.type === 'color') {
+      bannerEl.style.background = s.banner.value;
+      bannerEl.innerHTML = '';
+    } else {
+      bannerEl.style.background = 'transparent';
+      bannerEl.innerHTML = `<img src="${esc(s.banner.value)}" class="w-full h-full object-cover">`;
+    }
+  } else {
+    bannerEl.style.background = '';
+    bannerEl.innerHTML = '';
+  }
+
+  if(s && s.avatarCrop) {
+    const c = s.avatarCrop;
+    avatarEl.style.objectPosition = `${50 - (c.x/2)}% ${50 - (c.y/2)}%`;
+    avatarEl.style.transform = `scale(${c.zoom})`;
+  } else {
+    avatarEl.style.objectPosition = 'center';
+    avatarEl.style.transform = 'none';
+  }
+
+  if(s && s.ringUrl) {
+    ringEl.src = s.ringUrl;
+    ringEl.classList.remove('hidden');
+  } else {
+    ringEl.classList.add('hidden');
+  }
+
   $('upBio').textContent = bio || 'No bio set.';
   const stLabel = {online:'Online',idle:'Idle',dnd:'Do Not Disturb',offline:'Offline',invisible:'Offline'}[status] || 'Offline';
   $('upStatusLine').textContent = stLabel;
@@ -1899,7 +2577,19 @@ window.createServer = async () => {
   $('createServerErr').classList.add('hidden');
   try{
     const ref = doc(collection(db,'servers'));
-    const serverData = { name, desc:desc||'', ownerUid:S.user.uid, ownerHandle:safe(S.profile.handle,'Owner'), iconUrl, createdAt:Date.now() };
+    const serverData = { 
+      name, 
+      desc:desc||'', 
+      ownerUid:S.user.uid, 
+      ownerHandle:safe(S.profile.handle,'Owner'), 
+      iconUrl, 
+      createdAt:Date.now(),
+      memberCount: 1,
+      isPublic: false,
+      tags: [],
+      ringUrl: '',
+      bannerUrl: ''
+    };
     await setDoc(ref, serverData);
     await setDoc(doc(db,'servers',ref.id,'members',S.user.uid), {
       role:'owner', handle:safe(S.profile.handle,'Owner'),
@@ -2203,9 +2893,9 @@ async function resolveProfiles(uids){
       const snap = await getDoc(doc(db,'users', uid));
       if(snap.exists()){
         const u = snap.data();
-        S.profileCache[uid] = { handle: u.handle || 'User', avatar: u.avatar || userAvatar(uid), createdAt: u.createdAt || 0 };
+        S.profileCache[uid] = { handle: u.handle || 'User', avatar: u.avatar || userAvatar(uid), createdAt: u.createdAt || 0, style: u.style || null };
       } else {
-        S.profileCache[uid] = { handle: 'User', avatar: userAvatar(uid) };
+        S.profileCache[uid] = { handle: 'User', avatar: userAvatar(uid), style: null };
       }
     }catch(e){
       S.profileCache[uid] = { handle: 'User', avatar: userAvatar(uid) };
@@ -2259,13 +2949,21 @@ async function renderMsgs(msgs){
     const mentionsMe = (m.content||'').toLowerCase().includes('@'+(S.profile?.handle||'').toLowerCase()) || /@(everyone|here)/i.test(m.content||'');
     const div = document.createElement('div');
     div.className = `flex items-start gap-3 hover:bg-dark-800/40 px-2 py-2 rounded-lg group relative ${mentionsMe&&!isServerMuted(S.server?.id,'notif')?'bg-bch/5 border-l-2 border-bch':''}`;
+    
+    const userStyle = getUserStyleString(live);
+    const avatarStyle = getAvatarStyleString(live);
+    const ringUrl = live.style?.ringUrl || '';
+    
     div.innerHTML = `
-      <img src="${esc(displayAvatar)}" class="w-9 h-9 rounded-full border ${isOwner?'border-carrot/60':'border-dark-600'} shrink-0 cursor-pointer" data-profile-uid="${esc(m.uid)}"
+      <div class="w-9 h-9 rounded-full shrink-0 cursor-pointer border ${isOwner?'border-carrot/60':'border-dark-600'} avatar-ring-wrapper"
            onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')"
            oncontextmenu="showUserContext(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')">
+        <img src="${esc(displayAvatar)}" class="w-full h-full rounded-full object-cover relative z-10" style="${avatarStyle}">
+        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring w-full h-full rounded-full">` : ''}
+      </div>
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5">
-          <span class="font-bold text-xs ${isOwner?'text-carrot':'text-slate-100'} cursor-pointer" ${nameStyle}
+          <span class="font-bold text-xs cursor-pointer" style="${userStyle}"
             onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')">${esc(displayHandle)}</span>
           ${isNewMember(m.uid)?'<span class="new-member-leaf" title="New member (joined within the last week)"><i class="fa-solid fa-seedling"></i></span>':''}
           ${isOwner?'<span class="badge-owner">OWNER</span>':''}
@@ -2478,7 +3176,9 @@ function listenMembers(serverId){
     try{
       const snap = await getDocs(collection(db,'servers',serverId,'members'));
       S.membersCache = [];
-      const list = $('membersList'); list.innerHTML = '';
+      const list = $('membersList'); 
+      if(!list) return;
+      list.innerHTML = '';
       const members = [];
       snap.forEach(d => { const m = {uid:d.id, ...d.data()}; members.push(m); S.membersCache.push(m); });
 
@@ -2954,20 +3654,22 @@ window.openModal = id => {
     $('ssSeed').value = '';
     $('ssIconUrl').value = '';
     $('ssIconPreview').src = S.server?.iconUrl || serverIcon('server');
+    $('ssIsPublic').checked = !!S.server?.isPublic;
+    $('ssTags').value = (S.server?.tags || []).join(', ');
+    $('ssRingUrl').value = S.server?.ringUrl || '';
+    $('ssBannerUrl').value = S.server?.bannerUrl || '';
     S.ssIconMode = 'seed';
     ssIconMethod('seed');
     sSettingsTab('overview');
   }
+  if(id === 'discover') loadDiscovery();
   if(id === 'admin' && S.isAdmin) adminTab('servers');
   if(id === 'profile' && S.profile){
     $('profileHandle').value = safe(S.profile.handle,'');
     $('profileBio').value = safe(S.profile.bio,'');
     $('profileStatus').value = safe(S.profile.status,'');
     $('profileAvatarPreview').src = safe(S.profile.avatar, userAvatar('Guest'));
-    $('profileSeed').value = '';
-    $('profileAvatarUrl').value = '';
-    S.avatarMode = 'seed';
-    avatarMethod('seed');
+    initProfileEditor();
   }
   if(id === 'auth') loadRemember();
   if(id === 'createServer' && !S.user){ openModal('auth'); return; }
@@ -3005,8 +3707,13 @@ window.saveServerSettings = async () => {
     iconUrl = serverIcon($('ssSeed').value.trim());
   }
 
-  await updateDoc(doc(db,'servers',S.server.id), {name,desc,iconUrl});
-  S.server = {...S.server, name, desc, iconUrl};
+  const isPublic = $('ssIsPublic').checked;
+  const tags = $('ssTags').value.split(',').map(t => t.trim().toLowerCase()).filter(t => t.length > 0).slice(0, 10);
+  const ringUrl = $('ssRingUrl').value.trim();
+  const bannerUrl = $('ssBannerUrl').value.trim();
+
+  await updateDoc(doc(db,'servers',S.server.id), {name,desc,iconUrl,isPublic,tags,ringUrl,bannerUrl});
+  S.server = {...S.server, name, desc, iconUrl, isPublic, tags, ringUrl, bannerUrl};
   $('currentServerName').textContent = name;
   if(iconUrl){ $('serverIconPreview').src = iconUrl; $('serverIconPreview').classList.remove('hidden'); }
   else $('serverIconPreview').classList.add('hidden');
@@ -3019,13 +3726,30 @@ async function renderServerMembers(){
     const m = {uid:d.id, ...d.data()};
     let handle = m.handle || 'User';
     let avatar = m.avatar || userAvatar(m.uid);
+    let style = m.style || null;
     try{
       const u = await getDoc(doc(db,'users', m.uid));
-      if(u.exists()){ if(u.data().handle) handle = u.data().handle; if(u.data().avatar) avatar = u.data().avatar; }
+      if(u.exists()){ 
+        if(u.data().handle) handle = u.data().handle; 
+        if(u.data().avatar) avatar = u.data().avatar;
+        if(u.data().style) style = u.data().style;
+      }
     }catch(e){}
+    
+    const userStyle = getUserStyleString({style});
+    const avatarStyle = getAvatarStyleString({style});
+    
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
-    row.innerHTML = `<img src="${esc(avatar)}" class="w-7 h-7 rounded-full border border-dark-600"><div class="flex-1 min-w-0"><div class="font-bold text-xs text-slate-200 truncate">${esc(handle)}</div><div class="text-[10px] text-slate-500 mono">${esc(m.role||'member')}</div></div>${m.role!=='owner'?`<button onclick="kickMember('${esc(m.uid)}','${esc(handle)}')" class="text-amber-500 text-xs"><i class="fa-solid fa-right-from-bracket"></i></button>`:'<span class="badge-owner">OWNER</span>'}`;
+    row.innerHTML = `
+      <div class="w-7 h-7 rounded-full overflow-hidden border border-dark-600 shrink-0">
+        <img src="${esc(avatar)}" class="w-full h-full object-cover" style="${avatarStyle}">
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="font-bold text-xs truncate" style="${userStyle}">${esc(handle)}</div>
+        <div class="text-[10px] text-slate-500 mono">${esc(m.role||'member')}</div>
+      </div>
+      ${m.role!=='owner'?`<button onclick="kickMember('${esc(m.uid)}','${esc(handle)}')" class="text-amber-500 text-xs"><i class="fa-solid fa-right-from-bracket"></i></button>`:'<span class="badge-owner">OWNER</span>'}`;
     el.appendChild(row);
   }
 }
@@ -3290,19 +4014,102 @@ function startPresenceHeartbeat(){
   });
 }
 
+function applyUserStyle(el, profile){
+  if(!el || !profile) return;
+  const s = profile.style;
+  if(!s) {
+    el.style.fontFamily = '';
+    el.style.background = 'none';
+    el.style.webkitTextFillColor = '';
+    el.style.color = '';
+    return;
+  }
+  el.style.fontFamily = s.font || '';
+  if(s.nameGradient) {
+    el.style.background = s.nameGradient;
+    el.style.webkitBackgroundClip = 'text';
+    el.style.webkitTextFillColor = 'transparent';
+  } else {
+    el.style.background = 'none';
+    el.style.webkitTextFillColor = s.nameColor || '#ffffff';
+    el.style.color = s.nameColor || '#ffffff';
+  }
+}
+
+function getUserStyleString(profile){
+  if(!profile || !profile.style) return '';
+  const s = profile.style;
+  let css = `font-family:${s.font};`;
+  if(s.nameGradient) {
+    css += `background:${s.nameGradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;`;
+  } else {
+    css += `color:${s.nameColor};`;
+  }
+  return css;
+}
+
+function getAvatarStyleString(profile){
+  if(!profile || !profile.style || !profile.style.avatarCrop) return '';
+  const c = profile.style.avatarCrop;
+  return `object-position:${50-(c.x/2)}% ${50-(c.y/2)}%;transform:scale(${c.zoom});`;
+}
+
 function updateUserUI(){
   const bar = $('authBar'), logoutBtn = $('logoutBtn');
   if(S.user && S.profile){
-    $('ucHandle').textContent = safe(S.profile.handle,'User');
+    const handleEl = $('ucHandle');
+    handleEl.textContent = safe(S.profile.handle,'User');
+    applyUserStyle(handleEl, S.profile);
+    
     const stLabel = {online:'Online',idle:'Idle',dnd:'Do Not Disturb',invisible:'Invisible'}[S.myStatus] || 'Online';
     $('ucRole').textContent = S.isAdmin ? ('⚡ ADMIN · ' + stLabel) : (S.user.isAnonymous ? 'Anonymous' : stLabel);
     updateStatusDot();
-    $('ucAvatar').src = safe(S.profile.avatar, userAvatar('Guest'));
+    
+    const avatarEl = $('ucAvatar');
+    const ringEl = $('ucRing');
+    avatarEl.src = safe(S.profile.avatar, userAvatar('Guest'));
+    
+    if(S.profile.style && S.profile.style.avatarCrop) {
+      const c = S.profile.style.avatarCrop;
+      avatarEl.style.objectPosition = `${50 - (c.x/2)}% ${50 - (c.y/2)}%`;
+      avatarEl.style.transform = `scale(${c.zoom})`;
+    } else {
+      avatarEl.style.objectPosition = 'center';
+      avatarEl.style.transform = 'none';
+    }
+
+    if(S.profile.style && S.profile.style.ringUrl) {
+      if(!ringEl) {
+        const newRing = document.createElement('img');
+        newRing.id = 'ucRing';
+        newRing.className = 'avatar-ring';
+        avatarEl.parentElement.classList.add('avatar-ring-wrapper');
+        avatarEl.parentElement.appendChild(newRing);
+        newRing.src = S.profile.style.ringUrl;
+      } else {
+        ringEl.src = S.profile.style.ringUrl;
+        ringEl.classList.remove('hidden');
+      }
+    } else if(ringEl) {
+      ringEl.classList.add('hidden');
+    }
+    
     logoutBtn.classList.remove('hidden');
-    bar.innerHTML = `<div class="flex items-center gap-2"><img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-bch/40"><span class="font-bold text-slate-200 mono text-xs">${esc(S.profile.handle)}</span>${S.isAdmin?'<span class="badge-admin">ADMIN</span>':''}<button onclick="doSignOut()" class="text-slate-400 hover:text-red-400 ml-1" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button></div>`;
+    
+    // Auth bar name also styled
+    const ringHtml = (S.profile.style && S.profile.style.ringUrl) ? `<img src="${esc(S.profile.style.ringUrl)}" class="avatar-ring w-6 h-6">` : '';
+    bar.innerHTML = `<div class="flex items-center gap-2"><div class="avatar-ring-wrapper"><img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-bch/40" id="authBarAvatar">${ringHtml}</div><span class="font-bold text-slate-200 mono text-xs" id="authBarHandle">${esc(S.profile.handle)}</span>${S.isAdmin?'<span class="badge-admin">ADMIN</span>':''}<button onclick="doSignOut()" class="text-slate-400 hover:text-red-400 ml-1" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button></div>`;
+    applyUserStyle($('authBarHandle'), S.profile);
   } else {
+    const avatarEl = $('ucAvatar');
+    const ringEl = $('ucRing');
+    if(ringEl) ringEl.classList.add('hidden');
+    if(avatarEl.parentElement.classList.contains('avatar-ring-wrapper')) avatarEl.parentElement.classList.remove('avatar-ring-wrapper');
+    
     $('ucHandle').textContent = 'Guest'; $('ucRole').textContent = 'Not signed in';
-    $('ucAvatar').src = userAvatar('Guest');
+    avatarEl.src = userAvatar('Guest');
+    avatarEl.style.objectPosition = 'center';
+    avatarEl.style.transform = 'none';
     logoutBtn.classList.add('hidden');
     bar.innerHTML = `<button onclick="openModal('auth')" class="btn-primary px-3 py-1.5 text-xs">Login / Register</button>`;
   }
@@ -3319,12 +4126,20 @@ window.authTab = tab => {
 };
 
 document.querySelectorAll('[id^="modal-"]').forEach(m => {
-  m.addEventListener('click', e => { if(e.target === m) m.classList.add('hidden'); });
+  let clickTarget = null;
+  m.addEventListener('mousedown', e => { clickTarget = e.target; });
+  m.addEventListener('mouseup', e => {
+    if(e.target === m && clickTarget === m) m.classList.add('hidden');
+    clickTarget = null;
+  });
 });
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape'){ document.querySelectorAll('[id^="modal-"]').forEach(m => m.classList.add('hidden')); hideCtx(); }
 });
-document.addEventListener('DOMContentLoaded', loadRemember);
+document.addEventListener('DOMContentLoaded', () => {
+  loadFullTgifDataset();
+  loadRemember();
+});
 
 
 // ===== NEW MEMBER LEAF (< 7 days) =====
