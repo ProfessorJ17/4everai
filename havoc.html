@@ -100,27 +100,27 @@
     .avatar-ring-wrapper { position: relative; display: inline-block; }
     .avatar-ring {
       position: absolute;
-      inset: -2px;
+      inset: 0;
       border-radius: 50%;
       pointer-events: none;
-      z-index: 20;
-      width: calc(100% + 4px);
-      height: calc(100% + 4px);
-      top: -2px;
-      left: -2px;
+      z-index: 15;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
       object-fit: contain;
       /* Automatically cut circular hole in middle of ring image */
-      -webkit-mask-image: radial-gradient(circle at center, transparent 45%, black 50%);
-      mask-image: radial-gradient(circle at center, transparent 45%, black 50%);
+      -webkit-mask-image: radial-gradient(circle at center, transparent 48%, black 52%);
+      mask-image: radial-gradient(circle at center, transparent 48%, black 52%);
     }
     .avatar-ring-large {
-      inset: -4px;
-      width: calc(100% + 8px);
-      height: calc(100% + 8px);
-      top: -4px;
-      left: -4px;
-      -webkit-mask-image: radial-gradient(circle at center, transparent 42%, black 48%);
-      mask-image: radial-gradient(circle at center, transparent 42%, black 48%);
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      -webkit-mask-image: radial-gradient(circle at center, transparent 46%, black 50%);
+      mask-image: radial-gradient(circle at center, transparent 46%, black 50%);
     }
 
     /* Ensure all avatars are perfectly circular */
@@ -2470,6 +2470,29 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   let style = null;
   let userTag = '';
 
+  // Check cache first for instant display
+  if(S.profileCache && S.profileCache[uid]) {
+    const cached = S.profileCache[uid];
+    handle = cached.handle || handle;
+    avatar = cached.avatar || avatar;
+    bio = cached.bio || '';
+    status = cached.status || 'offline';
+    createdAt = cached.createdAt || null;
+    style = cached.style || null;
+    userTag = cached.userTag || '';
+  }
+
+  // Also try members cache for extra data
+  if(S.server){
+    const mem = (S.membersCache||[]).find(x => x.uid === uid);
+    if(mem){
+      if(!handle || handle === 'User') handle = mem.handle || handle;
+      if(!avatar || avatar.includes('Guest')) avatar = mem.avatar || avatar;
+      if(!style) style = mem.style || null;
+    }
+  }
+
+  // Then fetch from database for latest data
   try{
     const snap = await getDoc(doc(db,'users', uid));
     if(snap.exists()){
@@ -2487,16 +2510,6 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
     }
   }catch(err){
     console.warn('Profile fetch failed (permissions or network):', err.message);
-  }
-
-  // Also try members cache for extra data
-  if(S.server){
-    const mem = (S.membersCache||[]).find(x => x.uid === uid);
-    if(mem){
-      if(!handle || handle === 'User') handle = mem.handle || handle;
-      if(!avatar || avatar.includes('Guest')) avatar = mem.avatar || avatar;
-      if(!style) style = mem.style || null;
-    }
   }
 
   $('upHandle').innerHTML = `<span>${esc(handle)}</span>${renderUserTag(S.profileCache[uid])}`;
