@@ -397,13 +397,19 @@
       </div>
     </div>
     <!-- GIF SETTINGS AREA -->
-    <div id="gifSettings" class="hidden p-3 border-b border-dark-700 bg-dark-950/50">
-      <label class="text-[10px] font-bold text-slate-400 uppercase mono block mb-1">GIPHY API Key</label>
-      <div class="flex gap-2">
-        <input type="text" id="giphyApiKey" placeholder="Paste your GIPHY API Key..." class="field flex-1 text-xs">
-        <button onclick="saveGiphyKey()" class="btn-primary px-3 text-xs shrink-0">Save</button>
+    <div id="gifSettings" class="hidden p-4 border-b border-dark-700 bg-dark-950/80 backdrop-blur-sm">
+      <div class="flex items-center justify-between mb-3">
+        <label class="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider mono">GIPHY API key :</label>
+        <a href="https://developers.giphy.com/dashboard/" target="_blank" class="text-[10px] bg-bch/20 text-bch-bright px-2 py-1 rounded hover:bg-bch/40 transition-colors mono font-bold border border-bch/30">Create Key</a>
       </div>
-      <p class="text-[9px] text-slate-500 mt-1">Get your key at <a href="https://developers.giphy.com/dashboard/" target="_blank" class="text-bch hover:underline">giphy.com/dashboard</a></p>
+      <div class="flex gap-2">
+        <input type="text" id="giphyApiKey" placeholder="ZtqHPx1Hf3dGH4oTV7rCHbyqyJB4r9Lg" class="field flex-1 text-xs mono py-2" spellcheck="false">
+        <div class="flex gap-1">
+          <button id="saveGiphyBtn" onclick="saveGiphyKey()" class="btn-primary px-4 text-xs font-bold shrink-0">Save</button>
+          <button id="editGiphyBtn" onclick="editGiphyKey()" class="hidden bg-dark-700 hover:bg-dark-600 text-slate-300 border border-dark-600 px-4 text-xs font-bold shrink-0 rounded">Edit</button>
+        </div>
+      </div>
+      <p class="text-[9px] text-slate-500 mt-2 italic">Add your own key for 100 API calls per hour. Keys are saved locally.</p>
     </div>
     <div class="p-3 border-b border-dark-700 space-y-2">
       <div class="flex gap-2">
@@ -1113,14 +1119,31 @@ window.toggleGifSettings = () => {
   const el = $('gifSettings');
   el.classList.toggle('hidden');
   if(!el.classList.contains('hidden')){
-    $('giphyApiKey').value = localStorage.getItem('giphy_api_key') || '';
+    const key = localStorage.getItem('giphy_api_key') || '';
+    $('giphyApiKey').value = key;
+    if(key){
+      $('giphyApiKey').disabled = true;
+      $('saveGiphyBtn').classList.add('hidden');
+      $('editGiphyBtn').classList.remove('hidden');
+    } else {
+      $('giphyApiKey').disabled = false;
+      $('saveGiphyBtn').classList.remove('hidden');
+      $('editGiphyBtn').classList.add('hidden');
+    }
   }
 };
 window.saveGiphyKey = () => {
   const key = ($('giphyApiKey').value||'').trim();
+  if(!key) return alert('Please enter a key');
   localStorage.setItem('giphy_api_key', key);
   alert('GIPHY API Key saved!');
-  $('gifSettings').classList.add('hidden');
+  window.toggleGifSettings();
+};
+window.editGiphyKey = () => {
+  $('giphyApiKey').disabled = false;
+  $('saveGiphyBtn').classList.remove('hidden');
+  $('editGiphyBtn').classList.add('hidden');
+  $('giphyApiKey').focus();
 };
 
 window.searchGifs = async (q) => {
@@ -1270,7 +1293,7 @@ function startVisualizer(stream) {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const source = audioCtx.createMediaStreamSource(stream);
   const analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 64;
+  analyser.fftSize = 256; 
   source.connect(analyser);
   
   const bufferLength = analyser.frequencyBinCount;
@@ -1280,30 +1303,43 @@ function startVisualizer(stream) {
   
   function draw() {
     visRaf = requestAnimationFrame(draw);
-    analyser.getByteFrequencyData(dataArray);
+    analyser.getByteTimeDomainData(dataArray); // Audacity-style waveform
     
-    // Auto-resize canvas internal buffer
     if (canvas.width !== canvas.clientWidth) canvas.width = canvas.clientWidth;
     if (canvas.height !== canvas.clientHeight) canvas.height = canvas.clientHeight;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const barWidth = (canvas.width / bufferLength) * 1.5;
+    ctx.fillStyle = '#0f172a'; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#0AC18E'; 
+    ctx.beginPath();
+
+    const sliceWidth = canvas.width * 1.0 / bufferLength;
     let x = 0;
-    
+
     for (let i = 0; i < bufferLength; i++) {
-      const barHeight = (dataArray[i] / 255) * canvas.height * 0.8;
-      ctx.fillStyle = i % 2 === 0 ? '#0AC18E' : '#089d74';
-      // Rounded bars
-      ctx.beginPath();
-      ctx.roundRect(x, (canvas.height - barHeight) / 2, barWidth, barHeight, 2);
-      ctx.fill();
-      x += barWidth + 2;
+      const v = dataArray[i] / 128.0;
+      const y = v * canvas.height / 2;
+
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+
+      x += sliceWidth;
     }
+
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.stroke();
     
-    const elapsed = Math.floor((Date.now() - visStartTs) / 1000);
+    const elapsedMs = Date.now() - visStartTs;
+    const elapsed = Math.floor(elapsedMs / 1000);
     const mins = Math.floor(elapsed / 60);
     const secs = elapsed % 60;
-    $('audioRecStatus').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    $('audioRecStatus').textContent = `${mins}:${secs.toString().padStart(2, '0')} / 0:30`;
+
+    if(elapsedMs >= 30000){
+      stopAudioRecord(false);
+    }
   }
   
   draw();
@@ -1312,14 +1348,18 @@ function startVisualizer(stream) {
 
 function stopVisualizer() {
   if (visRaf) cancelAnimationFrame(visRaf);
-  if (visCtx) visCtx.close();
+  if (visCtx && visCtx.state !== 'closed') visCtx.close();
   visCtx = null;
 }
 
 window.toggleAudioRecord = async () => {
   if(mediaRecorder && mediaRecorder.state === 'recording'){ stopAudioRecord(false); return; }
   try{
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const micId = localStorage.getItem('havoc_mic_id');
+    const constraints = { 
+      audio: micId ? { deviceId: { exact: micId } } : true 
+    };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
     mediaRecorder = new MediaRecorder(stream);
     audioChunks = [];
     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
@@ -1338,7 +1378,10 @@ window.toggleAudioRecord = async () => {
     startVisualizer(stream);
     $('audioPreview').classList.remove('hidden');
     $('audioClipBtn').classList.add('text-red-400','rec-pulse');
-  }catch(err){ alert('Microphone access denied'); }
+  }catch(err){ 
+    console.error('Mic access error', err);
+    alert('Microphone access denied. Check permissions.'); 
+  }
 };
 
 window.stopAudioRecord = (cancel) => {
