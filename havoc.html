@@ -129,12 +129,13 @@
       object-fit: cover;
     }
 
-    /* Ensure GIF avatars in lists don't overflow their containers */
-    #membersList img, #dmList img, #friendsList img {
-      max-width: 100%;
-      max-height: 100%;
+    /* Force GIF avatars in lists to fit their containers */
+    #membersList img[src*=".gif"], #dmList img[src*=".gif"], #friendsList img[src*=".gif"],
+    #membersList img[src*="giphy"], #dmList img[src*="giphy"], #friendsList img[src*="giphy"],
+    #membersList img[src*="tenor"], #dmList img[src*="tenor"], #friendsList img[src*="tenor"] {
       width: 100% !important;
       height: 100% !important;
+      object-fit: cover !important;
     }
     
     /* DISCOVERY MODAL */
@@ -2435,6 +2436,9 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   if(!uid || uid === 'undefined') return;
   e && e.stopPropagation && e.stopPropagation();
 
+  // Close any existing popup first
+  hideUserPopup();
+
   const popup = $('userPopup');
   const x = e ? e.clientX : 100;
   const y = e ? e.clientY : 100;
@@ -2491,6 +2495,7 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
 
   $('upHandle').innerHTML = `<span>${esc(handle)}</span>${renderUserTag(S.profileCache[uid])}`;
   $('upAvatar').src = avatar;
+  $('upAvatar').onerror = () => { $('upAvatar').src = userAvatar(uid); };
 
   // Apply style & ring
   const handleEl = $('upHandle');
