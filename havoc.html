@@ -244,7 +244,7 @@
 
     <div class="bg-dark-950 border-t border-dark-700 px-2 py-2">
       <div class="flex items-center gap-2">
-        <div class="relative cursor-pointer avatar-ring-wrapper" onclick="openModal('profile')">
+        <div class="relative cursor-pointer avatar-ring-wrapper" onclick="openModal('profile')" style="width:32px;height:32px">
           <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600 relative z-10">
           <img id="ucRing" class="avatar-ring hidden">
           <span id="ucStatusDot" class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-slate-500 border-2 border-dark-950 z-20"></span>
@@ -381,15 +381,15 @@
 <!-- USER PROFILE POPUP (Discord-style) -->
 <div id="userPopup" class="fixed z-[350] hidden w-72 rounded-xl overflow-hidden shadow-2xl border border-dark-600" style="background:#111214">
   <div id="upBanner" class="h-14 bg-gradient-to-r from-bch/40 to-kiro/40 relative">
-    <div class="absolute -bottom-8 left-4">
-      <div class="relative avatar-ring-wrapper" style="width:64px;height:64px">
-        <img id="upAvatar" src="" class="w-16 h-16 rounded-full border-4 border-[#111214] object-cover bg-dark-800 relative z-10">
-        <img id="upRing" class="avatar-ring avatar-ring-large hidden">
-        <span id="upDot" class="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#111214] z-20 status-online"></span>
+    <div class="absolute -bottom-4 left-4">
+      <div class="relative avatar-ring-wrapper" style="width:32px;height:32px">
+        <img id="upAvatar" src="" class="w-8 h-8 rounded-full border-4 border-[#111214] object-cover bg-dark-800 relative z-10">
+        <img id="upRing" class="avatar-ring hidden">
+        <span id="upDot" class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#111214] z-20 status-online"></span>
       </div>
     </div>
   </div>
-  <div class="pt-10 px-4 pb-3">
+  <div class="pt-6 px-4 pb-3">
     <div id="upHandle" class="font-bold text-white text-base leading-tight flex items-center gap-1.5"></div>
     <div id="upStatusLine" class="text-xs text-slate-400 mono mt-0.5"></div>
     <div class="mt-3 bg-[#1e1f22] rounded-lg p-3 space-y-2">
@@ -658,10 +658,10 @@
 
     <!-- AVATAR & BANNER METHODS -->
     <div class="flex items-center gap-4 mb-4">
-      <div class="avatar-ring-wrapper relative" style="width:64px;height:64px">
+      <div class="avatar-ring-wrapper relative" style="width:32px;height:32px">
         <img id="profileAvatarPreview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest"
-             class="w-16 h-16 rounded-full border-2 border-bch/40 object-cover relative z-10">
-        <img id="profileRingPreview" class="avatar-ring avatar-ring-large hidden">
+             class="w-8 h-8 rounded-full border-2 border-bch/40 object-cover relative z-10">
+        <img id="profileRingPreview" class="avatar-ring hidden">
       </div>
       <div class="flex-1 pt-1">
         <label class="field-label mb-1">Avatar & Banner Methods</label>
@@ -690,6 +690,11 @@
     <div id="avatarUrlBox" class="hidden mb-4">
       <label class="field-label mb-1">Avatar URL</label>
       <input type="url" id="profileAvatarUrl" placeholder="https://... (PNG, JPG, WEBP)" oninput="previewFromUrl(this.value)" class="field text-xs">
+    </div>
+    <div id="avatarGifBox" class="hidden mb-4">
+      <label class="field-label mb-1">Avatar GIF</label>
+      <p class="text-[10px] text-slate-500 mb-2">Click the GIF button above to select an animated avatar</p>
+      <input type="text" id="profileAvatarGif" placeholder="GIF URL will appear here" readonly class="field text-xs bg-dark-950">
     </div>
 
     <!-- AVATAR RING CONTROL -->
@@ -1500,6 +1505,11 @@ window.setNameFont = (family, el) => {
   document.querySelectorAll('.font-option').forEach(x => x.classList.remove('active'));
   if(el) el.classList.add('active');
   updateNamePreview();
+  // Also update bottom-left handle for immediate feedback
+  const ucHandle = $('ucHandle');
+  if(ucHandle) {
+    ucHandle.style.fontFamily = family;
+  }
 };
 
 window.setNameColor = (hex) => {
@@ -1508,6 +1518,14 @@ window.setNameColor = (hex) => {
   S.profileStyle.customGradient = [];
   document.querySelectorAll('#nameGradients .gradient-swatch').forEach(x => x.classList.remove('active'));
   updateNamePreview();
+  // Also update bottom-left handle for immediate feedback
+  const ucHandle = $('ucHandle');
+  if(ucHandle) {
+    ucHandle.style.background = 'none';
+    ucHandle.style.webkitBackgroundClip = '';
+    ucHandle.style.webkitTextFillColor = hex;
+    ucHandle.style.color = hex;
+  }
 };
 
 window.setNameGradient = (grad, el) => {
@@ -1516,6 +1534,14 @@ window.setNameGradient = (grad, el) => {
   document.querySelectorAll('#nameGradients .gradient-swatch').forEach(x => x.classList.remove('active'));
   if(el) el.classList.add('active');
   updateNamePreview();
+  // Also update bottom-left handle for immediate feedback
+  const ucHandle = $('ucHandle');
+  if(ucHandle) {
+    ucHandle.style.background = grad;
+    ucHandle.style.webkitBackgroundClip = 'text';
+    ucHandle.style.webkitTextFillColor = 'transparent';
+    ucHandle.style.color = 'transparent';
+  }
 };
 
 window.updateCustomGradient = () => {
@@ -1524,6 +1550,14 @@ window.updateCustomGradient = () => {
   S.profileStyle.customGradient = colors;
   S.profileStyle.nameGradient = `linear-gradient(to right, ${colors.join(', ')})`;
   updateNamePreview();
+  // Also update bottom-left handle for immediate feedback
+  const ucHandle = $('ucHandle');
+  if(ucHandle) {
+    ucHandle.style.background = S.profileStyle.nameGradient;
+    ucHandle.style.webkitBackgroundClip = 'text';
+    ucHandle.style.webkitTextFillColor = 'transparent';
+    ucHandle.style.color = 'transparent';
+  }
 };
 
 window.addGradientStop = () => {
@@ -1805,7 +1839,7 @@ window.avatarMethod = (m) => {
     const box = $(`avatar${x.charAt(0).toUpperCase()+x.slice(1)}Box`);
     if(box) box.classList.toggle('hidden', x!==m);
   });
-  if(m === 'gif') openGifPicker('avatar');
+  // Don't auto-open GIF picker - only open when user clicks the GIF button explicitly
 };
 window.previewAvatar = seed => {
   const url = userAvatar(seed||'Guest');
@@ -2955,7 +2989,7 @@ window.openInviteToFriends = async () => {
     const nameStyle = getUserStyleString({ style });
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
-    row.innerHTML = `<div class="avatar-ring-wrapper" style="width:28px;height:28px;flex-shrink:0"><img src="${esc(f.avatar||userAvatar('x'))}" class="w-7 h-7 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-300 flex-1 truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
+    row.innerHTML = `<div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0"><img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-300 flex-1 truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
     el.appendChild(row);
     const nameEl = row.querySelector('.msg-handle');
     if (nameEl) styleName(nameEl, profile || { handle: f.handle });
@@ -3210,10 +3244,10 @@ async function renderMsgs(msgs){
     const ringUrl = live.style?.ringUrl || '';
 
     div.innerHTML = `
-      <div class="avatar-ring-wrapper" style="width:36px;height:36px;flex-shrink:0;position:relative;display:inline-block;cursor:pointer;"
+      <div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0;position:relative;display:inline-block;cursor:pointer;"
            onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')"
            oncontextmenu="showMessageContext(event,'${esc(m.id)}','${esc(displayHandle)}','${esc((m.content||'').replace(/'/g,"").slice(0,80))}')">
-        <img src="${esc(displayAvatar)}" class="w-9 h-9 rounded-full object-cover relative z-10 ${isOwner?'border-carrot/60':'border-dark-600'} border-2" style="${avatarStyle}">
+        <img src="${esc(displayAvatar)}" class="w-8 h-8 rounded-full object-cover relative z-10 ${isOwner?'border-carrot/60':'border-dark-600'} border-2" style="${avatarStyle}">
         ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
         ${renderStatusDot(live)}
       </div>
@@ -3676,7 +3710,7 @@ function renderFriends(){
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
     div.oncontextmenu = e => showUserContext(e, f.uid, f.handle, f.avatar);
     div.innerHTML = `
-      <div class="avatar-ring-wrapper shrink-0">
+      <div class="avatar-ring-wrapper shrink-0" style="width:32px;height:32px">
         <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full cursor-pointer relative z-10" style="${avatarStyle}" data-profile-uid="${esc(f.uid)}" onclick="event.stopPropagation();showUserProfile(event,'${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')">
         ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
         <span class="member-status-dot ${dotClass} z-20"></span>
@@ -3731,7 +3765,7 @@ function renderDMList(){
     div.dataset.name = (f.handle||'').toLowerCase();
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
     div.innerHTML = `
-      <div class="avatar-ring-wrapper shrink-0">
+      <div class="avatar-ring-wrapper shrink-0" style="width:32px;height:32px">
         <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full relative z-10" style="${avatarStyle}">
         ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
         <span class="member-status-dot ${dotClass} z-20"></span>
