@@ -252,10 +252,10 @@
 
     <div class="bg-dark-950 border-t border-dark-700 px-2 py-2">
       <div class="flex items-center gap-2">
-        <div class="relative cursor-pointer avatar-ring-wrapper" onclick="openModal('profile')" style="width:32px;height:32px">
-          <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600 relative z-10">
+        <div class="relative shrink-0 avatar-ring-wrapper cursor-pointer" onclick="openModal('profile')">
+          <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full border border-dark-600 relative z-10">
           <img id="ucRing" class="avatar-ring hidden">
-          <span id="ucStatusDot" class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-slate-500 border-2 border-dark-950 z-20"></span>
+          <span id="ucStatusDot" class="member-status-dot z-20"></span>
         </div>
         <div class="min-w-0 flex-1">
           <div id="ucHandle" class="font-bold text-white text-xs truncate">Guest</div>
@@ -390,10 +390,10 @@
 <div id="userPopup" class="fixed z-[350] hidden w-72 rounded-xl overflow-hidden shadow-2xl border border-dark-600" style="background:#111214">
   <div id="upBanner" class="h-14 bg-gradient-to-r from-bch/40 to-kiro/40 relative">
     <div class="absolute -bottom-4 left-4">
-      <div class="relative avatar-ring-wrapper" style="width:32px;height:32px">
+      <div class="relative shrink-0 avatar-ring-wrapper">
         <img id="upAvatar" src="" class="w-8 h-8 rounded-full border-4 border-[#111214] object-cover bg-dark-800 relative z-10">
         <img id="upRing" class="avatar-ring hidden">
-        <span id="upDot" class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#111214] z-20 status-online"></span>
+        <span id="upDot" class="member-status-dot z-20 status-online"></span>
       </div>
     </div>
   </div>
@@ -666,7 +666,7 @@
 
     <!-- AVATAR & BANNER METHODS -->
     <div class="flex items-center gap-4 mb-4">
-      <div class="avatar-ring-wrapper relative" style="width:32px;height:32px">
+      <div class="relative shrink-0 avatar-ring-wrapper">
         <img id="profileAvatarPreview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest"
              class="w-8 h-8 rounded-full border-2 border-bch/40 object-cover relative z-10">
         <img id="profileRingPreview" class="avatar-ring hidden">
@@ -788,21 +788,8 @@
         <label class="text-[10px] mono text-slate-500 uppercase tracking-widest font-bold">Identity Tag</label>
         <select id="profileUserTag" class="field text-xs bg-dark-900 border-dark-700">
           <option value="">No Tag</option>
-          <option value="BETA">BETA</option>
-          <option value="OG">OG</option>
-          <option value="DEV">DEV</option>
-          <option value="VIP">VIP</option>
-          <option value="ALPHA">ALPHA</option>
-          <option value="STAFF">STAFF</option>
-          <option value="FOUNDER">FOUNDER</option>
-          <option value="VERIFIED">VERIFIED</option>
-          <option value="CHAMP">CHAMP</option>
-          <option value="ELITE">ELITE</option>
-          <option value="LEGEND">LEGEND</option>
-          <option value="MYSTIC">MYSTIC</option>
-          <option value="PIONEER">PIONEER</option>
         </select>
-        <p class="text-[9px] text-slate-500 italic">Select a tag to display next to your name across all servers.</p>
+        <p class="text-[9px] text-slate-500 italic">Select a tag from a server you're in to display it next to your name</p>
       </div>
     </div>
 
@@ -1641,7 +1628,7 @@ window.updateNamePreview = () => {
   // Also update bottom-left user handle for live preview
   const ucHandle = $('ucHandle');
   if(ucHandle) {
-    ucHandle.textContent = handle;
+    ucHandle.innerHTML = `${handle}${renderServerTag(S.user?.uid)}`;
     applyUserStyle(ucHandle, { style });
   }
 };
@@ -2580,7 +2567,7 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   }
 
   // Apply data
-  $('upHandle').textContent = handle;
+  $('upHandle').innerHTML = `${esc(handle)}${renderServerTag(uid)}`;
   styleName($('upHandle'), { style });
   $('upAvatar').src = avatar;
   $('upBio').textContent = bio || 'No bio set.';
@@ -3036,7 +3023,7 @@ window.openInviteToFriends = async () => {
     const nameStyle = getUserStyleString({ style });
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
-    row.innerHTML = `<div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0"><img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-300 flex-1 truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
+    row.innerHTML = `<div class="relative shrink-0 avatar-ring-wrapper"><img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full border border-dark-600 relative z-10"></div><span class="text-xs text-slate-300 flex-1 truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
     el.appendChild(row);
     const nameEl = row.querySelector('.msg-handle');
     if (nameEl) styleName(nameEl, profile || { handle: f.handle });
@@ -3230,6 +3217,39 @@ function renderUserTag(profile) {
   return `<span class="px-1.5 py-0.5 rounded bg-dark-800 text-bch text-[8px] font-black mono tracking-tighter uppercase border border-bch/20 ml-1 shadow-sm">${esc(profile.userTag)}</span>`;
 }
 
+function renderServerTag(uid) {
+  if (!S.myServers || !S.myServers.length) return '';
+  
+  // For the current user, use their selected userTag from profile
+  if (S.user && uid === S.user.uid && S.profile && S.profile.userTag) {
+    const selectedTag = S.profile.userTag;
+    // Find the server that has this tag
+    const server = S.myServers.find(s => s.tag === selectedTag);
+    if (server) {
+      const tagEmoji = server.tagEmoji || '⚡';
+      return `<span class="px-1.5 py-0.5 rounded bg-dark-800 text-xs font-bold mono tracking-tighter uppercase border border-dark-600 ml-1 shadow-sm" style="background:${server.tagBgColor||'#242b3b'};color:${server.tagEmojiColor||'#94a3b8'}">${tagEmoji} ${esc(server.tag)}</span>`;
+    }
+  }
+  
+  // For other users, show the tag from the server they're in
+  let server = null;
+  if (S.server && S.server.id) {
+    const member = (S.membersCache || []).find(m => m.uid === uid);
+    if (member && member.serverId === S.server.id) {
+      server = S.server;
+    }
+  }
+  if (!server) {
+    server = S.myServers.find(s => {
+      const member = (S.membersCache || []).find(m => m.uid === uid);
+      return member && s.id === member.serverId;
+    });
+  }
+  if (!server || !server.tag) return '';
+  const tagEmoji = server.tagEmoji || '⚡';
+  return `<span class="px-1.5 py-0.5 rounded bg-dark-800 text-xs font-bold mono tracking-tighter uppercase border border-dark-600 ml-1 shadow-sm" style="background:${server.tagBgColor||'#242b3b'};color:${server.tagEmojiColor||'#94a3b8'}">${tagEmoji} ${esc(server.tag)}</span>`;
+}
+
 function renderStatusDot(profile) {
   if (!profile) return '';
   const st = computePresence(profile);
@@ -3291,18 +3311,18 @@ async function renderMsgs(msgs){
     const ringUrl = live.style?.ringUrl || '';
 
     div.innerHTML = `
-      <div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0;position:relative;display:inline-block;cursor:pointer;"
+      <div class="relative shrink-0 avatar-ring-wrapper cursor-pointer"
            onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')"
            oncontextmenu="showMessageContext(event,'${esc(m.id)}','${esc(displayHandle)}','${esc((m.content||'').replace(/'/g,"").slice(0,80))}')">
-        <img src="${esc(displayAvatar)}" class="w-8 h-8 rounded-full object-cover relative z-10 ${isOwner?'border-carrot/60':'border-dark-600'} border-2" style="${avatarStyle}">
+        <img src="${esc(displayAvatar)}" class="w-8 h-8 rounded-full border border-dark-600 relative z-10" style="${avatarStyle}">
         ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
-        ${renderStatusDot(live)}
+        <span class="member-status-dot ${live.status === 'online' ? 'status-online' : live.status === 'idle' ? 'status-idle' : live.status === 'dnd' ? 'status-dnd' : 'status-offline'} z-20"></span>
       </div>
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5">
           <span class="font-bold text-xs cursor-pointer msg-handle" style="${userStyle}"
             onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')">${esc(displayHandle)}</span>
-          ${renderUserTag(live)}
+          ${renderServerTag(m.uid)}
           ${isNewMember(m.uid)?'<span class="new-member-leaf" title="New member (joined within the last week)"><i class="fa-solid fa-seedling"></i></span>':''}
           ${isOwner?'<span class="badge-owner">OWNER</span>':''}
           <span class="text-[10px] text-slate-600 mono">${shortTime(m.ts)}</span>
@@ -3614,7 +3634,7 @@ function listenMembers(serverId){
             <div class="min-w-0 flex-1">
               <div class="font-bold text-xs truncate flex items-center member-name" style="${nameStyle}">
                 <span>${esc(m.handle)}</span>
-                ${renderUserTag(S.profileCache[m.uid])}
+                ${renderServerTag(m.uid)}
                 ${isNewMember(m.uid)?' <i class="fa-solid fa-seedling new-member-leaf ml-1" title="New member"></i>':''}
               </div>
               <div class="text-[9px] text-slate-500">${isOwner?'Owner · ':''}${statusLabel}</div>
@@ -3757,13 +3777,14 @@ function renderFriends(){
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
     div.oncontextmenu = e => showUserContext(e, f.uid, f.handle, f.avatar);
     div.innerHTML = `
-      <div class="avatar-ring-wrapper shrink-0" style="width:32px;height:32px">
-        <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full cursor-pointer relative z-10" style="${avatarStyle}" data-profile-uid="${esc(f.uid)}" onclick="event.stopPropagation();showUserProfile(event,'${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')">
+      <div class="relative shrink-0 avatar-ring-wrapper">
+        <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full border border-dark-600 relative z-10 cursor-pointer" style="${avatarStyle}" data-profile-uid="${esc(f.uid)}" onclick="event.stopPropagation();showUserProfile(event,'${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')">
         ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
         <span class="member-status-dot ${dotClass} z-20"></span>
       </div>
       <div class="min-w-0 flex-1">
         <div class="text-xs truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</div>
+        ${renderServerTag(f.uid)}
       </div>
       <button onclick="event.stopPropagation();startDM('${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')" class="text-slate-500 hover:text-bch text-xs"><i class="fa-solid fa-message"></i></button>
     `;
@@ -3780,7 +3801,7 @@ function renderPending(){
   (S.incoming||[]).forEach(r => {
     const div = document.createElement('div');
     div.className = 'dm-item flex-col items-stretch gap-1';
-    div.innerHTML = `<div class="flex items-center gap-2"><div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0"><img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-200 flex-1 truncate">${esc(r.handle||'User')}</span></div>
+    div.innerHTML = `<div class="flex items-center gap-2"><div class="relative shrink-0 avatar-ring-wrapper"><img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full border border-dark-600 relative z-10"></div><span class="text-xs text-slate-200 flex-1 truncate">${esc(r.handle||'User')}</span></div>
       <div class="flex gap-1 pl-10"><button onclick="acceptFriendRequest('${esc(r.fromUid)}','${esc(r.handle||'')}','${esc(r.avatar||'')}')" class="btn-primary text-[10px] px-2 py-1">Accept</button>
       <button onclick="declineFriendRequest('${esc(r.fromUid)}')" class="text-[10px] px-2 py-1 bg-dark-800 border border-dark-600 rounded text-red-400">Decline</button></div>`;
     inc.appendChild(div);
@@ -3789,7 +3810,7 @@ function renderPending(){
   (S.outgoing||[]).forEach(r => {
     const div = document.createElement('div');
     div.className = 'dm-item';
-    div.innerHTML = `<div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0"><img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-400 truncate flex-1">${esc(r.handle||'User')}</span><span class="text-[9px] text-slate-600 mono">Pending</span>
+    div.innerHTML = `<div class="relative shrink-0 avatar-ring-wrapper"><img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full border border-dark-600 relative z-10"></div><span class="text-xs text-slate-400 truncate flex-1">${esc(r.handle||'User')}</span><span class="text-[9px] text-slate-600 mono">Pending</span>
       <button onclick="cancelFriendRequest('${esc(r.toUid)}')" class="text-[10px] text-red-400">Cancel</button>`;
     out.appendChild(div);
   });
@@ -3812,12 +3833,13 @@ function renderDMList(){
     div.dataset.name = (f.handle||'').toLowerCase();
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
     div.innerHTML = `
-      <div class="avatar-ring-wrapper shrink-0" style="width:32px;height:32px">
-        <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full relative z-10" style="${avatarStyle}">
+      <div class="relative shrink-0 avatar-ring-wrapper">
+        <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full border border-dark-600 relative z-10" style="${avatarStyle}">
         ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
         <span class="member-status-dot ${dotClass} z-20"></span>
       </div>
       <span class="text-xs truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</span>
+      ${renderServerTag(f.uid)}
     `;
     el.appendChild(div);
     const nameEl = div.querySelector('.msg-handle');
@@ -4195,7 +4217,21 @@ window.openModal = id => {
     $('profileAvatarPreview').src = avatarUrl;
     $('profileAvatarPreview').style.objectPosition = 'center';
     $('profileAvatarPreview').style.transform = 'none';
-    $('profileUserTag').value = S.profile.userTag || '';
+    
+    // Populate Identity Tag dropdown with server tags from servers user is in
+    const tagSelect = $('profileUserTag');
+    if(tagSelect) {
+      tagSelect.innerHTML = '<option value="">No Tag</option>';
+      if(S.myServers && S.myServers.length > 0) {
+        S.myServers.forEach(s => {
+          if(s.tag) {
+            const tagEmoji = s.tagEmoji || '⚡';
+            const tagLabel = `${tagEmoji} ${s.tag} (${s.name})`;
+            tagSelect.innerHTML += `<option value="${s.tag}" ${S.profile.userTag === s.tag ? 'selected' : ''}>${tagLabel}</option>`;
+          }
+        });
+      }
+    }
 
     // Set initial avatar mode
     const av = S.profile.avatar || '';
@@ -4794,7 +4830,7 @@ function updateUserUI(){
   const bar = $('authBar'), logoutBtn = $('logoutBtn');
   if(S.user && S.profile){
     const handleEl = $('ucHandle');
-    handleEl.textContent = safe(S.profile.handle,'User');
+    handleEl.innerHTML = `${safe(S.profile.handle,'User')}${renderServerTag(S.user.uid)}`;
     applyUserStyle(handleEl, S.profile);
     
     const stLabel = {online:'Online',idle:'Idle',dnd:'Do Not Disturb',invisible:'Invisible'}[S.myStatus] || 'Online';
@@ -4844,7 +4880,7 @@ function updateUserUI(){
         </div>
         <div class="flex items-center gap-1">
           <span class="font-bold text-slate-200 mono text-xs" id="authBarHandle">${esc(S.profile.handle)}</span>
-          ${renderUserTag(S.profile)}
+          ${renderServerTag(S.user?.uid)}
         </div>
         ${S.isAdmin?'<span class="badge-admin">ADMIN</span>':''}
         <button onclick="doSignOut()" class="text-slate-400 hover:text-red-400 ml-1" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
