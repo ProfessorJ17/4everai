@@ -1629,9 +1629,13 @@ window.updateNamePreview = () => {
   const ucHandle = $('ucHandle');
   if(ucHandle) {
     ucHandle.textContent = handle;
-    const ucTag = document.createElement('span');
-    ucTag.innerHTML = renderServerTag(S.user?.uid);
-    ucHandle.appendChild(ucTag);
+    try {
+      const ucTag = document.createElement('span');
+      ucTag.innerHTML = renderServerTag(S.user?.uid);
+      ucHandle.appendChild(ucTag);
+    } catch(e) {
+      console.warn('Failed to render name preview server tag:', e);
+    }
     applyUserStyle(ucHandle, { style });
   }
 };
@@ -2571,9 +2575,13 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
 
   // Apply data
   $('upHandle').textContent = handle;
-  const upTag = document.createElement('span');
-  upTag.innerHTML = renderServerTag(uid);
-  $('upHandle').appendChild(upTag);
+  try {
+    const upTag = document.createElement('span');
+    upTag.innerHTML = renderServerTag(uid);
+    $('upHandle').appendChild(upTag);
+  } catch(e) {
+    console.warn('Failed to render profile popup server tag:', e);
+  }
   styleName($('upHandle'), { style });
   $('upAvatar').src = avatar;
   $('upBio').textContent = bio || 'No bio set.';
@@ -3224,36 +3232,42 @@ function renderUserTag(profile) {
 }
 
 function renderServerTag(uid) {
+  if (!uid) return '';
   if (!S.myServers || !S.myServers.length) return '';
   
-  // For the current user, use their selected userTag from profile
-  if (S.user && uid === S.user.uid && S.profile && S.profile.userTag) {
-    const selectedTag = S.profile.userTag;
-    // Find the server that has this tag
-    const server = S.myServers.find(s => s.tag === selectedTag);
-    if (server) {
-      const tagEmoji = server.tagEmoji || '⚡';
-      return `<span class="px-1.5 py-0.5 rounded bg-dark-800 text-xs font-bold mono tracking-tighter uppercase border border-dark-600 ml-1 shadow-sm" style="background:${server.tagBgColor||'#242b3b'};color:${server.tagEmojiColor||'#94a3b8'}">${tagEmoji} ${esc(server.tag)}</span>`;
+  try {
+    // For the current user, use their selected userTag from profile
+    if (S.user && uid === S.user.uid && S.profile && S.profile.userTag) {
+      const selectedTag = S.profile.userTag;
+      // Find the server that has this tag
+      const server = S.myServers.find(s => s.tag === selectedTag);
+      if (server) {
+        const tagEmoji = server.tagEmoji || '⚡';
+        return `<span class="px-1.5 py-0.5 rounded bg-dark-800 text-xs font-bold mono tracking-tighter uppercase border border-dark-600 ml-1 shadow-sm" style="background:${server.tagBgColor||'#242b3b'};color:${server.tagEmojiColor||'#94a3b8'}">${tagEmoji} ${esc(server.tag)}</span>`;
+      }
     }
-  }
-  
-  // For other users, show the tag from the server they're in
-  let server = null;
-  if (S.server && S.server.id) {
-    const member = (S.membersCache || []).find(m => m.uid === uid);
-    if (member && member.serverId === S.server.id) {
-      server = S.server;
-    }
-  }
-  if (!server) {
-    server = S.myServers.find(s => {
+    
+    // For other users, show the tag from the server they're in
+    let server = null;
+    if (S.server && S.server.id) {
       const member = (S.membersCache || []).find(m => m.uid === uid);
-      return member && s.id === member.serverId;
-    });
+      if (member && member.serverId === S.server.id) {
+        server = S.server;
+      }
+    }
+    if (!server) {
+      server = S.myServers.find(s => {
+        const member = (S.membersCache || []).find(m => m.uid === uid);
+        return member && s.id === member.serverId;
+      });
+    }
+    if (!server || !server.tag) return '';
+    const tagEmoji = server.tagEmoji || '⚡';
+    return `<span class="px-1.5 py-0.5 rounded bg-dark-800 text-xs font-bold mono tracking-tighter uppercase border border-dark-600 ml-1 shadow-sm" style="background:${server.tagBgColor||'#242b3b'};color:${server.tagEmojiColor||'#94a3b8'}">${tagEmoji} ${esc(server.tag)}</span>`;
+  } catch(e) {
+    console.warn('Error in renderServerTag:', e);
+    return '';
   }
-  if (!server || !server.tag) return '';
-  const tagEmoji = server.tagEmoji || '⚡';
-  return `<span class="px-1.5 py-0.5 rounded bg-dark-800 text-xs font-bold mono tracking-tighter uppercase border border-dark-600 ml-1 shadow-sm" style="background:${server.tagBgColor||'#242b3b'};color:${server.tagEmojiColor||'#94a3b8'}">${tagEmoji} ${esc(server.tag)}</span>`;
 }
 
 function renderStatusDot(profile) {
@@ -3347,7 +3361,13 @@ async function renderMsgs(msgs){
     const nameEl = div.querySelector('.msg-handle');
     if (nameEl) styleName(nameEl, S.profileCache?.[m.uid] || { handle: m.handle });
     const tagEl = div.querySelector('.msg-tag');
-    if (tagEl) tagEl.innerHTML = renderServerTag(m.uid);
+    if (tagEl) {
+      try {
+        tagEl.innerHTML = renderServerTag(m.uid);
+      } catch(e) {
+        console.warn('Failed to render message server tag:', e);
+      }
+    }
   });
   const c = $('msgContainer'); c.scrollTop = c.scrollHeight;
 }
@@ -3651,7 +3671,13 @@ function listenMembers(serverId){
           const nameSpan = div.querySelector('.member-name');
           if (nameSpan) styleName(nameSpan, profile || { handle: m.handle });
           const tagEl = div.querySelector('.member-tag');
-          if (tagEl) tagEl.innerHTML = renderServerTag(m.uid);
+          if (tagEl) {
+            try {
+              tagEl.innerHTML = renderServerTag(m.uid);
+            } catch(e) {
+              console.warn('Failed to render member server tag:', e);
+            }
+          }
         });
       };
 
@@ -3802,7 +3828,13 @@ function renderFriends(){
     const nameEl = div.querySelector('.msg-handle');
     if (nameEl) styleName(nameEl, profile || { handle: f.handle });
     const tagEl = div.querySelector('.friend-tag');
-    if (tagEl) tagEl.innerHTML = renderServerTag(f.uid);
+    if (tagEl) {
+      try {
+        tagEl.innerHTML = renderServerTag(f.uid);
+      } catch(e) {
+        console.warn('Failed to render friend server tag:', e);
+      }
+    }
   });
 }
 function renderPending(){
@@ -3857,7 +3889,13 @@ function renderDMList(){
     const nameEl = div.querySelector('.msg-handle');
     if (nameEl) styleName(nameEl, profile || { handle: f.handle });
     const tagEl = div.querySelector('.dm-tag');
-    if (tagEl) tagEl.innerHTML = renderServerTag(f.uid);
+    if (tagEl) {
+      try {
+        tagEl.innerHTML = renderServerTag(f.uid);
+      } catch(e) {
+        console.warn('Failed to render DM server tag:', e);
+      }
+    }
   });
 }
 window.openAddFriendModal = () => { $('addFriendHandle').value=''; $('addFriendMsg').classList.add('hidden'); openModal('addFriend'); };
@@ -4845,9 +4883,13 @@ function updateUserUI(){
   if(S.user && S.profile){
     const handleEl = $('ucHandle');
     handleEl.textContent = safe(S.profile.handle,'User');
-    const ucTag = document.createElement('span');
-    ucTag.innerHTML = renderServerTag(S.user.uid);
-    handleEl.appendChild(ucTag);
+    try {
+      const ucTag = document.createElement('span');
+      ucTag.innerHTML = renderServerTag(S.user.uid);
+      handleEl.appendChild(ucTag);
+    } catch(e) {
+      console.warn('Failed to render server tag:', e);
+    }
     applyUserStyle(handleEl, S.profile);
     
     const stLabel = {online:'Online',idle:'Idle',dnd:'Do Not Disturb',invisible:'Invisible'}[S.myStatus] || 'Online';
@@ -4904,8 +4946,12 @@ function updateUserUI(){
       </div>`;
     applyUserStyle($('authBarHandle'), S.profile);
     // Add server tag separately to avoid template string issues
-    const tagEl = $('authBarTag');
-    if(tagEl) tagEl.innerHTML = renderServerTag(S.user?.uid);
+    try {
+      const tagEl = $('authBarTag');
+      if(tagEl) tagEl.innerHTML = renderServerTag(S.user?.uid);
+    } catch(e) {
+      console.warn('Failed to render auth bar server tag:', e);
+    }
   } else {
     const avatarEl = $('ucAvatar');
     const ringEl = $('ucRing');
