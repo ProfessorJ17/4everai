@@ -1628,7 +1628,10 @@ window.updateNamePreview = () => {
   // Also update bottom-left user handle for live preview
   const ucHandle = $('ucHandle');
   if(ucHandle) {
-    ucHandle.innerHTML = `${handle}${renderServerTag(S.user?.uid)}`;
+    ucHandle.textContent = handle;
+    const ucTag = document.createElement('span');
+    ucTag.innerHTML = renderServerTag(S.user?.uid);
+    ucHandle.appendChild(ucTag);
     applyUserStyle(ucHandle, { style });
   }
 };
@@ -2567,7 +2570,10 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   }
 
   // Apply data
-  $('upHandle').innerHTML = `${esc(handle)}${renderServerTag(uid)}`;
+  $('upHandle').textContent = handle;
+  const upTag = document.createElement('span');
+  upTag.innerHTML = renderServerTag(uid);
+  $('upHandle').appendChild(upTag);
   styleName($('upHandle'), { style });
   $('upAvatar').src = avatar;
   $('upBio').textContent = bio || 'No bio set.';
@@ -3322,7 +3328,7 @@ async function renderMsgs(msgs){
         <div class="flex items-center gap-1.5">
           <span class="font-bold text-xs cursor-pointer msg-handle" style="${userStyle}"
             onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')">${esc(displayHandle)}</span>
-          ${renderServerTag(m.uid)}
+          <span class="msg-tag" data-uid="${esc(m.uid)}"></span>
           ${isNewMember(m.uid)?'<span class="new-member-leaf" title="New member (joined within the last week)"><i class="fa-solid fa-seedling"></i></span>':''}
           ${isOwner?'<span class="badge-owner">OWNER</span>':''}
           <span class="text-[10px] text-slate-600 mono">${shortTime(m.ts)}</span>
@@ -3340,6 +3346,8 @@ async function renderMsgs(msgs){
     feed.appendChild(div);
     const nameEl = div.querySelector('.msg-handle');
     if (nameEl) styleName(nameEl, S.profileCache?.[m.uid] || { handle: m.handle });
+    const tagEl = div.querySelector('.msg-tag');
+    if (tagEl) tagEl.innerHTML = renderServerTag(m.uid);
   });
   const c = $('msgContainer'); c.scrollTop = c.scrollHeight;
 }
@@ -3634,7 +3642,7 @@ function listenMembers(serverId){
             <div class="min-w-0 flex-1">
               <div class="font-bold text-xs truncate flex items-center member-name" style="${nameStyle}">
                 <span>${esc(m.handle)}</span>
-                ${renderServerTag(m.uid)}
+                <span class="member-tag" data-uid="${esc(m.uid)}"></span>
                 ${isNewMember(m.uid)?' <i class="fa-solid fa-seedling new-member-leaf ml-1" title="New member"></i>':''}
               </div>
               <div class="text-[9px] text-slate-500">${isOwner?'Owner · ':''}${statusLabel}</div>
@@ -3642,6 +3650,8 @@ function listenMembers(serverId){
           list.appendChild(div);
           const nameSpan = div.querySelector('.member-name');
           if (nameSpan) styleName(nameSpan, profile || { handle: m.handle });
+          const tagEl = div.querySelector('.member-tag');
+          if (tagEl) tagEl.innerHTML = renderServerTag(m.uid);
         });
       };
 
@@ -3784,13 +3794,15 @@ function renderFriends(){
       </div>
       <div class="min-w-0 flex-1">
         <div class="text-xs truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</div>
-        ${renderServerTag(f.uid)}
+        <span class="friend-tag" data-uid="${esc(f.uid)}"></span>
       </div>
       <button onclick="event.stopPropagation();startDM('${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')" class="text-slate-500 hover:text-bch text-xs"><i class="fa-solid fa-message"></i></button>
     `;
     el.appendChild(div);
     const nameEl = div.querySelector('.msg-handle');
     if (nameEl) styleName(nameEl, profile || { handle: f.handle });
+    const tagEl = div.querySelector('.friend-tag');
+    if (tagEl) tagEl.innerHTML = renderServerTag(f.uid);
   });
 }
 function renderPending(){
@@ -3839,11 +3851,13 @@ function renderDMList(){
         <span class="member-status-dot ${dotClass} z-20"></span>
       </div>
       <span class="text-xs truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</span>
-      ${renderServerTag(f.uid)}
+      <span class="dm-tag" data-uid="${esc(f.uid)}"></span>
     `;
     el.appendChild(div);
     const nameEl = div.querySelector('.msg-handle');
     if (nameEl) styleName(nameEl, profile || { handle: f.handle });
+    const tagEl = div.querySelector('.dm-tag');
+    if (tagEl) tagEl.innerHTML = renderServerTag(f.uid);
   });
 }
 window.openAddFriendModal = () => { $('addFriendHandle').value=''; $('addFriendMsg').classList.add('hidden'); openModal('addFriend'); };
@@ -4830,7 +4844,10 @@ function updateUserUI(){
   const bar = $('authBar'), logoutBtn = $('logoutBtn');
   if(S.user && S.profile){
     const handleEl = $('ucHandle');
-    handleEl.innerHTML = `${safe(S.profile.handle,'User')}${renderServerTag(S.user.uid)}`;
+    handleEl.textContent = safe(S.profile.handle,'User');
+    const ucTag = document.createElement('span');
+    ucTag.innerHTML = renderServerTag(S.user.uid);
+    handleEl.appendChild(ucTag);
     applyUserStyle(handleEl, S.profile);
     
     const stLabel = {online:'Online',idle:'Idle',dnd:'Do Not Disturb',invisible:'Invisible'}[S.myStatus] || 'Online';
@@ -4880,19 +4897,26 @@ function updateUserUI(){
         </div>
         <div class="flex items-center gap-1">
           <span class="font-bold text-slate-200 mono text-xs" id="authBarHandle">${esc(S.profile.handle)}</span>
-          ${renderServerTag(S.user?.uid)}
+          <span id="authBarTag"></span>
         </div>
         ${S.isAdmin?'<span class="badge-admin">ADMIN</span>':''}
         <button onclick="doSignOut()" class="text-slate-400 hover:text-red-400 ml-1" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
       </div>`;
     applyUserStyle($('authBarHandle'), S.profile);
+    // Add server tag separately to avoid template string issues
+    const tagEl = $('authBarTag');
+    if(tagEl) tagEl.innerHTML = renderServerTag(S.user?.uid);
   } else {
     const avatarEl = $('ucAvatar');
     const ringEl = $('ucRing');
     if(ringEl) ringEl.classList.add('hidden');
     if(avatarEl.parentElement.classList.contains('avatar-ring-wrapper')) avatarEl.parentElement.classList.remove('avatar-ring-wrapper');
     
-    $('ucHandle').textContent = 'Guest'; $('ucRole').textContent = 'Not signed in';
+    $('ucHandle').textContent = 'Guest';
+    // Clear any existing tag spans
+    const existingTags = $('ucHandle').querySelectorAll('span');
+    existingTags.forEach(t => t.remove());
+    $('ucRole').textContent = 'Not signed in';
     avatarEl.src = userAvatar('Guest');
     avatarEl.style.objectPosition = 'center';
     avatarEl.style.transform = 'none';
