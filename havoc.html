@@ -292,6 +292,7 @@
         </div>
       </div>
       <div class="px-4 pb-4 pt-2 bg-dark-900/80 border-t border-dark-700 shrink-0">
+        <div id="replyBar" class="hidden"></div>
         <form id="msgForm" onsubmit="sendMsg(event)" class="bg-dark-800 border border-dark-700 focus-within:border-bch rounded-xl px-3 py-2.5 flex items-center gap-2">
           <button type="button" id="imgUploadBtn" onclick="triggerImageUpload()" class="hidden text-slate-500 hover:text-bch-bright p-1.5 rounded" title="Image URL"><i class="fa-solid fa-image"></i></button>
           <button type="button" id="gifBtn" onclick="openGifPicker()" class="hidden text-slate-500 hover:text-bch-bright p-1.5 rounded" title="GIF"><span class="text-[10px] font-bold">GIF</span></button>
@@ -656,13 +657,11 @@
     </div>
 
     <!-- AVATAR & BANNER METHODS -->
-    <div class="flex gap-4 mb-6">
-      <div class="relative">
-        <div class="avatar-ring-wrapper">
-          <img id="profileAvatarPreview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-20 h-20 rounded-full border-4 border-dark-900 shadow-xl object-cover -mt-10 ml-2 relative z-10">
-          <img id="profileRingPreview" src="" class="avatar-ring avatar-ring-large hidden -mt-10 ml-2">
-        </div>
-        <button onclick="openGifEditor()" class="absolute bottom-0 right-0 w-7 h-7 bg-bch text-black rounded-full flex items-center justify-center border-4 border-dark-900 z-20 hover:scale-110 transition-transform"><i class="fa-solid fa-camera text-[10px]"></i></button>
+    <div class="flex items-center gap-4 mb-4">
+      <div class="avatar-ring-wrapper relative" style="width:64px;height:64px">
+        <img id="profileAvatarPreview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest"
+             class="w-16 h-16 rounded-full border-2 border-bch/40 object-cover relative z-10">
+        <img id="profileRingPreview" class="avatar-ring avatar-ring-large hidden">
       </div>
       <div class="flex-1 pt-1">
         <label class="field-label mb-1">Avatar & Banner Methods</label>
@@ -2491,7 +2490,7 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
 
   // Apply data
   $('upHandle').textContent = handle;
-  applyUserStyle($('upHandle'), { style });          // safe even if style is null
+  styleName($('upHandle'), { style });
   $('upAvatar').src = avatar;
   $('upBio').textContent = bio || 'No bio set.';
   $('upStatusLine').textContent = status.charAt(0).toUpperCase() + status.slice(1);
@@ -2556,19 +2555,6 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
 };
 window.hideUserPopup = () => { $('userPopup')?.classList.add('hidden'); S.popupUid = null; };
 
-// Save note on blur
-document.addEventListener('DOMContentLoaded', () => {
-  const note = $('upNote');
-  if(note){
-    note.addEventListener('blur', async () => {
-      if(!S.user || !S.popupUid) return;
-      const text = note.value.trim();
-      try{
-        await setDoc(doc(db,'users', S.user.uid, 'notes', S.popupUid), { text, updatedAt: Date.now() });
-      }catch(e){ console.warn('note save', e); }
-    });
-  }
-});
 // Click outside closes popup
 document.addEventListener('click', (e) => {
   const popup = $('userPopup');
@@ -2956,7 +2942,7 @@ window.openInviteToFriends = async () => {
   else S.friends.forEach(f => {
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
-    row.innerHTML = `<img src="${esc(f.avatar||userAvatar('x'))}" class="w-7 h-7 rounded-full"><span class="text-xs text-slate-300 flex-1 truncate">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
+    row.innerHTML = `<div class="avatar-ring-wrapper" style="width:28px;height:28px;flex-shrink:0"><img src="${esc(f.avatar||userAvatar('x'))}" class="w-7 h-7 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-300 flex-1 truncate">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
     el.appendChild(row);
   });
   openModal('inviteFriends');
@@ -3202,35 +3188,41 @@ async function renderMsgs(msgs){
     const mentionsMe = (m.content||'').toLowerCase().includes('@'+(S.profile?.handle||'').toLowerCase()) || /@(everyone|here)/i.test(m.content||'');
     const div = document.createElement('div');
     div.className = `flex items-start gap-3 hover:bg-dark-800/40 px-2 py-2 rounded-lg group relative ${mentionsMe&&!isServerMuted(S.server?.id,'notif')?'bg-bch/5 border-l-2 border-bch':''}`;
-    
+
     const userStyle = getUserStyleString(live);
     const avatarStyle = getAvatarStyleString(live);
     const ringUrl = live.style?.ringUrl || '';
-    
+
     div.innerHTML = `
-      <div class="w-9 h-9 rounded-full shrink-0 cursor-pointer border ${isOwner?'border-carrot/60':'border-dark-600'} avatar-ring-wrapper"
+      <div class="avatar-ring-wrapper" style="width:36px;height:36px;flex-shrink:0;position:relative;display:inline-block;cursor:pointer;"
            onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')"
-           oncontextmenu="showUserContext(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')">
-        <img src="${esc(displayAvatar)}" class="w-full h-full rounded-full object-cover relative z-10" style="${avatarStyle}">
+           oncontextmenu="showMessageContext(event,'${esc(m.id)}','${esc(displayHandle)}','${esc((m.content||'').replace(/'/g,"").slice(0,80))}')">
+        <img src="${esc(displayAvatar)}" class="w-9 h-9 rounded-full object-cover relative z-10 ${isOwner?'border-carrot/60':'border-dark-600'} border-2" style="${avatarStyle}">
         ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
         ${renderStatusDot(live)}
       </div>
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5">
-          <span class="font-bold text-xs cursor-pointer" style="${userStyle}"
+          <span class="font-bold text-xs cursor-pointer msg-handle" style="${userStyle}"
             onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')">${esc(displayHandle)}</span>
           ${renderUserTag(live)}
           ${isNewMember(m.uid)?'<span class="new-member-leaf" title="New member (joined within the last week)"><i class="fa-solid fa-seedling"></i></span>':''}
           ${isOwner?'<span class="badge-owner">OWNER</span>':''}
           <span class="text-[10px] text-slate-600 mono">${shortTime(m.ts)}</span>
+          <button onclick="startReply('${esc(m.id)}','${esc(displayHandle)}','${esc((m.content||'').slice(0,80))}')" class="hidden group-hover:inline text-slate-500 hover:text-bch text-[11px] ml-1" title="Reply"><i class="fa-solid fa-reply"></i></button>
           <button onclick="showReactionPicker(event,'${esc(m.id)}')" class="hidden group-hover:inline text-slate-500 hover:text-bch text-[11px] ml-1" title="Add reaction"><i class="fa-regular fa-face-smile"></i></button>
           <button onclick="pinMessage('${esc(m.id)}','${esc((m.content||'').replace(/'/g,"").slice(0,150))}','${esc(displayHandle)}')" class="hidden group-hover:inline text-slate-500 hover:text-bch text-[11px] ml-1" title="Pin Message"><i class="fa-solid fa-thumbtack"></i></button>
           ${S.canManage?`<button onclick="deleteMsg('${esc(m.id)}')" class="hidden group-hover:inline text-red-500 text-[10px] ml-auto"><i class="fa-solid fa-trash"></i></button>`:''}
         </div>
+        ${m.replyTo ? `<div class="text-[10px] text-slate-500 mb-1 flex items-center gap-1">
+          <i class="fa-solid fa-reply"></i> replying to <span class="text-bch">${esc(m.replyHandle || 'someone')}</span>
+        </div>` : ''}
         <div class="text-xs text-slate-200 mt-0.5 break-words leading-relaxed">${contentHtml}</div>
         ${reactHtml}
       </div>`;
     feed.appendChild(div);
+    const nameEl = div.querySelector('.msg-handle');
+    if (nameEl) styleName(nameEl, S.profileCache?.[m.uid] || { handle: m.handle });
   });
   const c = $('msgContainer'); c.scrollTop = c.scrollHeight;
 }
@@ -3344,12 +3336,17 @@ async function actuallySendMessage(content, imageUrl, audioUrl){
     return;
   }
   if(!S.server || !S.channel) return;
-  await addDoc(collection(db,'servers',S.server.id,'channels',S.channel,'messages'), {
+  const data = {
     uid:S.user.uid, handle:safe(S.profile?.handle,'User'),
     avatar:safe(S.profile?.avatar, userAvatar(S.user.uid)),
     content: content||'', imageUrl: imageUrl||null, audioUrl: audioUrl||null,
-    reactions: {}, ts: Date.now()
-  });
+    reactions: {}, ts: Date.now(),
+    replyTo: S.replyingTo ? S.replyingTo.msgId : null,
+    replyHandle: S.replyingTo ? S.replyingTo.handle : null
+  };
+  S.replyingTo = null;
+  cancelReply();
+  await addDoc(collection(db,'servers',S.server.id,'channels',S.channel,'messages'), data);
 }
 window.playAudioMsg = (url, aid) => {
   const icon = $(`icon-${aid}`);
@@ -3392,6 +3389,30 @@ window.playAudioMsg = (url, aid) => {
   
   audio.play();
   icon.className = 'fa-solid fa-pause';
+};
+
+S.replyingTo = null;
+
+window.startReply = (msgId, handle, preview) => {
+  S.replyingTo = { msgId, handle, preview };
+  const bar = document.getElementById('replyBar');
+  if (bar) {
+    bar.innerHTML = `
+      <div class="flex items-center gap-2 text-xs text-slate-400 px-3 py-1.5 bg-dark-800 border-b border-dark-700">
+        <i class="fa-solid fa-reply text-bch"></i>
+        Replying to <strong class="text-white">${esc(handle)}</strong>
+        <span class="truncate opacity-60">${esc(preview)}</span>
+        <button onclick="cancelReply()" class="ml-auto text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>`;
+    bar.classList.remove('hidden');
+  }
+  $('chatInput').focus();
+};
+
+window.cancelReply = () => {
+  S.replyingTo = null;
+  const bar = document.getElementById('replyBar');
+  if (bar) bar.classList.add('hidden');
 };
 
 window.sendMsg = async e => {
@@ -3492,13 +3513,16 @@ function listenMembers(serverId){
               <span class="member-status-dot ${dotClass} z-20"></span>
             </div>
             <div class="min-w-0 flex-1">
-              <div class="font-bold text-xs truncate flex items-center" style="${nameStyle}">
+              <div class="font-bold text-xs truncate flex items-center member-name" style="${nameStyle}">
                 <span>${esc(m.handle)}</span>
                 ${renderUserTag(S.profileCache[m.uid])}
                 ${isNewMember(m.uid)?' <i class="fa-solid fa-seedling new-member-leaf ml-1" title="New member"></i>':''}
               </div>
               <div class="text-[9px] text-slate-500">${isOwner?'Owner · ':''}${statusLabel}</div>
             </div>`;
+          list.appendChild(div);
+          const nameSpan = div.querySelector('.member-name');
+          if (nameSpan) styleName(nameSpan, S.profileCache[m.uid] || { handle: m.handle });
           list.appendChild(div);
         });
       };
@@ -3538,7 +3562,20 @@ window.showUserContext = (e, uid, handle, avatar) => {
   menu.innerHTML = `
     ${isFriend ? `<div class="ctx-item" onclick="startDM('${esc(uid)}','${esc(handle)}','${esc(avatar||'')}');hideCtx()"><i class="fa-solid fa-message w-4"></i> Message</div>` : ''}
     ${friendAction}
-    <div class="ctx-item text-red-400" onclick="blockUser('${esc(uid)}');hideCtx()"><i class="fa-solid fa-ban w-4"></i> Block</div>`;
+    <div class="ctx-item text-red-400" onclick="blockUser('${esc(uid)}');hideCtx()"><i class="fa-solid fa-ban w-4"></i> Block</div>
+    <div class="ctx-item" onclick="copyUserId('${esc(uid)}');hideCtx()"><i class="fa-solid fa-copy w-4"></i> Copy User ID</div>`;
+  menu.style.left = Math.min(e.clientX, window.innerWidth-200)+'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight-150)+'px';
+  menu.classList.remove('hidden');
+};
+window.copyUserId = (uid) => { navigator.clipboard.writeText(uid); };
+window.showMessageContext = (e, msgId, handle, content) => {
+  e.preventDefault(); e.stopPropagation();
+  const menu = $('ctxMenu');
+  menu.innerHTML = `
+    <div class="ctx-item" onclick="startReply('${esc(msgId)}', '${esc(handle)}', '${esc(content.replace(/'/g,"").slice(0,80))}');hideCtx()"><i class="fa-solid fa-reply w-4"></i> Reply</div>
+    ${S.canManage ? `<div class="ctx-item text-red-400" onclick="deleteMsg('${esc(msgId)}');hideCtx()"><i class="fa-solid fa-trash w-4"></i> Delete</div>` : ''}
+  `;
   menu.style.left = Math.min(e.clientX, window.innerWidth-200)+'px';
   menu.style.top = Math.min(e.clientY, window.innerHeight-150)+'px';
   menu.classList.remove('hidden');
@@ -3627,11 +3664,13 @@ function renderFriends(){
         <span class="member-status-dot ${dotClass} z-20"></span>
       </div>
       <div class="min-w-0 flex-1">
-        <div class="text-xs truncate" style="${nameStyle}">${esc(f.handle)}</div>
+        <div class="text-xs truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</div>
       </div>
       <button onclick="event.stopPropagation();startDM('${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')" class="text-slate-500 hover:text-bch text-xs"><i class="fa-solid fa-message"></i></button>
     `;
     el.appendChild(div);
+    const nameEl = div.querySelector('.msg-handle');
+    if (nameEl) styleName(nameEl, S.profileCache?.[f.uid] || { handle: f.handle });
   });
 }
 function renderPending(){
@@ -3642,7 +3681,7 @@ function renderPending(){
   (S.incoming||[]).forEach(r => {
     const div = document.createElement('div');
     div.className = 'dm-item flex-col items-stretch gap-1';
-    div.innerHTML = `<div class="flex items-center gap-2"><img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full"><span class="text-xs text-slate-200 flex-1 truncate">${esc(r.handle||'User')}</span></div>
+    div.innerHTML = `<div class="flex items-center gap-2"><div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0"><img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-200 flex-1 truncate">${esc(r.handle||'User')}</span></div>
       <div class="flex gap-1 pl-10"><button onclick="acceptFriendRequest('${esc(r.fromUid)}','${esc(r.handle||'')}','${esc(r.avatar||'')}')" class="btn-primary text-[10px] px-2 py-1">Accept</button>
       <button onclick="declineFriendRequest('${esc(r.fromUid)}')" class="text-[10px] px-2 py-1 bg-dark-800 border border-dark-600 rounded text-red-400">Decline</button></div>`;
     inc.appendChild(div);
@@ -3651,7 +3690,7 @@ function renderPending(){
   (S.outgoing||[]).forEach(r => {
     const div = document.createElement('div');
     div.className = 'dm-item';
-    div.innerHTML = `<img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full"><span class="text-xs text-slate-400 truncate flex-1">${esc(r.handle||'User')}</span><span class="text-[9px] text-slate-600 mono">Pending</span>
+    div.innerHTML = `<div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0"><img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-400 truncate flex-1">${esc(r.handle||'User')}</span><span class="text-[9px] text-slate-600 mono">Pending</span>
       <button onclick="cancelFriendRequest('${esc(r.toUid)}')" class="text-[10px] text-red-400">Cancel</button>`;
     out.appendChild(div);
   });
@@ -3678,9 +3717,11 @@ function renderDMList(){
         ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
         <span class="member-status-dot ${dotClass} z-20"></span>
       </div>
-      <span class="text-xs truncate" style="${nameStyle}">${esc(f.handle)}</span>
+      <span class="text-xs truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</span>
     `;
     el.appendChild(div);
+    const nameEl = div.querySelector('.msg-handle');
+    if (nameEl) styleName(nameEl, S.profileCache?.[f.uid] || { handle: f.handle });
   });
 }
 window.openAddFriendModal = () => { $('addFriendHandle').value=''; $('addFriendMsg').classList.add('hidden'); openModal('addFriend'); };
@@ -4584,6 +4625,35 @@ function applyUserStyle(el, profile){
     el.style.webkitTextFillColor = s.nameColor || '#ffffff';
     el.style.color = s.nameColor || '#ffffff';
   }
+}
+
+function styleName(el, profile) {
+  if (!el) return;
+  applyUserStyle(el, profile || {});
+}
+
+function makeAvatar(uid, avatarUrl, size = 32, ringUrl = null) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'avatar-ring-wrapper';
+  wrapper.style.cssText = `width:${size}px;height:${size}px;flex-shrink:0;position:relative;display:inline-block;`;
+
+  const img = document.createElement('img');
+  img.src = avatarUrl || userAvatar(uid);
+  img.className = 'rounded-full object-cover relative z-10';
+  img.style.cssText = `width:${size}px;height:${size}px;`;
+  img.dataset.profileUid = uid;
+  img.onclick = (e) => { e.stopPropagation(); showUserProfile(e, uid); };
+
+  wrapper.appendChild(img);
+
+  if (ringUrl) {
+    const ring = document.createElement('img');
+    ring.src = ringUrl;
+    ring.className = size >= 48 ? 'avatar-ring avatar-ring-large' : 'avatar-ring';
+    wrapper.appendChild(ring);
+  }
+
+  return wrapper;
 }
 
 function getUserStyleString(profile){
