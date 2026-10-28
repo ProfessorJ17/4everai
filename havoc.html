@@ -96,41 +96,9 @@
     .gradient-swatch.active { border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
     .color-wheel-btn { width: 24px; height: 24px; border-radius: 4px; background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); cursor: pointer; }
     
-    /* AVATAR RING - Discord-style border ring */
-    .avatar-ring-wrapper { position: relative; display: inline-block; }
-    .avatar-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 15;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      object-fit: contain;
-      /* Automatically cut circular hole in middle of ring image */
-      -webkit-mask-image: radial-gradient(circle at center, transparent 48%, black 52%);
-      mask-image: radial-gradient(circle at center, transparent 48%, black 52%);
-    }
-    .avatar-ring-large {
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      -webkit-mask-image: radial-gradient(circle at center, transparent 46%, black 50%);
-      mask-image: radial-gradient(circle at center, transparent 46%, black 50%);
-    }
-
-    /* Ensure all avatars are perfectly circular */
-    .avatar-ring-wrapper img:not(.avatar-ring) {
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    /* Force all avatars in members list to be correct size */
-    #membersList .avatar-ring-wrapper {
+    /* ===== AVATAR RINGS – same rules everywhere as members list ===== */
+    .avatar-ring-wrapper {
+      position: relative !important;
       display: inline-block !important;
       width: 32px !important;
       height: 32px !important;
@@ -138,10 +106,39 @@
       flex-shrink: 0 !important;
     }
 
-    #membersList .avatar-ring-wrapper img {
+    .avatar-ring-wrapper img:not(.avatar-ring) {
       width: 32px !important;
       height: 32px !important;
+      border-radius: 50% !important;
       object-fit: cover !important;
+      position: relative;
+      z-index: 10;
+    }
+
+    .avatar-ring {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 50% !important;
+      pointer-events: none !important;
+      z-index: 15 !important;
+      object-fit: contain !important;
+      -webkit-mask-image: radial-gradient(circle at center, transparent 48%, black 52%) !important;
+      mask-image: radial-gradient(circle at center, transparent 48%, black 52%) !important;
+    }
+
+    /* Only the big profile popup avatar can be larger */
+    #userPopup .avatar-ring-wrapper,
+    #profileAvatarPreview,
+    .profile-large-avatar {
+      width: 64px !important;
+      height: 64px !important;
+    }
+    #userPopup .avatar-ring-wrapper img:not(.avatar-ring),
+    #profileAvatarPreview {
+      width: 64px !important;
+      height: 64px !important;
     }
     
     /* DISCOVERY MODAL */
@@ -244,9 +241,8 @@
 
     <div class="bg-dark-950 border-t border-dark-700 px-2 py-2">
       <div class="flex items-center gap-2">
-        <div class="relative cursor-pointer avatar-ring-wrapper" onclick="openModal('profile')" style="width:32px;height:32px">
+        <div class="avatar-ring-wrapper relative cursor-pointer" onclick="openModal('profile')">
           <img id="ucAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-8 h-8 rounded-full bg-dark-800 border border-dark-600 relative z-10">
-          <img id="ucRing" class="avatar-ring hidden">
           <span id="ucStatusDot" class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-slate-500 border-2 border-dark-950 z-20"></span>
         </div>
         <div class="min-w-0 flex-1">
@@ -382,7 +378,7 @@
 <div id="userPopup" class="fixed z-[350] hidden w-72 rounded-xl overflow-hidden shadow-2xl border border-dark-600" style="background:#111214">
   <div id="upBanner" class="h-14 bg-gradient-to-r from-bch/40 to-kiro/40 relative">
     <div class="absolute -bottom-4 left-4">
-      <div class="relative avatar-ring-wrapper" style="width:32px;height:32px">
+      <div class="avatar-ring-wrapper relative" style="width:32px;height:32px">
         <img id="upAvatar" src="" class="w-8 h-8 rounded-full border-4 border-[#111214] object-cover bg-dark-800 relative z-10">
         <img id="upRing" class="avatar-ring hidden">
         <span id="upDot" class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#111214] z-20 status-online"></span>
@@ -2635,6 +2631,15 @@ window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
   } else {
     ringEl.classList.add('hidden');
   }
+
+  // Ring preview in profile modal
+  const ringPreviewEl = $('profileRingPreview');
+  if (ringPreviewEl && style?.ringUrl) {
+    ringPreviewEl.src = style.ringUrl;
+    ringPreviewEl.classList.remove('hidden');
+  } else if (ringPreviewEl) {
+    ringPreviewEl.classList.add('hidden');
+  }
 };
 window.hideUserPopup = () => { $('userPopup')?.classList.add('hidden'); S.popupUid = null; };
 
@@ -3028,7 +3033,8 @@ window.openInviteToFriends = async () => {
     const nameStyle = getUserStyleString({ style });
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
-    row.innerHTML = `<div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0"><img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-300 flex-1 truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
+    const avatarNode = makeAvatar(f.uid, f.avatar || userAvatar('x'), 32, style?.ringUrl || null);
+    row.insertBefore(avatarNode, row.firstChild);
     el.appendChild(row);
     const nameEl = row.querySelector('.msg-handle');
     if (nameEl) styleName(nameEl, profile || { handle: f.handle });
@@ -3282,14 +3288,11 @@ async function renderMsgs(msgs){
     const avatarStyle = getAvatarStyleString(live);
     const ringUrl = live.style?.ringUrl || '';
 
-    div.innerHTML = `
-      <div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0;position:relative;display:inline-block;cursor:pointer;"
-           onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')"
-           oncontextmenu="showMessageContext(event,'${esc(m.id)}','${esc(displayHandle)}','${esc((m.content||'').replace(/'/g,"").slice(0,80))}')">
-        <img src="${esc(displayAvatar)}" class="w-8 h-8 rounded-full object-cover relative z-10 ${isOwner?'border-carrot/60':'border-dark-600'} border-2" style="${avatarStyle}">
-        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
-        ${renderStatusDot(live)}
-      </div>
+    // Create avatar using makeAvatar helper
+    const avatarNode = makeAvatar(m.uid, displayAvatar, 32, ringUrl);
+    div.appendChild(avatarNode);
+
+    div.innerHTML += `
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5">
           <span class="font-bold text-xs cursor-pointer msg-handle" style="${userStyle}"
@@ -3748,17 +3751,24 @@ function renderFriends(){
     div.dataset.name = (f.handle||'').toLowerCase();
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
     div.oncontextmenu = e => showUserContext(e, f.uid, f.handle, f.avatar);
-    div.innerHTML = `
-      <div class="avatar-ring-wrapper shrink-0" style="width:32px;height:32px">
-        <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full cursor-pointer relative z-10" style="${avatarStyle}" data-profile-uid="${esc(f.uid)}" onclick="event.stopPropagation();showUserProfile(event,'${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')">
-        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
-        <span class="member-status-dot ${dotClass} z-20"></span>
-      </div>
-      <div class="min-w-0 flex-1">
-        <div class="text-xs truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</div>
-      </div>
-      <button onclick="event.stopPropagation();startDM('${esc(f.uid)}','${esc(f.handle)}','${esc(f.avatar||'')}')" class="text-slate-500 hover:text-bch text-xs"><i class="fa-solid fa-message"></i></button>
-    `;
+    const avatarNode = makeAvatar(f.uid, f.avatar || userAvatar('x'), 32, style?.ringUrl || null);
+    div.appendChild(avatarNode);
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'min-w-0 flex-1';
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'text-xs truncate msg-handle';
+    nameDiv.style = nameStyle;
+    nameDiv.textContent = f.handle;
+    contentDiv.appendChild(nameDiv);
+    div.appendChild(contentDiv);
+
+    const msgBtn = document.createElement('button');
+    msgBtn.className = 'text-slate-500 hover:text-bch text-xs';
+    msgBtn.innerHTML = '<i class="fa-solid fa-message"></i>';
+    msgBtn.onclick = (e) => { e.stopPropagation(); startDM(f.uid, f.handle, f.avatar); };
+    div.appendChild(msgBtn);
+
     el.appendChild(div);
     const nameEl = div.querySelector('.msg-handle');
     if (nameEl) styleName(nameEl, profile || { handle: f.handle });
@@ -3772,17 +3782,18 @@ function renderPending(){
   (S.incoming||[]).forEach(r => {
     const div = document.createElement('div');
     div.className = 'dm-item flex-col items-stretch gap-1';
-    div.innerHTML = `<div class="flex items-center gap-2"><div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0"><img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-200 flex-1 truncate">${esc(r.handle||'User')}</span></div>
-      <div class="flex gap-1 pl-10"><button onclick="acceptFriendRequest('${esc(r.fromUid)}','${esc(r.handle||'')}','${esc(r.avatar||'')}')" class="btn-primary text-[10px] px-2 py-1">Accept</button>
-      <button onclick="declineFriendRequest('${esc(r.fromUid)}')" class="text-[10px] px-2 py-1 bg-dark-800 border border-dark-600 rounded text-red-400">Decline</button></div>`;
+    const avatarNode = makeAvatar(r.fromUid, r.avatar || userAvatar('x'), 32, null);
+    div.innerHTML = '<div class="flex items-center gap-2"></div><span class="text-xs text-slate-200 flex-1 truncate">' + esc(r.handle||'User') + '</span><div class="flex gap-1 pl-10"><button onclick="acceptFriendRequest(\'' + esc(r.fromUid) + '\',\'' + esc(r.handle||'') + '\',\'' + esc(r.avatar||'') + '\')" class="btn-primary text-[10px] px-2 py-1">Accept</button><button onclick="declineFriendRequest(\'' + esc(r.fromUid) + '\')" class="text-[10px] px-2 py-1 bg-dark-800 border border-dark-600 rounded text-red-400">Decline</button></div>';
+    div.querySelector('div').appendChild(avatarNode);
     inc.appendChild(div);
   });
   if(!(S.outgoing||[]).length) out.innerHTML = '<p class="text-[10px] text-slate-600 px-2">No outgoing requests</p>';
   (S.outgoing||[]).forEach(r => {
     const div = document.createElement('div');
     div.className = 'dm-item';
-    div.innerHTML = `<div class="avatar-ring-wrapper" style="width:32px;height:32px;flex-shrink:0"><img src="${esc(r.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-400 truncate flex-1">${esc(r.handle||'User')}</span><span class="text-[9px] text-slate-600 mono">Pending</span>
-      <button onclick="cancelFriendRequest('${esc(r.toUid)}')" class="text-[10px] text-red-400">Cancel</button>`;
+    const avatarNode = makeAvatar(r.toUid, r.avatar || userAvatar('x'), 32, null);
+    div.innerHTML = '<div></div><span class="text-xs text-slate-400 truncate flex-1">' + esc(r.handle||'User') + '</span><span class="text-[9px] text-slate-600 mono">Pending</span><button onclick="cancelFriendRequest(\'' + esc(r.toUid) + '\')" class="text-[10px] text-red-400">Cancel</button>';
+    div.querySelector('div').appendChild(avatarNode);
     out.appendChild(div);
   });
 }
@@ -3803,14 +3814,15 @@ function renderDMList(){
     div.className = `dm-item ${S.dmTarget?.uid===f.uid?'active':''}`;
     div.dataset.name = (f.handle||'').toLowerCase();
     div.onclick = () => startDM(f.uid, f.handle, f.avatar);
-    div.innerHTML = `
-      <div class="avatar-ring-wrapper shrink-0" style="width:32px;height:32px">
-        <img src="${esc(f.avatar||userAvatar('x'))}" class="w-8 h-8 rounded-full relative z-10" style="${avatarStyle}">
-        ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
-        <span class="member-status-dot ${dotClass} z-20"></span>
-      </div>
-      <span class="text-xs truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</span>
-    `;
+    const avatarNode = makeAvatar(f.uid, f.avatar || userAvatar('x'), 32, style?.ringUrl || null);
+    div.appendChild(avatarNode);
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'text-xs truncate msg-handle';
+    nameSpan.style = nameStyle;
+    nameSpan.textContent = f.handle;
+    div.appendChild(nameSpan);
+
     el.appendChild(div);
     const nameEl = div.querySelector('.msg-handle');
     if (nameEl) styleName(nameEl, profile || { handle: f.handle });
@@ -4740,21 +4752,23 @@ function refreshAllUIWithStyle() {
 function makeAvatar(uid, avatarUrl, size = 32, ringUrl = null) {
   const wrapper = document.createElement('div');
   wrapper.className = 'avatar-ring-wrapper';
-  wrapper.style.cssText = `width:${size}px;height:${size}px;flex-shrink:0;position:relative;display:inline-block;`;
+  // size is forced by CSS to 32px for almost everything
 
   const img = document.createElement('img');
   img.src = avatarUrl || userAvatar(uid);
   img.className = 'rounded-full object-cover relative z-10';
-  img.style.cssText = `width:${size}px;height:${size}px;`;
   img.dataset.profileUid = uid;
-  img.onclick = (e) => { e.stopPropagation(); showUserProfile(e, uid); };
+  img.onclick = (e) => {
+    e.stopPropagation();
+    showUserProfile(e, uid);
+  };
 
   wrapper.appendChild(img);
 
   if (ringUrl) {
     const ring = document.createElement('img');
     ring.src = ringUrl;
-    ring.className = size >= 48 ? 'avatar-ring avatar-ring-large' : 'avatar-ring';
+    ring.className = 'avatar-ring';
     wrapper.appendChild(ring);
   }
 
