@@ -88,9 +88,9 @@
     .banner-preview img { width: 100%; height: 100%; object-fit: cover; }
     .crop-container { width: 100%; aspect-ratio: 1; background: #050608; border-radius: 12px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid #242b3b; }
     .crop-circle { position: absolute; width: 200px; height: 200px; border-radius: 50%; border: 2px solid #0AC18E; box-shadow: 0 0 0 2000px rgba(0,0,0,0.6); pointer-events: none; z-index: 10; }
-    .font-option { padding: 6px 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
+    .font-option { padding: 6px 10px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
     .font-option:hover { background: #1c222e; border-color: #242b3b; }
-    .font-option.active { border-color: #0AC18E; background: rgba(10,193,142,0.1); }
+    .font-option.active { border-color: #0AC18E !important; background: rgba(10,193,142,0.15) !important; color: #00E5A3 !important; }
     .gradient-swatch { width: 24px; height: 24px; border-radius: 4px; cursor: pointer; border: 1.5px solid transparent; transition: transform 0.1s; }
     .gradient-swatch:hover { transform: scale(1.1); }
     .gradient-swatch.active { border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
@@ -1426,22 +1426,29 @@ S.profileStyle = {
 window.initProfileEditor = () => {
   const fp = $('fontPicker');
   if(fp) {
-    fp.innerHTML = PROFILE_FONTS.map(f => `
-      <div class="font-option ${(S.profileStyle.font || "'Plus Jakarta Sans', sans-serif") === f.family ? 'active' : ''}"
-           style="font-family:${f.family}"
-           onclick="setNameFont('${f.family}', this)">
-        ${f.name}
-      </div>
-    `).join('');
+    fp.innerHTML = '';
+    PROFILE_FONTS.forEach((f, i) => {
+      const isActive = (S.profileStyle.font || "'Plus Jakarta Sans', sans-serif") === f.family;
+      const div = document.createElement('div');
+      div.className = `font-option ${isActive ? 'active' : ''}`;
+      div.style.fontFamily = f.family;
+      div.textContent = f.name;
+      div.onclick = () => selectFont(i);
+      fp.appendChild(div);
+    });
   }
 
   const ng = $('nameGradients');
   if(ng) {
-    ng.innerHTML = NAME_GRADIENTS.map(g => `
-      <div class="gradient-swatch ${S.profileStyle.nameGradient === g ? 'active' : ''}"
-           style="background:${g}"
-           onclick="setNameGradient('${g}', this)"></div>
-    `).join('');
+    ng.innerHTML = '';
+    NAME_GRADIENTS.forEach((g, i) => {
+      const isActive = S.profileStyle.nameGradient === g;
+      const div = document.createElement('div');
+      div.className = `gradient-swatch ${isActive ? 'active' : ''}`;
+      div.style.background = g;
+      div.onclick = () => selectGradient(i);
+      ng.appendChild(div);
+    });
   }
 
   // Load existing profile style if available
@@ -1450,13 +1457,16 @@ window.initProfileEditor = () => {
     updateProfileUIFromStyle();
     // Re-render font picker with correct active state
     if(fp) {
-      fp.innerHTML = PROFILE_FONTS.map(f => `
-        <div class="font-option ${(S.profileStyle.font || "'Plus Jakarta Sans', sans-serif") === f.family ? 'active' : ''}"
-             style="font-family:${f.family}"
-             onclick="setNameFont('${f.family}', this)">
-          ${f.name}
-        </div>
-      `).join('');
+      fp.innerHTML = '';
+      PROFILE_FONTS.forEach((f, i) => {
+        const isActive = (S.profileStyle.font || "'Plus Jakarta Sans', sans-serif") === f.family;
+        const div = document.createElement('div');
+        div.className = `font-option ${isActive ? 'active' : ''}`;
+        div.style.fontFamily = f.family;
+        div.textContent = f.name;
+        div.onclick = () => selectFont(i);
+        fp.appendChild(div);
+      });
     }
   }
   // Load ring URL
@@ -1501,28 +1511,41 @@ function updateProfileUIFromStyle() {
 }
 
 window.setNameFont = (family, el) => {
-  console.log('Setting font:', family);
+  console.log('Setting font:', family, 'Element:', el);
   S.profileStyle.font = family;
+
   // Remove active from all font options
   document.querySelectorAll('.font-option').forEach(x => x.classList.remove('active'));
+
   // Add active to clicked element
   if(el) {
     el.classList.add('active');
-  } else {
-    // If no element passed, find it by font family
-    const options = document.querySelectorAll('.font-option');
-    options.forEach(opt => {
-      if(opt.style.fontFamily === family || opt.style.fontFamily === `"${family}"`) {
-        opt.classList.add('active');
-      }
-    });
   }
+
+  // Update preview immediately
   updateNamePreview();
+
   // Also update bottom-left handle for immediate feedback
   const ucHandle = $('ucHandle');
   if(ucHandle) {
     ucHandle.style.fontFamily = family;
   }
+};
+
+window.selectFont = (index) => {
+  const f = PROFILE_FONTS[index];
+  const fp = $('fontPicker');
+  const el = fp.children[index];
+  console.log('Selecting font:', index, f.family, el);
+  setNameFont(f.family, el);
+};
+
+window.selectGradient = (index) => {
+  const g = NAME_GRADIENTS[index];
+  const ng = $('nameGradients');
+  const el = ng.children[index];
+  console.log('Selecting gradient:', index, g, el);
+  setNameGradient(g, el);
 };
 
 window.setNameColor = (hex) => {
