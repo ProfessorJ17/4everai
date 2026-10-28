@@ -1427,7 +1427,7 @@ window.initProfileEditor = () => {
   const fp = $('fontPicker');
   if(fp) {
     fp.innerHTML = PROFILE_FONTS.map(f => `
-      <div class="font-option ${S.profileStyle.font === f.family ? 'active' : ''}"
+      <div class="font-option ${(S.profileStyle.font || "'Plus Jakarta Sans', sans-serif") === f.family ? 'active' : ''}"
            style="font-family:${f.family}"
            onclick="setNameFont('${f.family}', this)">
         ${f.name}
@@ -1451,7 +1451,7 @@ window.initProfileEditor = () => {
     // Re-render font picker with correct active state
     if(fp) {
       fp.innerHTML = PROFILE_FONTS.map(f => `
-        <div class="font-option ${S.profileStyle.font === f.family ? 'active' : ''}"
+        <div class="font-option ${(S.profileStyle.font || "'Plus Jakarta Sans', sans-serif") === f.family ? 'active' : ''}"
              style="font-family:${f.family}"
              onclick="setNameFont('${f.family}', this)">
           ${f.name}
@@ -1501,9 +1501,22 @@ function updateProfileUIFromStyle() {
 }
 
 window.setNameFont = (family, el) => {
+  console.log('Setting font:', family);
   S.profileStyle.font = family;
+  // Remove active from all font options
   document.querySelectorAll('.font-option').forEach(x => x.classList.remove('active'));
-  if(el) el.classList.add('active');
+  // Add active to clicked element
+  if(el) {
+    el.classList.add('active');
+  } else {
+    // If no element passed, find it by font family
+    const options = document.querySelectorAll('.font-option');
+    options.forEach(opt => {
+      if(opt.style.fontFamily === family || opt.style.fontFamily === `"${family}"`) {
+        opt.classList.add('active');
+      }
+    });
+  }
   updateNamePreview();
   // Also update bottom-left handle for immediate feedback
   const ucHandle = $('ucHandle');
@@ -1580,15 +1593,18 @@ window.updateNamePreview = () => {
 
   // Update modal input for immediate feedback
   const target = $('profileHandle');
-  target.style.fontFamily = style.font;
-  if(style.nameGradient) {
-    target.style.background = style.nameGradient;
-    target.style.webkitBackgroundClip = 'text';
-    target.style.webkitTextFillColor = 'transparent';
-  } else {
-    target.style.background = 'none';
-    target.style.webkitTextFillColor = style.nameColor;
-    target.style.color = style.nameColor;
+  if(target) {
+    target.style.fontFamily = style.font || "'Plus Jakarta Sans', sans-serif";
+    if(style.nameGradient) {
+      target.style.background = style.nameGradient;
+      target.style.webkitBackgroundClip = 'text';
+      target.style.webkitTextFillColor = 'transparent';
+    } else {
+      target.style.background = 'none';
+      target.style.webkitBackgroundClip = '';
+      target.style.webkitTextFillColor = style.nameColor || '#ffffff';
+      target.style.color = style.nameColor || '#ffffff';
+    }
   }
 
   // Also update bottom-left user handle for live preview
