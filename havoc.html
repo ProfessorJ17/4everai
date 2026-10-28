@@ -381,9 +381,9 @@
 <div id="userPopup" class="fixed z-[350] hidden w-72 rounded-xl overflow-hidden shadow-2xl border border-dark-600" style="background:#111214">
   <div id="upBanner" class="h-14 bg-gradient-to-r from-bch/40 to-kiro/40 relative">
     <div class="absolute -bottom-8 left-4">
-      <div class="relative avatar-ring-wrapper">
+      <div class="relative avatar-ring-wrapper" style="width:64px;height:64px">
         <img id="upAvatar" src="" class="w-16 h-16 rounded-full border-4 border-[#111214] object-cover bg-dark-800 relative z-10">
-        <img id="upRing" src="" class="avatar-ring avatar-ring-large hidden w-16 h-16">
+        <img id="upRing" class="avatar-ring avatar-ring-large hidden">
         <span id="upDot" class="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#111214] z-20 status-online"></span>
       </div>
     </div>
@@ -1444,6 +1444,16 @@ window.initProfileEditor = () => {
   if(S.profile && S.profile.style) {
     S.profileStyle = { ...S.profileStyle, ...S.profile.style };
     updateProfileUIFromStyle();
+    // Re-render font picker with correct active state
+    if(fp) {
+      fp.innerHTML = PROFILE_FONTS.map(f => `
+        <div class="font-option ${S.profileStyle.font === f.family ? 'active' : ''}"
+             style="font-family:${f.family}"
+             onclick="setNameFont('${f.family}', this)">
+          ${f.name}
+        </div>
+      `).join('');
+    }
   }
   // Load ring URL
   if(S.profileStyle.ringUrl) {
@@ -2439,195 +2449,110 @@ window.toggleMuteServer = (id,type) => { setMute(id,type,!isServerMuted(id,type)
 // ===== DISCORD-STYLE USER PROFILE POPUP =====
 S.popupUid = null;
 window.showUserProfile = async (e, uid, fallbackHandle, fallbackAvatar) => {
-  if(!uid || uid === 'undefined') return;
-  e && e.stopPropagation && e.stopPropagation();
-
-  // Close any existing popup first
-  hideUserPopup();
-
+  e?.stopPropagation?.();
+  hideCtx();
   const popup = $('userPopup');
-  const x = e ? e.clientX : 100;
-  const y = e ? e.clientY : 100;
-  popup.style.left = Math.min(x + 8, window.innerWidth - 300) + 'px';
-  popup.style.top = Math.min(Math.max(8, y - 40), window.innerHeight - 420) + 'px';
-  popup.classList.remove('hidden');
-  S.popupUid = uid;
+  if(!popup) return;
 
-  // Safe defaults (never crash)
+  // Reset immediately so it never shows old data
   $('upHandle').textContent = fallbackHandle || 'Loading…';
   $('upAvatar').src = fallbackAvatar || userAvatar(uid);
   $('upBio').textContent = '…';
-  $('upStatusLine').textContent = '';
   $('upCreated').textContent = '—';
-  $('upNote').value = '';
   $('upServerJoinWrap')?.classList.add('hidden');
+  $('upNote').value = '';
+  $('upDot').className = 'absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#111214] status-offline';
 
-  let handle = fallbackHandle || 'User';
-  let avatar = fallbackAvatar || userAvatar(uid);
-  let bio = '';
-  let status = 'offline';
-  let createdAt = null;
-  let style = null;
-  let userTag = '';
+  // Position
+  const x = Math.min(e.clientX + 12, window.innerWidth - 300);
+  const y = Math.min(e.clientY - 20, window.innerHeight - 420);
+  popup.style.left = x + 'px';
+  popup.style.top = y + 'px';
+  popup.classList.remove('hidden');
 
-  // Check cache first for instant display
-  if(S.profileCache && S.profileCache[uid]) {
-    const cached = S.profileCache[uid];
-    handle = cached.handle || handle;
-    avatar = cached.avatar || avatar;
-    bio = cached.bio || '';
-    status = cached.status || 'offline';
-    createdAt = cached.createdAt || null;
-    style = cached.style || null;
-    userTag = cached.userTag || '';
-  }
+  let bio = '', createdAt = null, status = 'offline', handle = fallbackHandle, avatar = fallbackAvatar, style = null;
 
-  // Also try members cache for extra data
-  if(S.server){
-    const mem = (S.membersCache||[]).find(x => x.uid === uid);
-    if(mem){
-      if(!handle || handle === 'User') handle = mem.handle || handle;
-      if(!avatar || avatar.includes('Guest')) avatar = mem.avatar || avatar;
-      if(!style) style = mem.style || null;
+  try {
+    const snap = await getDoc(doc(db, 'users', uid));
+    if (snap.exists()) {
+      const d = snap.data();
+      handle = d.handle || fallbackHandle || 'User';
+      avatar = d.avatar || fallbackAvatar || userAvatar(uid);
+      bio = d.bio || '';
+      createdAt = d.createdAt || null;
+      status = d.status || 'offline';
+      style = d.style || null;
+      S.profileCache = S.profileCache || {};
+      S.profileCache[uid] = d;
     }
+  } catch (err) {
+    console.warn('Profile load failed (using fallback)', err);
   }
 
-  // Then fetch from database for latest data
-  try{
-    const snap = await getDoc(doc(db,'users', uid));
-    if(snap.exists()){
-      const u = snap.data();
-      handle = u.handle || handle;
-      avatar = u.avatar || avatar;
-      bio = u.bio || '';
-      status = computePresence(u);
-      createdAt = u.createdAt || null;
-      style = u.style || null;
-      userTag = u.userTag || '';
-      // Update cache
-      if(!S.profileCache) S.profileCache = {};
-      S.profileCache[uid] = { handle, avatar, bio, status, createdAt, style, userTag, _ts: Date.now() };
-    }
-  }catch(err){
-    console.warn('Profile fetch failed (permissions or network):', err.message);
-  }
-
-  $('upHandle').innerHTML = `<span>${esc(handle)}</span>${renderUserTag(S.profileCache[uid])}`;
+  // Apply data
+  $('upHandle').textContent = handle;
+  applyUserStyle($('upHandle'), { style });          // safe even if style is null
   $('upAvatar').src = avatar;
-  $('upAvatar').onerror = () => { $('upAvatar').src = userAvatar(uid); };
+  $('upBio').textContent = bio || 'No bio set.';
+  $('upStatusLine').textContent = status.charAt(0).toUpperCase() + status.slice(1);
 
-  // Apply style & ring
-  const handleEl = $('upHandle');
-  const bannerEl = $('upBanner');
-  const avatarEl = $('upAvatar');
+  // Status dot
+  const st = status === 'online' ? 'status-online' :
+             status === 'idle'   ? 'status-idle'   :
+             status === 'dnd'    ? 'status-dnd'    : 'status-offline';
+  $('upDot').className = `absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#111214] ${st}`;
+
+  // Account Created – always show something
+  if (createdAt) {
+    $('upCreated').textContent = new Date(createdAt).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+  } else {
+    // fallback so it never stays as a bare dash
+    $('upCreated').textContent = new Date().toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
+
+  // Server join date (if we have it)
+  const m = (S.membersCache || []).find(x => x.uid === uid);
+  if (m?.joinedAt) {
+    $('upServerJoined').textContent = new Date(m.joinedAt).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+    $('upServerJoinWrap')?.classList.remove('hidden');
+  }
+
+  // Note
+  try {
+    if (S.user) {
+      const noteSnap = await getDoc(doc(db, 'users', S.user.uid, 'notes', uid));
+      if (noteSnap.exists()) $('upNote').value = noteSnap.data().text || '';
+    }
+  } catch (e) {}
+
+  // Buttons
+  $('upMsgBtn').onclick = () => { startDM(uid, handle, avatar); popup.classList.add('hidden'); };
+  $('upFriendBtn').onclick = () => sendFriendRequest(uid, handle, avatar);
+  $('upMoreBtn').onclick = (ev) => showUserContext(ev, uid, handle, avatar);
+
+  // Note save
+  $('upNote').onblur = async () => {
+    if (!S.user) return;
+    const text = $('upNote').value.trim();
+    try {
+      await setDoc(doc(db, 'users', S.user.uid, 'notes', uid), { text, updatedAt: Date.now() }, { merge: true });
+    } catch (e) {}
+  };
+
+  // Ring
   const ringEl = $('upRing');
-
-  applyUserStyle(handleEl, { style });
-
-  if(style && style.banner) {
-    const b = style.banner;
-    if(b.type === 'color') {
-      bannerEl.style.background = b.value;
-      bannerEl.innerHTML = '';
-    } else {
-      bannerEl.style.background = 'transparent';
-      bannerEl.innerHTML = `<img src="${esc(b.value)}" class="w-full h-full object-cover">`;
-    }
-  } else {
-    bannerEl.style.background = '';
-    bannerEl.innerHTML = '';
-  }
-
-  if(style && style.avatarCrop) {
-    const c = style.avatarCrop;
-    // Don't apply crop if avatar is a GIF
-    const isGif = avatar.includes('.gif') || avatar.includes('giphy') || avatar.includes('tenor');
-    if(!isGif) {
-      avatarEl.style.objectPosition = `${50 - (c.x/2)}% ${50 - (c.y/2)}%`;
-      avatarEl.style.transform = `scale(${c.zoom})`;
-    } else {
-      avatarEl.style.objectPosition = 'center';
-      avatarEl.style.transform = 'none';
-    }
-  } else {
-    avatarEl.style.objectPosition = 'center';
-    avatarEl.style.transform = 'none';
-  }
-
-  if(style && style.ringUrl) {
+  if (style?.ringUrl) {
     ringEl.src = style.ringUrl;
     ringEl.classList.remove('hidden');
   } else {
     ringEl.classList.add('hidden');
   }
-
-  $('upBio').textContent = bio || 'No bio set.';
-  const stLabel = {online:'Online',idle:'Idle',dnd:'Do Not Disturb',offline:'Offline',invisible:'Offline'}[status] || 'Offline';
-  $('upStatusLine').textContent = stLabel;
-  const dot = $('upDot');
-  dot.className = 'absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#111214] ' +
-    (status==='online'?'status-online':status==='idle'?'status-idle':status==='dnd'?'status-dnd':'status-offline');
-
-  // Account Created – if missing, show today
-  const formatProfileDate = (d) => {
-    if(!d) return 'Not set';
-    // Handle Firebase Timestamp objects
-    const date = (typeof d.toDate === 'function') ? d.toDate() : new Date(d);
-    return isNaN(date.getTime()) ? 'Not set' : date.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
-  };
-
-  $('upCreated').textContent = formatProfileDate(createdAt);
-
-  // Server join date
-  let serverJoined = 0;
-  if(S.server){
-    const mem = (S.membersCache||[]).find(x => x.uid === uid);
-    serverJoined = mem?.joinedAt || 0;
-  }
-  if(serverJoined){
-    $('upServerJoined').textContent = formatProfileDate(serverJoined);
-    $('upServerJoinWrap')?.classList.remove('hidden');
-  } else {
-    $('upServerJoinWrap')?.classList.add('hidden');
-  }
-
-  // Private note
-  if(S.user){
-    try{
-      const nSnap = await getDoc(doc(db,'users', S.user.uid, 'notes', uid));
-      $('upNote').value = nSnap.exists() ? (nSnap.data().text || '') : '';
-    }catch(e){ $('upNote').value = ''; }
-  }
-
-  // Buttons
-  const isSelf = S.user && uid === S.user.uid;
-  const isFriend = (S.friends||[]).some(f => f.uid === uid);
-
-  // Show/hide Edit Profile button based on whether viewing own profile
-  if(isSelf){
-    $('upEditBtn').classList.remove('hidden');
-    $('upEditBtn').onclick = () => { hideUserPopup(); openModal('profile'); };
-  } else {
-    $('upEditBtn').classList.add('hidden');
-  }
-
-  $('upMsgBtn').onclick = () => { hideUserPopup(); if(!isSelf) startDM(uid, handle, avatar); else openModal('profile'); };
-  $('upMsgBtn').textContent = isSelf ? 'Edit Profile' : `Message @${handle}`;
-  if(isSelf){
-    $('upFriendBtn').style.display = 'none';
-  } else {
-    $('upFriendBtn').style.display = '';
-    $('upFriendBtn').innerHTML = isFriend ? '<i class="fa-solid fa-user-minus"></i>' : '<i class="fa-solid fa-user-plus"></i>';
-    $('upFriendBtn').onclick = () => {
-      if(isFriend) removeFriend(uid);
-      else sendFriendRequest(uid, handle, avatar);
-      hideUserPopup();
-    };
-  }
-  $('upMoreBtn').onclick = (ev) => {
-    hideUserPopup();
-    showUserContext(ev, uid, handle, avatar);
-  };
 };
 window.hideUserPopup = () => { $('userPopup')?.classList.add('hidden'); S.popupUid = null; };
 
