@@ -730,7 +730,7 @@
     <div class="space-y-4">
       <div>
         <label for="profileHandle" class="field-label">Handle</label>
-        <input type="text" id="profileHandle" class="field font-bold" oninput="updateNamePreview()">
+        <input type="text" id="profileHandle" class="field font-bold" oninput="updateNamePreview()" onchange="updateNamePreview()">
       </div>
 
       <!-- NAME CUSTOMIZATION -->
@@ -1542,9 +1542,9 @@ window.addGradientStop = () => {
 
 window.updateNamePreview = () => {
   const handle = $('profileHandle').value || S.profile?.handle || 'Username';
-  const preview = $('ucHandle'); // In real app, we might have a specific preview el
-  // For now, let's just update the handle in the modal if we had one, or apply style to ucHandle for live feedback
   const style = S.profileStyle;
+
+  // Update modal input for immediate feedback
   const target = $('profileHandle');
   target.style.fontFamily = style.font;
   if(style.nameGradient) {
@@ -1555,6 +1555,13 @@ window.updateNamePreview = () => {
     target.style.background = 'none';
     target.style.webkitTextFillColor = style.nameColor;
     target.style.color = style.nameColor;
+  }
+
+  // Also update bottom-left user handle for live preview
+  const ucHandle = $('ucHandle');
+  if(ucHandle) {
+    ucHandle.textContent = handle;
+    applyUserStyle(ucHandle, { style });
   }
 };
 
@@ -1865,10 +1872,13 @@ window.saveProfile = async () => {
       }
     } catch(propErr){ console.warn('propagate to members', propErr); }
 
+    // Clear cache and update all UI elements
     S.profileCache = {};
-    updateUserUI();
-    if(S.server) listenMembers(S.server.id);
-    if(S.server && S.channel) listenMessages(S.server.id, S.channel);
+    S.profileCache[S.user.uid] = { handle, avatar, bio, status, style: S.profileStyle, userTag, _ts: Date.now() };
+
+    // Refresh all UI with new style
+    refreshAllUIWithStyle();
+
     // Refresh profile popup if it's currently open and showing this user
     if(S.popupUid === S.user.uid) {
       showUserProfile(null, S.user.uid, handle, avatar);
@@ -2940,10 +2950,15 @@ window.openInviteToFriends = async () => {
   const el = $('inviteFriendList'); el.innerHTML = '';
   if(!S.friends.length) el.innerHTML = '<p class="text-xs text-slate-500 mono">No friends yet.</p>';
   else S.friends.forEach(f => {
+    const profile = S.profileCache?.[f.uid] || {};
+    const style = profile.style || f.style || null;
+    const nameStyle = getUserStyleString({ style });
     const row = document.createElement('div');
     row.className = 'flex items-center gap-2 px-2 py-1.5 rounded hover:bg-dark-800';
-    row.innerHTML = `<div class="avatar-ring-wrapper" style="width:28px;height:28px;flex-shrink:0"><img src="${esc(f.avatar||userAvatar('x'))}" class="w-7 h-7 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-300 flex-1 truncate">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
+    row.innerHTML = `<div class="avatar-ring-wrapper" style="width:28px;height:28px;flex-shrink:0"><img src="${esc(f.avatar||userAvatar('x'))}" class="w-7 h-7 rounded-full object-cover relative z-10"></div><span class="text-xs text-slate-300 flex-1 truncate msg-handle" style="${nameStyle}">${esc(f.handle)}</span><button onclick="sendInviteToFriend('${esc(f.uid)}','${esc(f.handle)}')" class="text-[10px] btn-primary px-2 py-1">Send</button>`;
     el.appendChild(row);
+    const nameEl = row.querySelector('.msg-handle');
+    if (nameEl) styleName(nameEl, profile || { handle: f.handle });
   });
   openModal('inviteFriends');
 };
@@ -3152,7 +3167,9 @@ async function renderMsgs(msgs){
     const isOwner = m.uid === S.server?.ownerUid;
     const member = S.membersCache.find(x => x.uid === m.uid);
     const color = getMemberColor(member) || (isOwner ? '#F7931A' : null);
-    const nameStyle = color ? `style="color:${color}"` : '';
+    // Use user's custom style if available, otherwise fall back to role color
+    const userStyle = getUserStyleString(live);
+    const nameStyle = live.style ? `style="${userStyle}"` : (color ? `style="color:${color}"` : '');
     let contentHtml = parseMentions(esc(parseEmojis(m.content||'')));
     if(m.imageUrl) contentHtml += `<div class="mt-2"><img src="${esc(m.imageUrl)}" class="max-w-xs max-h-64 rounded-lg border border-dark-600 cursor-pointer" onclick="window.open('${esc(m.imageUrl)}')"></div>`;
     if(m.audioUrl) {
@@ -3189,7 +3206,6 @@ async function renderMsgs(msgs){
     const div = document.createElement('div');
     div.className = `flex items-start gap-3 hover:bg-dark-800/40 px-2 py-2 rounded-lg group relative ${mentionsMe&&!isServerMuted(S.server?.id,'notif')?'bg-bch/5 border-l-2 border-bch':''}`;
 
-    const userStyle = getUserStyleString(live);
     const avatarStyle = getAvatarStyleString(live);
     const ringUrl = live.style?.ringUrl || '';
 
@@ -3466,6 +3482,7 @@ function listenMembers(serverId){
         let avatar = m.avatar || userAvatar(m.uid||'x');
         let presence = 'offline';
         let createdAt = 0;
+        let style = null;
         try{
           const uSnap = await getDoc(doc(db,'users', m.uid));
           if(uSnap.exists()){
@@ -3494,7 +3511,8 @@ function listenMembers(serverId){
         list.appendChild(hdr);
         arr.forEach(m => {
           const isOwner = m.role === 'owner';
-          const style = m.style || null;
+          const profile = S.profileCache[m.uid] || {};
+          const style = profile.style || m.style || null;
           const nameStyle = getUserStyleString({ style });
           const avatarStyle = getAvatarStyleString({ style });
           const ringUrl = style?.ringUrl || '';
@@ -3522,8 +3540,7 @@ function listenMembers(serverId){
             </div>`;
           list.appendChild(div);
           const nameSpan = div.querySelector('.member-name');
-          if (nameSpan) styleName(nameSpan, S.profileCache[m.uid] || { handle: m.handle });
-          list.appendChild(div);
+          if (nameSpan) styleName(nameSpan, profile || { handle: m.handle });
         });
       };
 
@@ -3644,11 +3661,12 @@ function renderFriends(){
   el.innerHTML = '';
   if(!S.friends.length){ el.innerHTML = '<p class="text-[10px] text-slate-600 px-2">No friends yet. Right-click someone or use Add Friend.</p>'; return; }
   S.friends.forEach(f => {
-    const style = f.style || null;
+    // Use profileCache for style, fall back to friend object
+    const profile = S.profileCache?.[f.uid] || {};
+    const style = profile.style || f.style || null;
     const nameStyle = getUserStyleString({ style });
     const avatarStyle = getAvatarStyleString({ style });
     const ringUrl = style?.ringUrl || '';
-    const profile = S.profileCache?.[f.uid] || {};
     const presence = computePresence(profile);
     const dotClass = presence === 'online' ? 'status-online' : presence === 'idle' ? 'status-idle' : presence === 'dnd' ? 'status-dnd' : 'status-offline';
 
@@ -3670,7 +3688,7 @@ function renderFriends(){
     `;
     el.appendChild(div);
     const nameEl = div.querySelector('.msg-handle');
-    if (nameEl) styleName(nameEl, S.profileCache?.[f.uid] || { handle: f.handle });
+    if (nameEl) styleName(nameEl, profile || { handle: f.handle });
   });
 }
 function renderPending(){
@@ -3699,11 +3717,12 @@ function renderDMList(){
   const el = $('dmList'); if(!el) return;
   el.innerHTML = '';
   S.friends.forEach(f => {
-    const style = f.style || null;
+    // Use profileCache for style, fall back to friend object
+    const profile = S.profileCache?.[f.uid] || {};
+    const style = profile.style || f.style || null;
     const nameStyle = getUserStyleString({ style });
     const avatarStyle = getAvatarStyleString({ style });
     const ringUrl = style?.ringUrl || '';
-    const profile = S.profileCache?.[f.uid] || {};
     const presence = computePresence(profile);
     const dotClass = presence === 'online' ? 'status-online' : presence === 'idle' ? 'status-idle' : presence === 'dnd' ? 'status-dnd' : 'status-offline';
 
@@ -3721,7 +3740,7 @@ function renderDMList(){
     `;
     el.appendChild(div);
     const nameEl = div.querySelector('.msg-handle');
-    if (nameEl) styleName(nameEl, S.profileCache?.[f.uid] || { handle: f.handle });
+    if (nameEl) styleName(nameEl, profile || { handle: f.handle });
   });
 }
 window.openAddFriendModal = () => { $('addFriendHandle').value=''; $('addFriendMsg').classList.add('hidden'); openModal('addFriend'); };
@@ -4630,6 +4649,19 @@ function applyUserStyle(el, profile){
 function styleName(el, profile) {
   if (!el) return;
   applyUserStyle(el, profile || {});
+}
+
+function refreshAllUIWithStyle() {
+  // Refresh messages
+  if(S.server && S.channel) listenMessages(S.server.id, S.channel);
+  // Refresh members
+  if(S.server) listenMembers(S.server.id);
+  // Refresh friends
+  if(S.friends) renderFriends();
+  // Refresh DM list
+  if(S.friends) renderDMList();
+  // Update user UI
+  updateUserUI();
 }
 
 function makeAvatar(uid, avatarUrl, size = 32, ringUrl = null) {
