@@ -97,30 +97,33 @@
     .color-wheel-btn { width: 24px; height: 24px; border-radius: 4px; background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); cursor: pointer; }
     
     /* AVATAR RING - Discord-style border ring */
-    .avatar-ring-wrapper { position: relative; display: inline-block; }
+    .avatar-ring-wrapper {
+      position: relative;
+      display: inline-block;
+      overflow: visible !important;
+      flex-shrink: 0;
+    }
     .avatar-ring {
       position: absolute;
-      inset: 0;
+      /* slightly larger than avatar so full ring is visible */
+      width: 132%;
+      height: 132%;
+      top: -16%;
+      left: -16%;
       border-radius: 50%;
       pointer-events: none;
       z-index: 15;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
       object-fit: contain;
-      /* Automatically cut circular hole in middle of ring image */
-      -webkit-mask-image: radial-gradient(circle at center, transparent 48%, black 52%);
-      mask-image: radial-gradient(circle at center, transparent 48%, black 52%);
+      -webkit-mask-image: radial-gradient(circle at center, transparent 42%, black 48%);
+      mask-image: radial-gradient(circle at center, transparent 42%, black 48%);
     }
     .avatar-ring-large {
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      -webkit-mask-image: radial-gradient(circle at center, transparent 46%, black 50%);
-      mask-image: radial-gradient(circle at center, transparent 46%, black 50%);
+      width: 132%;
+      height: 132%;
+      top: -16%;
+      left: -16%;
+      -webkit-mask-image: radial-gradient(circle at center, transparent 40%, black 46%);
+      mask-image: radial-gradient(circle at center, transparent 40%, black 46%);
     }
 
     /* Ensure all avatars are perfectly circular */
@@ -129,21 +132,26 @@
       object-fit: cover;
     }
 
-    /* Force all avatars in members list to be correct size */
+    /* Members list sizing only — NO overflow:hidden (that was clipping the ring) */
     #membersList .avatar-ring-wrapper {
       display: inline-block !important;
       width: 32px !important;
       height: 32px !important;
-      overflow: hidden !important;
+      overflow: visible !important;
       flex-shrink: 0 !important;
     }
 
-    #membersList .avatar-ring-wrapper img {
+    #membersList .avatar-ring-wrapper img:not(.avatar-ring) {
       width: 32px !important;
       height: 32px !important;
       object-fit: cover !important;
     }
-    
+
+    /* Prevent bottom bar from clipping avatar rings */
+    .bg-dark-950.border-t.border-dark-700 {
+      overflow: visible;
+    }
+
     /* DISCOVERY MODAL */
     .discover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
     .discover-card { background: #1e1f22; border-radius: 12px; overflow: hidden; transition: transform 0.2s, background 0.2s; cursor: pointer; border: 1px solid #242b3b; }
@@ -780,21 +788,8 @@
         <label class="text-[10px] mono text-slate-500 uppercase tracking-widest font-bold">Identity Tag</label>
         <select id="profileUserTag" class="field text-xs bg-dark-900 border-dark-700">
           <option value="">No Tag</option>
-          <option value="BETA">BETA</option>
-          <option value="OG">OG</option>
-          <option value="DEV">DEV</option>
-          <option value="VIP">VIP</option>
-          <option value="ALPHA">ALPHA</option>
-          <option value="STAFF">STAFF</option>
-          <option value="FOUNDER">FOUNDER</option>
-          <option value="VERIFIED">VERIFIED</option>
-          <option value="CHAMP">CHAMP</option>
-          <option value="ELITE">ELITE</option>
-          <option value="LEGEND">LEGEND</option>
-          <option value="MYSTIC">MYSTIC</option>
-          <option value="PIONEER">PIONEER</option>
         </select>
-        <p class="text-[9px] text-slate-500 italic">Select a tag to display next to your name across all servers.</p>
+        <p class="text-[9px] text-slate-500 italic">Select a server tag from servers you're in to display next to your name.</p>
       </div>
     </div>
 
@@ -3298,7 +3293,7 @@ async function renderMsgs(msgs){
            style="width:32px;height:32px;"
            onclick="showUserProfile(event,'${esc(m.uid)}','${esc(displayHandle)}','${esc(displayAvatar)}')"
            oncontextmenu="showMessageContext(event,'${esc(m.id)}','${esc(displayHandle)}','${esc((m.content||'').replace(/'/g,"").slice(0,80))}')">
-        <img src="${esc(displayAvatar)}" class="w-8 h-8 rounded-full object-cover relative z-10 ${isOwner?'border-carrot/60':'border-dark-600'} border-2" style="${avatarStyle}">
+        <img src="${esc(displayAvatar)}" class="w-8 h-8 rounded-full object-cover relative z-10 border border-dark-600" style="${avatarStyle}">
         ${ringUrl ? `<img src="${esc(ringUrl)}" class="avatar-ring">` : ''}
         ${renderStatusDot(live)}
       </div>
@@ -4205,6 +4200,9 @@ window.openModal = id => {
     $('profileAvatarPreview').style.transform = 'none';
     $('profileUserTag').value = S.profile.userTag || '';
 
+    // Load server tags from servers the user is in
+    loadServerTagsForProfile();
+
     // Set initial avatar mode
     const av = S.profile.avatar || '';
     if(av.includes('dicebear.com')){
@@ -4238,6 +4236,61 @@ window.openModal = id => {
   $(`modal-${id}`)?.classList.remove('hidden');
 };
 window.closeModal = id => $(`modal-${id}`)?.classList.add('hidden');
+
+// Load server tags from servers the user is in for the Identity Tag dropdown
+window.loadServerTagsForProfile = async () => {
+  if (!S.user) return;
+
+  const select = $('profileUserTag');
+  if (!select) return;
+
+  // Keep the current selection
+  const currentValue = select.value;
+
+  // Clear existing options except "No Tag"
+  select.innerHTML = '<option value="">No Tag</option>';
+
+  try {
+    // Get all servers the user is in
+    const snap = await getDocs(collection(db, 'servers'));
+    const myServers = [];
+
+    for (const d of snap.docs) {
+      const m = await getDoc(doc(db, 'servers', d.id, 'members', S.user.uid));
+      if (m.exists() || S.isAdmin) {
+        const serverData = d.data();
+        if (serverData.tag && serverData.tag.length >= 2 && serverData.tag.length <= 4) {
+          myServers.push({ tag: serverData.tag, name: serverData.name });
+        }
+      }
+    }
+
+    // Deduplicate tags (no servers should share the same tag, but we ensure it)
+    const uniqueTags = new Map();
+    myServers.forEach(s => {
+      if (!uniqueTags.has(s.tag)) {
+        uniqueTags.set(s.tag, s.name);
+      }
+    });
+
+    // Sort tags alphabetically
+    const sortedTags = Array.from(uniqueTags.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
+    // Add options
+    sortedTags.forEach(([tag, serverName]) => {
+      const option = document.createElement('option');
+      option.value = tag;
+      option.textContent = `${tag} (${serverName})`;
+      select.appendChild(option);
+    });
+
+    // Restore selection if it still exists
+    select.value = currentValue;
+  } catch (e) {
+    console.warn('Failed to load server tags for profile', e);
+  }
+};
+
 window.sSettingsTab = tab => {
   ['overview','roles','invites','members','danger'].forEach(t => {
     $(`ssp-${t}`)?.classList.add('hidden');
@@ -4846,7 +4899,7 @@ function updateUserUI(){
     const ringHtml = (S.profile.style && S.profile.style.ringUrl) ? `<img src="${esc(S.profile.style.ringUrl)}" class="avatar-ring">` : '';
     bar.innerHTML = `
       <div class="flex items-center gap-2">
-        <div class="avatar-ring-wrapper">
+        <div class="avatar-ring-wrapper" style="width:24px;height:24px">
           <img src="${esc(S.profile.avatar)}" class="w-6 h-6 rounded-full border border-bch/40 relative z-10" id="authBarAvatar">
           ${ringHtml}
         </div>
